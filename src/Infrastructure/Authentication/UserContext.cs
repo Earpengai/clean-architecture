@@ -1,4 +1,6 @@
 ﻿using Application.Abstractions.Authentication;
+using Finbuckle.MultiTenant;
+using Infrastructure.Multitenancy;
 using Microsoft.AspNetCore.Http;
 
 namespace Infrastructure.Authentication;
@@ -18,4 +20,22 @@ internal sealed class UserContext : IUserContext
             .User
             .GetUserId() ??
         throw new UserContextUnavailableException();
+
+    public Guid? TenantId
+    {
+        get
+        {
+            AppTenantInfo? tenantInfo = _httpContextAccessor
+                .HttpContext?
+                .GetMultiTenantContext<AppTenantInfo>()?
+                .TenantInfo;
+
+            if (tenantInfo is null || !Guid.TryParse(tenantInfo.Id, out Guid tenantId))
+            {
+                return null;
+            }
+
+            return tenantId;
+        }
+    }
 }

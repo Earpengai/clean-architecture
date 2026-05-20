@@ -30,7 +30,15 @@ internal sealed class LoginUserCommandHandler(
             return Result.Failure<string>(UserErrors.NotFoundByEmail);
         }
 
-        string token = tokenProvider.Create(user);
+        List<string> tenantIdentifiers = await context.Memberships
+            .Where(m => m.UserId == user.Id)
+            .Join(context.Tenants,
+                m => m.TenantId,
+                t => t.Id,
+                (m, t) => t.Identifier)
+            .ToListAsync(cancellationToken);
+
+        string token = tokenProvider.Create(user, tenantIdentifiers);
 
         return token;
     }

@@ -3,4 +3,5 @@
 public interface IUserContext
 {
     Guid UserId { get; }
+    Guid? TenantId { get; }
 }

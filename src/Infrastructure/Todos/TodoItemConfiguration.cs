@@ -14,5 +14,7 @@ internal sealed class TodoItemConfiguration : IEntityTypeConfiguration<TodoItem>
         builder.Property(t => t.DueDate).HasConversion(d => d != null ? DateTime.SpecifyKind(d.Value, DateTimeKind.Utc) : d, v => v);
 
         builder.HasOne<User>().WithMany().HasForeignKey(t => t.UserId);
+
+        builder.Property<Guid>("TenantId").IsRequired();
     }
 }

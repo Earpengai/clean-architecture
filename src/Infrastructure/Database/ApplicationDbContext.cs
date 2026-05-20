@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Data;
+using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.DomainEvents;
@@ -16,6 +17,10 @@ public sealed class ApplicationDbContext(
 
     public DbSet<TodoItem> TodoItems { get; set; }
 
+    public DbSet<Tenant> Tenants { get; set; }
+
+    public DbSet<Membership> Memberships { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
@@ -25,16 +30,6 @@ public sealed class ApplicationDbContext(
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        // When should you publish domain events?
-        //
-        // 1. BEFORE calling SaveChangesAsync
-        //     - domain events are part of the same transaction
-        //     - immediate consistency
-        // 2. AFTER calling SaveChangesAsync
-        //     - domain events are a separate transaction
-        //     - eventual consistency
-        //     - handlers can fail
-
         List<IDomainEvent> domainEvents = ExtractDomainEvents();
         int result = await base.SaveChangesAsync(cancellationToken);
 

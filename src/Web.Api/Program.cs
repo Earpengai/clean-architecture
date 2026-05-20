@@ -1,5 +1,6 @@
 using System.Reflection;
 using Application;
+using Finbuckle.MultiTenant;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
@@ -41,6 +42,8 @@ app.UseRequestContextLogging();
 app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
+
+app.UseMultiTenant();
 
 app.UseAuthentication();
 
