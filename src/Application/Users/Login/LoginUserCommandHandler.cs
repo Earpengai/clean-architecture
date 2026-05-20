@@ -38,7 +38,7 @@ internal sealed class LoginUserCommandHandler(
                 (m, t) => t.Identifier)
             .ToListAsync(cancellationToken);
 
-        string token = tokenProvider.Create(user, tenantIdentifiers);
+        string token = tokenProvider.Create(user, tenantIdentifiers, user.IsSystemAdministrator);
 
         return token;
     }

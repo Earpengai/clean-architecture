@@ -38,4 +38,18 @@ internal sealed class UserContext : IUserContext
             return tenantId;
         }
     }
+
+    public bool IsSystemAdministrator
+    {
+        get
+        {
+            string? claim = _httpContextAccessor
+                .HttpContext?
+                .User
+                .FindFirst("is_system_admin")?
+                .Value;
+
+            return string.Equals(claim, "TRUE", StringComparison.OrdinalIgnoreCase);
+        }
+    }
 }

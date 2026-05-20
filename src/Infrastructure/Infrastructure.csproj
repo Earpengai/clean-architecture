@@ -17,6 +17,7 @@
 
   <ItemGroup>
 	<InternalsVisibleTo Include="ArchitectureTests" />
+	<InternalsVisibleTo Include="Web.Api" />
   </ItemGroup>
 
 </Project>

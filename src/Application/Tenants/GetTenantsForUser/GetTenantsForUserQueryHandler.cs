@@ -18,14 +18,18 @@ internal sealed class GetTenantsForUserQueryHandler(IApplicationDbContext contex
             .Join(context.Tenants,
                 m => m.TenantId,
                 t => t.Id,
-                (m, t) => new TenantResponse(
-                    t.Id,
-                    t.Name,
-                    t.Identifier,
-                    t.SubscriptionPlan,
-                    t.SubscriptionStatus,
-                    t.SeatCount,
-                    m.Role))
+                (m, t) => new { Membership = m, Tenant = t })
+            .Join(context.Roles,
+                x => x.Membership.RoleId,
+                r => r.Id,
+                (x, r) => new TenantResponse(
+                    x.Tenant.Id,
+                    x.Tenant.Name,
+                    x.Tenant.Identifier,
+                    x.Tenant.SubscriptionPlan,
+                    x.Tenant.SubscriptionStatus,
+                    x.Tenant.SeatCount,
+                    r.Name))
             .ToListAsync(cancellationToken);
 
         return tenants;

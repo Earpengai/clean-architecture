@@ -11,7 +11,7 @@ namespace Infrastructure.Authentication;
 
 internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvider
 {
-    public string Create(User user, List<string> tenantIdentifiers)
+    public string Create(User user, List<string> tenantIdentifiers, bool isSystemAdministrator)
     {
         string secretKey = configuration["Jwt:Secret"]!;
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
@@ -22,7 +22,8 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
         [
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim("tenant_ids", JsonSerializer.Serialize(tenantIdentifiers))
+            new Claim("tenant_ids", JsonSerializer.Serialize(tenantIdentifiers)),
+            new Claim("is_system_admin", isSystemAdministrator.ToString().ToUpperInvariant())
         ];
 
         var tokenDescriptor = new SecurityTokenDescriptor

@@ -11,6 +11,9 @@ public interface IApplicationDbContext
     DbSet<TodoItem> TodoItems { get; }
     DbSet<Tenant> Tenants { get; }
     DbSet<Membership> Memberships { get; }
+    DbSet<Role> Roles { get; }
+    DbSet<RolePermission> RolePermissions { get; }
+    DbSet<Invitation> Invitations { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

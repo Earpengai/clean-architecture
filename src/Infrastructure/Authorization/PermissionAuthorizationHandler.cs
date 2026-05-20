@@ -11,12 +11,16 @@ internal sealed class PermissionAuthorizationHandler(IServiceScopeFactory servic
         AuthorizationHandlerContext context,
         PermissionRequirement requirement)
     {
-        // TODO: You definitely want to reject unauthenticated users here.
-        if (context.User is { Identity.IsAuthenticated: true })
+        if (context.User is not { Identity.IsAuthenticated: true })
         {
-            // TODO: Remove this call when you implement the PermissionProvider.GetForUserIdAsync
-            context.Succeed(requirement);
+            return;
+        }
 
+        string? isAdminClaim = context.User.FindFirst("is_system_admin")?.Value;
+
+        if (string.Equals(isAdminClaim, "TRUE", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Succeed(requirement);
             return;
         }
 

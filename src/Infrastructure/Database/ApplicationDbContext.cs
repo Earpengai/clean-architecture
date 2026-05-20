@@ -21,6 +21,12 @@ public sealed class ApplicationDbContext(
 
     public DbSet<Membership> Memberships { get; set; }
 
+    public DbSet<Role> Roles { get; set; }
+
+    public DbSet<RolePermission> RolePermissions { get; set; }
+
+    public DbSet<Invitation> Invitations { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);

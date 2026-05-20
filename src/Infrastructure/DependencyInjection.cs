@@ -4,6 +4,7 @@ using Application.Abstractions.Data;
 using Finbuckle.MultiTenant;
 using Infrastructure.Authentication;
 using Infrastructure.Authorization;
+using Infrastructure.Data;
 using Infrastructure.Database;
 using Infrastructure.DomainEvents;
 using Infrastructure.Multitenancy;
@@ -37,6 +38,8 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
+
+        services.AddTransient<DataSeeder>();
 
         return services;
     }

@@ -4,5 +4,5 @@ namespace Application.Abstractions.Authentication;
 
 public interface ITokenProvider
 {
-    string Create(User user, List<string> tenantIdentifiers);
+    string Create(User user, List<string> tenantIdentifiers, bool isSystemAdministrator);
 }

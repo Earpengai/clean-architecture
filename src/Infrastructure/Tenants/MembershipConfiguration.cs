@@ -18,5 +18,9 @@ internal sealed class MembershipConfiguration : IEntityTypeConfiguration<Members
         builder.HasOne<Tenant>(m => m.Tenant)
             .WithMany()
             .HasForeignKey(m => m.TenantId);
+
+        builder.HasOne<Role>(m => m.Role)
+            .WithMany(r => r.Memberships)
+            .HasForeignKey(m => m.RoleId);
     }
 }

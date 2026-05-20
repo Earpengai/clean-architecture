@@ -9,4 +9,4 @@ public sealed record TenantResponse(
     SubscriptionPlan SubscriptionPlan,
     SubscriptionStatus SubscriptionStatus,
     int SeatCount,
-    MembershipRole Role);
+    string Role);

@@ -30,6 +30,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerWithUi();
 
     app.ApplyMigrations();
+
+    app.SeedData();
 }
 
 app.MapHealthChecks("health", new HealthCheckOptions
