@@ -23,6 +23,7 @@ internal sealed class Login : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
+        .RequireRateLimiting("AuthRateLimit")
         .WithTags(Tags.Users);
     }
 }

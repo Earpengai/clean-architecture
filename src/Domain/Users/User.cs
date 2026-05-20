@@ -18,5 +18,7 @@ public sealed class User : Entity
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsSystemAdministrator { get; set; }
+    public int FailedLoginAttempts { get; set; }
+    public DateTime? LockoutEnd { get; set; }
     public ICollection<Membership> Memberships { get; set; } = [];
 }

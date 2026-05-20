@@ -1,15 +1,13 @@
-﻿using FluentValidation;
+using FluentValidation;
 
-namespace Application.Users.Register;
+namespace Application.Users.ChangePassword;
 
-internal sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
+internal sealed class ChangePasswordCommandValidator : AbstractValidator<ChangePasswordCommand>
 {
-    public RegisterUserCommandValidator()
+    public ChangePasswordCommandValidator()
     {
-        RuleFor(c => c.FirstName).NotEmpty().MaximumLength(100);
-        RuleFor(c => c.LastName).NotEmpty().MaximumLength(100);
-        RuleFor(c => c.Email).NotEmpty().EmailAddress().MaximumLength(256);
-        RuleFor(c => c.Password)
+        RuleFor(c => c.CurrentPassword).NotEmpty();
+        RuleFor(c => c.NewPassword)
             .NotEmpty()
             .MinimumLength(8)
             .MaximumLength(128)

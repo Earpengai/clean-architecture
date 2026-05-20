@@ -23,6 +23,7 @@ internal sealed class VerifyEmail : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
+        .RequireRateLimiting("AuthRateLimit")
         .WithTags(Tags.Users);
     }
 }

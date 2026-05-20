@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Globalization;
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Application.Abstractions.Authentication;
@@ -13,6 +14,7 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
 {
     public string Create(User user, List<string> tenantIdentifiers, bool isSystemAdministrator)
     {
+        DateTime utcNow = DateTime.UtcNow;
         string secretKey = configuration["Jwt:Secret"]!;
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
 
@@ -22,6 +24,8 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
         [
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new Claim(JwtRegisteredClaimNames.Nbf, EpochTime.GetIntDate(utcNow).ToString(CultureInfo.InvariantCulture)),
             new Claim("tenant_ids", JsonSerializer.Serialize(tenantIdentifiers)),
             new Claim("is_system_admin", isSystemAdministrator.ToString().ToUpperInvariant())
         ];
@@ -29,7 +33,8 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(configuration.GetValue<int>("Jwt:ExpirationInMinutes")),
+            Expires = utcNow.AddMinutes(configuration.GetValue<int>("Jwt:ExpirationInMinutes")),
+            NotBefore = utcNow,
             SigningCredentials = credentials,
             Issuer = configuration["Jwt:Issuer"],
             Audience = configuration["Jwt:Audience"]

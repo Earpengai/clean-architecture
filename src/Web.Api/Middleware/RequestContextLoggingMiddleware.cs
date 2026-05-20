@@ -1,11 +1,13 @@
-﻿using Microsoft.Extensions.Primitives;
+﻿using System.Text.RegularExpressions;
+using Microsoft.Extensions.Primitives;
 using Serilog.Context;
 
 namespace Web.Api.Middleware;
 
-public class RequestContextLoggingMiddleware(RequestDelegate next)
+public partial class RequestContextLoggingMiddleware(RequestDelegate next)
 {
     private const string CorrelationIdHeaderName = "Correlation-Id";
+    private const int MaxCorrelationIdLength = 64;
 
     public Task Invoke(HttpContext context)
     {
@@ -21,6 +23,18 @@ public class RequestContextLoggingMiddleware(RequestDelegate next)
             CorrelationIdHeaderName,
             out StringValues correlationId);
 
-        return correlationId.FirstOrDefault() ?? context.TraceIdentifier;
+        string? value = correlationId.FirstOrDefault();
+
+        if (value is not null
+            && value.Length <= MaxCorrelationIdLength
+            && CorrelationIdRegex().IsMatch(value))
+        {
+            return value;
+        }
+
+        return context.TraceIdentifier;
     }
+
+    [GeneratedRegex(@"^[a-zA-Z0-9\-_]+$")]
+    private static partial Regex CorrelationIdRegex();
 }

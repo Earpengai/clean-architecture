@@ -43,4 +43,8 @@ public static class UserErrors
     public static readonly Error NotMemberOfTenant = Error.Problem(
         "Users.NotMemberOfTenant",
         "The user is not a member of this tenant");
+
+    public static readonly Error AccountLocked = Error.Problem(
+        "Users.AccountLocked",
+        "Your account has been locked due to too many failed login attempts. Please try again later.");
 }

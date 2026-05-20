@@ -1,9 +1,12 @@
 using System.Reflection;
+using System.Globalization;
+using System.Threading.RateLimiting;
 using Application;
 using Finbuckle.MultiTenant;
 using HealthChecks.UI.Client;
 using Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 using Web.Api;
 using Web.Api.Extensions;
@@ -14,10 +17,23 @@ builder.Host.UseSerilog((context, loggerConfig) => loggerConfig.ReadFrom.Configu
 
 builder.Services.AddSwaggerGenWithAuth();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddFixedWindowLimiter("AuthRateLimit", config =>
+    {
+        config.PermitLimit = 10;
+        config.Window = TimeSpan.FromMinutes(1);
+        config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+        config.QueueLimit = 0;
+    });
+});
+
 builder.Services
     .AddApplication()
-    .AddPresentation()
-    .AddInfrastructure(builder.Configuration);
+    .AddPresentation(builder.Environment)
+    .AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
 
@@ -44,6 +60,16 @@ app.UseRequestContextLogging();
 app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+    app.UseHsts();
+}
+
+app.UseRateLimiter();
+
+app.UseCors();
 
 app.UseMultiTenant();
 

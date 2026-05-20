@@ -1,15 +1,13 @@
-﻿using FluentValidation;
+using FluentValidation;
 
-namespace Application.Users.Register;
+namespace Application.Users.ResetPassword;
 
-internal sealed class RegisterUserCommandValidator : AbstractValidator<RegisterUserCommand>
+internal sealed class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordCommand>
 {
-    public RegisterUserCommandValidator()
+    public ResetPasswordCommandValidator()
     {
-        RuleFor(c => c.FirstName).NotEmpty().MaximumLength(100);
-        RuleFor(c => c.LastName).NotEmpty().MaximumLength(100);
-        RuleFor(c => c.Email).NotEmpty().EmailAddress().MaximumLength(256);
-        RuleFor(c => c.Password)
+        RuleFor(c => c.Token).NotEmpty();
+        RuleFor(c => c.NewPassword)
             .NotEmpty()
             .MinimumLength(8)
             .MaximumLength(128)
