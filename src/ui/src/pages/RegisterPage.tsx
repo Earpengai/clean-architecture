@@ -27,7 +27,7 @@ export function RegisterPage() {
       {
         onSuccess: () => {
           setSuccess(true);
-          setTimeout(() => navigate("/login"), 3000);
+          setTimeout(() => navigate("/auth/login"), 3000);
         },
         onError: (err) => setError(err.message),
       },
@@ -112,7 +112,7 @@ export function RegisterPage() {
           </form>
           <p className="mt-4 text-center text-sm text-gray-500">
             Already have an account?{" "}
-            <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign in
             </Link>
           </p>

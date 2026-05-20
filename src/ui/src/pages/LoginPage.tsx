@@ -18,7 +18,7 @@ export function LoginPage() {
   const [error, setError] = useState("");
 
   if (isAuthenticated) {
-    navigate("/", { replace: true });
+    navigate("/app", { replace: true });
     return null;
   }
 
@@ -29,7 +29,7 @@ export function LoginPage() {
     login.mutate(
       { email, password },
       {
-        onSuccess: () => navigate("/", { replace: true }),
+        onSuccess: () => navigate("/app", { replace: true }),
         onError: (err) => setError(err.message),
       },
     );
@@ -75,12 +75,12 @@ export function LoginPage() {
           </form>
           <p className="mt-4 text-center text-sm text-gray-500">
             Don&apos;t have an account?{" "}
-            <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">
               Sign up
             </Link>
           </p>
           <p className="mt-1 text-center text-sm">
-            <Link to="/forgot-password" className="text-gray-500 hover:text-gray-700">
+            <Link to="/auth/forgot-password" className="text-gray-500 hover:text-gray-700">
               Forgot password?
             </Link>
           </p>

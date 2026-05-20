@@ -4,7 +4,19 @@
   },
   "nav": {
     "dashboard": "Dashboard",
-    "todos": "Todos"
+    "todos": "Todos",
+    "tenants": "Tenants",
+    "roles": "Roles",
+    "users": "Users",
+    "invitations": "Invitations",
+    "profile": "Profile",
+    "admin": "Admin",
+    "backToApp": "Back to Application"
+  },
+  "section": {
+    "application": "Application",
+    "management": "Tenant Management",
+    "administration": "Administration"
   },
   "auth": {
     "signIn": "Sign In",

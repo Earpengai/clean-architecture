@@ -39,12 +39,12 @@ export function TenantSwitcher() {
       <DropdownMenuContent align="start" className="w-44">
         <DropdownMenuLabel>My Tenants</DropdownMenuLabel>
         {tenants?.map((tenant) => (
-          <DropdownMenuItem key={tenant.id} onClick={() => navigate(`/tenants/${tenant.id}`)}>
+          <DropdownMenuItem key={tenant.id} onClick={() => navigate(`/tenant/tenants/${tenant.id}`)}>
             <Building2 className="h-4 w-4 mr-2" />
             {tenant.name}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuItem onClick={() => navigate("/tenants")}>
+        <DropdownMenuItem onClick={() => navigate("/tenant/tenants")}>
           <span className="text-indigo-600">Manage tenants...</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -27,7 +27,7 @@ export function TodoDetailPage() {
     return (
       <div className="text-center py-12">
         <p className="text-sm text-red-500">{t("todos.error")}</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/todos")}>
+        <Button variant="outline" className="mt-4" onClick={() => navigate("/app/todos")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Todos
         </Button>
@@ -39,7 +39,7 @@ export function TodoDetailPage() {
 
   const handleDelete = () => {
     deleteTodo.mutate(todo.id, {
-      onSuccess: () => navigate("/todos"),
+      onSuccess: () => navigate("/app/todos"),
     });
   };
 
@@ -52,7 +52,7 @@ export function TodoDetailPage() {
   return (
     <div>
       <div className="flex items-center gap-3 mb-6">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/todos")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/app/todos")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-2xl font-bold text-gray-900">Todo Detail</h1>

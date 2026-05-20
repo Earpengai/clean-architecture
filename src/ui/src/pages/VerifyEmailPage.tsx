@@ -52,7 +52,7 @@ export function VerifyEmailPage() {
               <h3 className="text-lg font-semibold">Email Verified</h3>
               <p className="mt-1 text-sm text-gray-500">Your email has been verified successfully.</p>
               <Button className="mt-4" asChild>
-                <Link to="/login">
+                <Link to="/auth/login">
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Sign In
                 </Link>
@@ -68,7 +68,7 @@ export function VerifyEmailPage() {
               <h3 className="text-lg font-semibold">Verification Failed</h3>
               <p className="mt-1 text-sm text-red-500">{errorMessage || "Unable to verify your email."}</p>
               <Button variant="link" className="mt-4" asChild>
-                <Link to="/login">
+                <Link to="/auth/login">
                   <ArrowLeft className="h-4 w-4 mr-1" />
                   Back to Sign In
                 </Link>

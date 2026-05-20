@@ -51,7 +51,7 @@ export function ResetPasswordPage() {
             <h3 className="text-lg font-semibold">Password Updated</h3>
             <p className="mt-1 text-sm text-gray-500">Your password has been reset successfully.</p>
             <Button variant="link" className="mt-4" asChild>
-              <Link to="/login">
+              <Link to="/auth/login">
                 <ArrowLeft className="h-4 w-4 mr-1" />
                 Sign In
               </Link>
@@ -87,7 +87,7 @@ export function ResetPasswordPage() {
             </Button>
           </form>
           <p className="mt-4 text-center text-sm">
-            <Link to="/login" className="text-indigo-600 hover:text-indigo-500">
+            <Link to="/auth/login" className="text-indigo-600 hover:text-indigo-500">
               Back to Sign In
             </Link>
           </p>
