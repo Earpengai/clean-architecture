@@ -39,7 +39,7 @@ builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
 
 WebApplication app = builder.Build();
 
-app.MapEndpoints();
+app.MapEndpoints(app.MapGroup("/api"));
 
 if (app.Environment.IsDevelopment())
 {

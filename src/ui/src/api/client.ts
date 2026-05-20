@@ -1,5 +1,5 @@
 const API_TARGET = import.meta.env.VITE_API_TARGET as string | undefined;
-const API_BASE = API_TARGET ? `${API_TARGET}` : "";
+const API_BASE = API_TARGET ? `${API_TARGET}/api` : "/api";
 const TOKEN_KEY = "auth_token";
 
 type TokenListener = (token: string | null) => void;
