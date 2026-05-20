@@ -1,0 +1,18 @@
+{
+  "app": {
+    "title": "Clean Architecture"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "todos": "Todos"
+  },
+  "todos": {
+    "title": "Todos",
+    "newTodo": "New Todo",
+    "description": "Description",
+    "addTodo": "Add Todo",
+    "noTodos": "No todos yet.",
+    "loading": "Loading...",
+    "error": "Error loading todos"
+  }
+}
