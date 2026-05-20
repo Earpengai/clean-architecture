@@ -1,13 +1,37 @@
-const API_BASE = "/api";
+const API_TARGET = import.meta.env.VITE_API_TARGET as string | undefined;
+const API_BASE = API_TARGET ? `${API_TARGET}` : "";
+const TOKEN_KEY = "auth_token";
 
-let authToken: string | null = null;
+type TokenListener = (token: string | null) => void;
 
-export function setAuthToken(token: string | null) {
-  authToken = token;
+const listeners = new Set<TokenListener>();
+
+function getStoredToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
 }
 
-export function getAuthToken() {
-  return authToken;
+function storeToken(token: string | null) {
+  if (token) {
+    localStorage.setItem(TOKEN_KEY, token);
+  } else {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+
+export function setAuthToken(token: string | null) {
+  storeToken(token);
+  listeners.forEach((fn) => fn(token));
+}
+
+export function getAuthToken(): string | null {
+  return getStoredToken();
+}
+
+export function onAuthTokenChange(fn: TokenListener): () => void {
+  listeners.add(fn);
+  return () => {
+    listeners.delete(fn);
+  };
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
@@ -35,12 +59,14 @@ export async function apiDelete<T>(path: string): Promise<T> {
 }
 
 async function apiRequest<T>(path: string, init: RequestInit): Promise<T> {
+  const token = getStoredToken();
+
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string> | undefined),
   };
 
-  if (authToken) {
-    headers["Authorization"] = `Bearer ${authToken}`;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   const response = await fetch(`${API_BASE}${path}`, {
@@ -57,6 +83,11 @@ async function apiRequest<T>(path: string, init: RequestInit): Promise<T> {
     } catch {
       detail = errorBody || response.statusText;
     }
+
+    if (response.status === 401) {
+      setAuthToken(null);
+    }
+
     throw new ApiError(response.status, detail);
   }
 

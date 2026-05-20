@@ -16,3 +16,63 @@ export interface CreateTodoPayload {
   labels?: string[];
   priority?: number;
 }
+
+export interface TenantResponse {
+  id: string;
+  name: string;
+  identifier: string;
+  subscriptionPlan: number;
+  subscriptionStatus: number;
+  seatCount: number;
+  role: string;
+}
+
+export interface CreateTenantPayload {
+  name: string;
+  identifier: string;
+}
+
+export interface RoleResponse {
+  id: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+  permissions: string[];
+}
+
+export interface RoleFormPayload {
+  name: string;
+  description: string | null;
+  permissions: string[];
+}
+
+export interface UserResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  emailVerified: boolean;
+  createdAt: string;
+  roleName: string;
+  roleId: string | null;
+}
+
+export interface InvitationResponse {
+  id: string;
+  email: string;
+  roleName: string;
+  status: number;
+  createdAt: string;
+  tokenExpiry: string;
+}
+
+export interface TenantAdminResponse {
+  id: string;
+  name: string;
+  identifier: string;
+  subscriptionPlan: number;
+  subscriptionStatus: number;
+  seatCount: number;
+  isActive: boolean;
+  createdAt: string;
+}

@@ -6,6 +6,19 @@
     "dashboard": "Dashboard",
     "todos": "Todos"
   },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signOut": "Sign Out",
+    "createAccount": "Create Account",
+    "signingIn": "Signing in...",
+    "creatingAccount": "Creating account...",
+    "forgotPassword": "Forgot password?",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Don't have an account?",
+    "registrationSuccess": "Registration Successful",
+    "redirectingToLogin": "Redirecting to sign in..."
+  },
   "todos": {
     "title": "Todos",
     "newTodo": "New Todo",
@@ -13,6 +26,20 @@
     "addTodo": "Add Todo",
     "noTodos": "No todos yet.",
     "loading": "Loading...",
-    "error": "Error loading todos"
+    "error": "Error loading todos",
+    "dueDate": "Due Date",
+    "priority": "Priority",
+    "labels": "Labels",
+    "addLabel": "Add label...",
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High",
+    "completed": "Completed",
+    "pending": "Pending",
+    "delete": "Delete",
+    "copy": "Copy",
+    "complete": "Complete",
+    "backToTodos": "Back to Todos",
+    "todoDetail": "Todo Detail"
   }
 }
