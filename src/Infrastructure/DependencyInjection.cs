@@ -209,12 +209,16 @@ public static class DependencyInjection
                         context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                         context.Response.ContentType = "application/problem+json";
 
+                        string detail = !string.IsNullOrEmpty(context.ErrorDescription)
+                            ? context.ErrorDescription
+                            : "Authentication is required to access this resource.";
+
                         var problem = new
                         {
                             type = "https://tools.ietf.org/html/rfc7235#section-3.1",
                             title = "Unauthorized",
                             status = StatusCodes.Status401Unauthorized,
-                            detail = context.ErrorDescription ?? "Authentication is required to access this resource.",
+                            detail,
                             instance = context.HttpContext.Request.Path.ToString()
                         };
 
