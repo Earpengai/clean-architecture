@@ -6,7 +6,7 @@ public sealed record UserResponse
     public string Email { get; init; }
     public string FirstName { get; init; }
     public string LastName { get; init; }
-    public bool EmailVerified { get; init; }
+    public bool EmailConfirmed { get; init; }
     public DateTime CreatedAt { get; init; }
     public string RoleName { get; init; }
     public Guid RoleId { get; init; }

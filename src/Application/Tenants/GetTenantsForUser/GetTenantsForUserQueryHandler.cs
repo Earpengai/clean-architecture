@@ -29,7 +29,7 @@ internal sealed class GetTenantsForUserQueryHandler(IApplicationDbContext contex
                     x.Tenant.SubscriptionPlan,
                     x.Tenant.SubscriptionStatus,
                     x.Tenant.SeatCount,
-                    r.Name))
+                    r.Name!))
             .ToListAsync(cancellationToken);
 
         return tenants;

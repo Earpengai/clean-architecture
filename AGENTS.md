@@ -24,10 +24,10 @@ Layer dependencies (enforced by `tests/ArchitectureTests`):
 Web.Api → Infrastructure → Application → Domain → SharedKernel (no deps)
 ```
 
-- **SharedKernel**: `Entity`, `Result`/`Error`, `IDomainEvent`, `IDateTimeProvider` — zero dependencies
-- **Domain**: `TodoItem`, `User`, domain events, error definitions — depends only on SharedKernel
-- **Application**: CQRS (commands/queries/handlers), FluentValidation, decorators, interfaces (`IApplicationDbContext`, `IPasswordHasher`, etc.) — depends on Domain + SharedKernel
-- **Infrastructure**: EF Core + PostgreSQL, JWT auth, permission authorization, `DomainEventsDispatcher` — depends on Application
+- **SharedKernel**: `Entity`, `IDomainEventSource`, `Result`/`Error`, `IDomainEvent`, `IDateTimeProvider` — zero dependencies
+- **Domain**: `User : IdentityUser<Guid>`, `Role : IdentityRole<Guid>`, `TodoItem`, domain events, error definitions — depends on SharedKernel + `Microsoft.Extensions.Identity.Stores`
+- **Application**: CQRS (commands/queries/handlers), FluentValidation, decorators, interfaces (`IApplicationDbContext`, `ITokenProvider`, `IUserContext`) — depends on Domain + SharedKernel + `Microsoft.Extensions.Identity.Stores`
+- **Infrastructure**: EF Core (`IdentityDbContext<User, Role, Guid>`), JWT auth, permission authorization, ASP.NET Core Identity stores, `DomainEventsDispatcher` — depends on Application + `Microsoft.AspNetCore.Identity.EntityFrameworkCore`
 - **Web.Api**: Minimal API endpoints (`IEndpoint`), Swagger, Serilog, health checks — depends on Infrastructure
 - **ArchitectureTests**: NetArchTest.Rules enforces the dependency rules above
 
@@ -57,8 +57,18 @@ dotnet test CleanArchitecture.slnx --no-build
 - **.NET 10** (`net10.0`) — `Directory.Build.props` has commented-out net8.0/net9.0 alternatives
 - **PostgreSQL 17** via docker compose; database `clean-architecture`, user/pass `postgres/postgres`
 - **Seq** for structured log viewing at `http://localhost:8081`
+- **MailHog** for email testing at `http://localhost:8025` — SMTP on port 1025, no auth required
 - **Serilog** with Seq sink; `RequestContextLoggingMiddleware` pushes correlation IDs to log context
 - **JWT auth** with config from `Jwt:Secret`, `Jwt:Issuer`, `Jwt:Audience` — use user secrets or env vars (secrets stored in `UserSecretsId: 7af30323-108a-4923-bd46-e13b7648968c`)
+- **ASP.NET Core Identity** for user/role management: `AddIdentityCore<User>().AddRoles<Role>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders()`
+  - Handlers inject `UserManager<User>` for password hashing, lockout, email confirmation, password reset
+  - Password rules: 8+ chars, require uppercase/lowercase/digit/non-alphanumeric
+  - Lockout: 5 failed attempts → 15-minute lockout
+  - Built-in token providers for email confirmation and password reset (replaces custom token fields on User entity)
+- **Security stamp validation** — embedded in JWT `security_stamp` claim, validated on every request via `OnTokenValidated`. Password changes invalidate all existing JWTs.
+- **Refresh tokens** — SHA256-hashed, rotation on use, reuse detection (revokes all tokens if token theft detected), 7-day expiry. `POST /api/users/refresh`
+- **Two-Factor Authentication** — TOTP (authenticator app) via `POST /api/users/enable-2fa`, `POST /api/users/confirm-2fa`, `POST /api/users/disable-2fa`. Login returns `RequiresTwoFactor` when 2FA enabled; `POST /api/users/login-2fa` to verify.
+- **Admin lock/unlock** — `POST /api/admin/users/{userId}/lock` and `POST /api/admin/users/{userId}/unlock` (system admin only)
 - **Swagger/OpenAPI** at `/swagger` (dev only)
 - **EF Core migrations** auto-applied in Development via `ApplyMigrations()` at startup
 
@@ -70,7 +80,9 @@ dotnet test CleanArchitecture.slnx --no-build
 
 ## Domain Events
 
-- Entities inherit `Entity` base class, call `Raise(domainEvent)` to enqueue events
+- Entities implement `IDomainEventSource` interface, call `Raise(domainEvent)` to enqueue events
+- `Entity` base class provides the `IDomainEventSource` implementation for non-Identity entities (TodoItem, Membership, Tenant, Invitation)
+- `User` and `Role` implement `IDomainEventSource` manually since they inherit from IdentityUser/IdentityRole
 - `ApplicationDbContext.SaveChangesAsync` dispatches queued events via `DomainEventsDispatcher`
 - `DomainEventsDispatcher` resolves `IDomainEventHandler<T>` implementations from the DI container using cached reflection
 - Domain event handlers live in the **Application** layer, not Domain

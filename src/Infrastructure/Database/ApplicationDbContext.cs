@@ -3,6 +3,7 @@ using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.DomainEvents;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -11,27 +12,27 @@ namespace Infrastructure.Database;
 public sealed class ApplicationDbContext(
     DbContextOptions<ApplicationDbContext> options,
     IDomainEventsDispatcher domainEventsDispatcher)
-    : DbContext(options), IApplicationDbContext
+    : IdentityDbContext<User, Role, Guid>(options), IApplicationDbContext
 {
-    public DbSet<User> Users { get; set; }
-
     public DbSet<TodoItem> TodoItems { get; set; }
 
     public DbSet<Tenant> Tenants { get; set; }
 
     public DbSet<Membership> Memberships { get; set; }
 
-    public DbSet<Role> Roles { get; set; }
-
     public DbSet<RolePermission> RolePermissions { get; set; }
 
     public DbSet<Invitation> Invitations { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+    public DbSet<RefreshToken> RefreshTokens { get; set; }
 
-        modelBuilder.HasDefaultSchema(Schemas.Default);
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        builder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        builder.HasDefaultSchema(Schemas.Default);
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -52,15 +53,16 @@ public sealed class ApplicationDbContext(
     private List<IDomainEvent> ExtractDomainEvents()
     {
         var domainEvents = ChangeTracker
-            .Entries<Entity>()
+            .Entries()
             .Select(entry => entry.Entity)
-            .SelectMany(entity =>
+            .OfType<IDomainEventSource>()
+            .SelectMany(source =>
             {
-                List<IDomainEvent> domainEvents = entity.DomainEvents;
+                List<IDomainEvent> events = source.DomainEvents;
 
-                entity.ClearDomainEvents();
+                source.ClearDomainEvents();
 
-                return domainEvents;
+                return events;
             })
             .ToList();
         return domainEvents;

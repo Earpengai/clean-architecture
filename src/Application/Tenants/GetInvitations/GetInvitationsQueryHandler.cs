@@ -30,7 +30,7 @@ internal sealed class GetInvitationsQueryHandler(
                 {
                     Id = i.Id,
                     Email = i.Email,
-                    RoleName = r.Name,
+                    RoleName = r.Name!,
                     Status = i.Status,
                     CreatedAt = i.CreatedAt,
                     TokenExpiry = i.TokenExpiry

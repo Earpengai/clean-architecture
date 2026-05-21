@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -10,7 +10,8 @@ namespace Application.Users.ChangeEmail;
 
 internal sealed class ChangeEmailCommandHandler(
     IApplicationDbContext context,
-    IUserContext userContext)
+    IUserContext userContext,
+    UserManager<User> userManager)
     : ICommandHandler<ChangeEmailCommand>
 {
     public async Task<Result> Handle(ChangeEmailCommand command, CancellationToken cancellationToken)
@@ -29,12 +30,15 @@ internal sealed class ChangeEmailCommandHandler(
         }
 
         user.Email = command.NewEmail;
-        user.EmailVerified = false;
-        user.EmailVerificationToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
+        user.UserName = command.NewEmail;
+        user.EmailConfirmed = false;
         user.UpdatedAt = DateTime.UtcNow;
 
-        user.Raise(new EmailVerificationRequestedDomainEvent(user.Id, user.Email));
+        await userManager.UpdateAsync(user);
+
+        string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+        user.Raise(new EmailVerificationRequestedDomainEvent(user.Id, user.Email!, token));
 
         await context.SaveChangesAsync(cancellationToken);
 

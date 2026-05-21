@@ -1,8 +1,8 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Tenants;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -10,7 +10,7 @@ namespace Application.Tenants.AcceptInvitation;
 
 internal sealed class AcceptInvitationCommandHandler(
     IApplicationDbContext context,
-    IPasswordHasher passwordHasher)
+    UserManager<User> userManager)
     : ICommandHandler<AcceptInvitationCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(AcceptInvitationCommand command, CancellationToken cancellationToken)
@@ -34,8 +34,7 @@ internal sealed class AcceptInvitationCommandHandler(
             return Result.Failure<Guid>(InvitationErrors.Expired);
         }
 
-        User? existingUser = await context.Users
-            .FirstOrDefaultAsync(u => u.Email == invitation.Email, cancellationToken);
+        User? existingUser = await userManager.FindByEmailAsync(invitation.Email);
 
         User user;
         if (existingUser is not null)
@@ -57,14 +56,19 @@ internal sealed class AcceptInvitationCommandHandler(
             {
                 Id = Guid.NewGuid(),
                 Email = invitation.Email,
+                UserName = invitation.Email,
                 FirstName = command.FirstName,
                 LastName = command.LastName,
-                PasswordHash = passwordHasher.Hash(command.Password),
-                EmailVerified = true,
+                EmailConfirmed = true,
                 CreatedAt = DateTime.UtcNow
             };
 
-            context.Users.Add(user);
+            IdentityResult result = await userManager.CreateAsync(user, command.Password);
+
+            if (!result.Succeeded)
+            {
+                return Result.Failure<Guid>(UserErrors.FromIdentityResult(result));
+            }
         }
 
         var membership = new Membership

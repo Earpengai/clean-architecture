@@ -36,12 +36,12 @@ internal sealed class GetTenantUserByIdQueryHandler(
         return new UserResponse
         {
             Id = membership.User.Id,
-            Email = membership.User.Email,
+            Email = membership.User.Email!,
             FirstName = membership.User.FirstName,
             LastName = membership.User.LastName,
-            EmailVerified = membership.User.EmailVerified,
+            EmailConfirmed = membership.User.EmailConfirmed,
             CreatedAt = membership.User.CreatedAt,
-            RoleName = membership.Role.Name,
+            RoleName = membership.Role.Name!,
             RoleId = membership.Role.Id
         };
     }

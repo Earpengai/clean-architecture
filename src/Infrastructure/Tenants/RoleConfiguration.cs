@@ -8,6 +8,8 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
 {
     public void Configure(EntityTypeBuilder<Role> builder)
     {
+        builder.ToTable("roles");
+
         builder.HasKey(r => r.Id);
 
         builder.HasIndex(r => new { r.TenantId, r.Name }).IsUnique();
@@ -19,5 +21,7 @@ internal sealed class RoleConfiguration : IEntityTypeConfiguration<Role>
         builder.HasMany(r => r.Permissions)
             .WithOne(p => p.Role)
             .HasForeignKey(p => p.RoleId);
+
+        builder.Property(r => r.Description).HasMaxLength(500);
     }
 }

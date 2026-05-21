@@ -33,12 +33,12 @@ internal sealed class GetTenantUsersQueryHandler(
                 (x, r) => new UserResponse
                 {
                     Id = x.User.Id,
-                    Email = x.User.Email,
+                    Email = x.User.Email!,
                     FirstName = x.User.FirstName,
                     LastName = x.User.LastName,
-                    EmailVerified = x.User.EmailVerified,
+                    EmailConfirmed = x.User.EmailConfirmed,
                     CreatedAt = x.User.CreatedAt,
-                    RoleName = r.Name,
+                    RoleName = r.Name!,
                     RoleId = r.Id
                 })
             .ToListAsync(cancellationToken);

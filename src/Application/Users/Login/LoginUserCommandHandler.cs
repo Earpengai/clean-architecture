@@ -1,7 +1,9 @@
-﻿using Application.Abstractions.Authentication;
+﻿using System.Security.Cryptography;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -9,53 +11,41 @@ namespace Application.Users.Login;
 
 internal sealed class LoginUserCommandHandler(
     IApplicationDbContext context,
-    IPasswordHasher passwordHasher,
-    ITokenProvider tokenProvider) : ICommandHandler<LoginUserCommand, string>
+    UserManager<User> userManager,
+    ITokenProvider tokenProvider) : ICommandHandler<LoginUserCommand, LoginResponse>
 {
-    private const int MaxFailedAttempts = 5;
-    private const int LockoutDurationMinutes = 15;
-
-    public async Task<Result<string>> Handle(LoginUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result<LoginResponse>> Handle(LoginUserCommand command, CancellationToken cancellationToken)
     {
-        User? user = await context.Users
-            .SingleOrDefaultAsync(u => u.Email == command.Email, cancellationToken);
+        User? user = await userManager.FindByEmailAsync(command.Email);
 
         if (user is null)
         {
-            return Result.Failure<string>(UserErrors.NotFoundByEmail);
+            return Result.Failure<LoginResponse>(UserErrors.NotFoundByEmail);
         }
 
-        if (user.LockoutEnd is not null && user.LockoutEnd > DateTime.UtcNow)
+        if (await userManager.IsLockedOutAsync(user))
         {
-            return Result.Failure<string>(UserErrors.AccountLocked);
+            return Result.Failure<LoginResponse>(UserErrors.AccountLocked);
         }
 
-        if (user.LockoutEnd is not null && user.LockoutEnd <= DateTime.UtcNow)
-        {
-            user.LockoutEnd = null;
-            user.FailedLoginAttempts = 0;
-        }
-
-        bool verified = passwordHasher.Verify(command.Password, user.PasswordHash);
+        bool verified = await userManager.CheckPasswordAsync(user, command.Password);
 
         if (!verified)
         {
-            user.FailedLoginAttempts++;
+            await userManager.AccessFailedAsync(user);
 
-            if (user.FailedLoginAttempts >= MaxFailedAttempts)
-            {
-                user.LockoutEnd = DateTime.UtcNow.AddMinutes(LockoutDurationMinutes);
-            }
-
-            user.UpdatedAt = DateTime.UtcNow;
-            await context.SaveChangesAsync(cancellationToken);
-
-            return Result.Failure<string>(UserErrors.NotFoundByEmail);
+            return Result.Failure<LoginResponse>(UserErrors.NotFoundByEmail);
         }
 
-        user.FailedLoginAttempts = 0;
-        user.LockoutEnd = null;
-        user.UpdatedAt = DateTime.UtcNow;
+        await userManager.ResetAccessFailedCountAsync(user);
+
+        if (await userManager.GetTwoFactorEnabledAsync(user))
+        {
+            string twoFactorToken = await userManager.GenerateTwoFactorTokenAsync(
+                user, TokenOptions.DefaultEmailProvider);
+
+            return LoginResponse.TwoFactorRequired(twoFactorToken);
+        }
 
         List<string> tenantIdentifiers = await context.Memberships
             .Where(m => m.UserId == user.Id)
@@ -65,10 +55,24 @@ internal sealed class LoginUserCommandHandler(
                 (m, t) => t.Identifier)
             .ToListAsync(cancellationToken);
 
-        string token = tokenProvider.Create(user, tenantIdentifiers, user.IsSystemAdministrator);
+        string accessToken = tokenProvider.Create(user, tenantIdentifiers, user.IsSystemAdministrator);
+
+        string plainRefreshToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+        string refreshTokenHash = Convert.ToHexString(SHA256.HashData(Convert.FromHexString(plainRefreshToken)));
+
+        var refreshToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.RefreshTokens.Add(refreshToken);
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return token;
+        return LoginResponse.Success(accessToken, plainRefreshToken);
     }
 }

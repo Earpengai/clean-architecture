@@ -1,33 +1,31 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using SharedKernel;
 
 namespace Application.Users.ResetPassword;
 
 internal sealed class ResetPasswordCommandHandler(
-    IApplicationDbContext context,
-    IPasswordHasher passwordHasher)
+    UserManager<User> userManager)
     : ICommandHandler<ResetPasswordCommand>
 {
     public async Task<Result> Handle(ResetPasswordCommand command, CancellationToken cancellationToken)
     {
-        User? user = await context.Users
-            .SingleOrDefaultAsync(u => u.PasswordResetToken == command.Token, cancellationToken);
+        User? user = await userManager.FindByIdAsync(command.UserId.ToString());
 
-        if (user is null || user.PasswordResetTokenExpiry < DateTime.UtcNow)
+        if (user is null)
         {
             return Result.Failure(UserErrors.InvalidResetToken);
         }
 
-        user.PasswordHash = passwordHasher.Hash(command.NewPassword);
-        user.PasswordResetToken = null;
-        user.PasswordResetTokenExpiry = null;
-        user.UpdatedAt = DateTime.UtcNow;
+        IdentityResult result = await userManager.ResetPasswordAsync(
+            user, command.Token, command.NewPassword);
 
-        await context.SaveChangesAsync(cancellationToken);
+        if (!result.Succeeded)
+        {
+            return Result.Failure(UserErrors.InvalidResetToken);
+        }
 
         return Result.Success();
     }

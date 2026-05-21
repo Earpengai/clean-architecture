@@ -1,19 +1,26 @@
-﻿using System.Text;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Email;
+using Domain.Tenants;
+using Domain.Users;
 using Finbuckle.MultiTenant;
 using Infrastructure.Authentication;
 using Infrastructure.Authorization;
 using Infrastructure.Data;
 using Infrastructure.Database;
 using Infrastructure.DomainEvents;
+using Infrastructure.Email;
 using Infrastructure.Multitenancy;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -31,6 +38,7 @@ public static class DependencyInjection
         services
             .AddServices()
             .AddDatabase(configuration)
+            .AddIdentityInternal()
             .AddHealthChecks(configuration)
             .AddAuthenticationInternal(configuration, environment)
             .AddAuthorizationInternal()
@@ -43,6 +51,8 @@ public static class DependencyInjection
         services.AddTransient<IDomainEventsDispatcher, DomainEventsDispatcher>();
 
         services.AddTransient<DataSeeder>();
+
+        services.AddScoped<IEmailService, MailHogEmailService>();
 
         return services;
     }
@@ -61,6 +71,27 @@ public static class DependencyInjection
                 .AddInterceptors(sp.GetRequiredService<TenantSaveInterceptor>()));
 
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
+
+        return services;
+    }
+
+    private static IServiceCollection AddIdentityInternal(this IServiceCollection services)
+    {
+        services.AddIdentityCore<User>(options =>
+            {
+                options.Password.RequiredLength = 8;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireUppercase = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.User.RequireUniqueEmail = true;
+                options.SignIn.RequireConfirmedEmail = false;
+            })
+            .AddRoles<Role>()
+            .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddDefaultTokenProviders();
 
         return services;
     }
@@ -90,11 +121,52 @@ public static class DependencyInjection
                     ValidAudience = configuration["Jwt:Audience"],
                     ClockSkew = TimeSpan.Zero
                 };
+
+                o.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = async context =>
+                    {
+                        IServiceScopeFactory scopeFactory = context.HttpContext.RequestServices
+                            .GetRequiredService<IServiceScopeFactory>();
+
+                        using IServiceScope scope = scopeFactory.CreateScope();
+
+                        UserManager<User> userManager = scope.ServiceProvider
+                            .GetRequiredService<UserManager<User>>();
+
+                        string? userId = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
+                        string? securityStampClaim = context.Principal?.FindFirstValue("security_stamp");
+
+                        if (userId is null || securityStampClaim is null)
+                        {
+                            context.Fail("Token is missing required claims.");
+                            return;
+                        }
+
+                        if (!Guid.TryParse(userId, out Guid parsedUserId))
+                        {
+                            context.Fail("Invalid user identifier in token.");
+                            return;
+                        }
+
+                        User? user = await userManager.FindByIdAsync(parsedUserId.ToString());
+
+                        if (user is null)
+                        {
+                            context.Fail("User no longer exists.");
+                            return;
+                        }
+
+                        if (!string.Equals(securityStampClaim, user.SecurityStamp, StringComparison.Ordinal))
+                        {
+                            context.Fail("Security stamp has changed. Token is no longer valid.");
+                        }
+                    }
+                };
             });
 
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
-        services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenProvider, TokenProvider>();
 
         return services;

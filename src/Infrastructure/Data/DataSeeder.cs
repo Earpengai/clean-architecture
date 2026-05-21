@@ -1,15 +1,12 @@
-using Application.Abstractions.Authentication;
-using Application.Abstractions.Data;
 using Domain.Users;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Data;
 
 internal sealed class DataSeeder(
-    IApplicationDbContext context,
-    IPasswordHasher passwordHasher,
+    UserManager<User> userManager,
     IConfiguration configuration,
     ILogger<DataSeeder> logger)
 {
@@ -24,31 +21,38 @@ internal sealed class DataSeeder(
             return;
         }
 
-        bool adminExists = await context.Users
-            .AnyAsync(u => u.Email == adminEmail && u.IsSystemAdministrator);
+        User? admin = await userManager.FindByEmailAsync(adminEmail);
 
-        if (adminExists)
+        if (admin is not null && admin.IsSystemAdministrator)
         {
             logger.LogInformation("Administrator already exists");
             return;
         }
 
-        var admin = new User
+        var systemAdmin = new User
         {
             Id = Guid.NewGuid(),
             Email = adminEmail,
+            UserName = adminEmail,
             FirstName = "System",
             LastName = "Administrator",
-            PasswordHash = passwordHasher.Hash(adminPassword),
-            EmailVerified = true,
+            EmailConfirmed = true,
             IsSystemAdministrator = true,
             CreatedAt = DateTime.UtcNow
         };
 
-        context.Users.Add(admin);
+        IdentityResult result = await userManager.CreateAsync(systemAdmin, adminPassword);
 
-        await context.SaveChangesAsync();
-
-        logger.LogInformation("Administrator created: {Email}", adminEmail);
+        if (result.Succeeded)
+        {
+            logger.LogInformation("Administrator created: {Email}", adminEmail);
+        }
+        else
+        {
+            foreach (IdentityError error in result.Errors)
+            {
+                logger.LogError("Identity error: {Code} - {Description}", error.Code, error.Description);
+            }
+        }
     }
 }

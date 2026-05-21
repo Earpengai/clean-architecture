@@ -1,7 +1,9 @@
+using System.Linq;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -10,29 +12,33 @@ namespace Application.Users.ChangePassword;
 internal sealed class ChangePasswordCommandHandler(
     IApplicationDbContext context,
     IUserContext userContext,
-    IPasswordHasher passwordHasher)
+    UserManager<User> userManager)
     : ICommandHandler<ChangePasswordCommand>
 {
     public async Task<Result> Handle(ChangePasswordCommand command, CancellationToken cancellationToken)
     {
-        User? user = await context.Users
-            .SingleOrDefaultAsync(u => u.Id == userContext.UserId, cancellationToken);
+        User? user = await userManager.FindByIdAsync(userContext.UserId.ToString());
 
         if (user is null)
         {
             return Result.Failure(UserErrors.NotFound(userContext.UserId));
         }
 
-        bool verified = passwordHasher.Verify(command.CurrentPassword, user.PasswordHash);
+        IdentityResult result = await userManager.ChangePasswordAsync(
+            user, command.CurrentPassword, command.NewPassword);
 
-        if (!verified)
+        if (!result.Succeeded)
         {
-            return Result.Failure(UserErrors.InvalidCredentials);
+            IdentityError? firstError = result.Errors.FirstOrDefault();
+            if (firstError is not null && string.Equals(firstError.Code, "PasswordMismatch", StringComparison.OrdinalIgnoreCase))
+            {
+                return Result.Failure(UserErrors.InvalidCredentials);
+            }
+
+            return Result.Failure(UserErrors.PasswordNotCompliant);
         }
 
-        user.PasswordHash = passwordHasher.Hash(command.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
-
         await context.SaveChangesAsync(cancellationToken);
 
         return Result.Success();

@@ -1,13 +1,15 @@
-using System.Security.Cryptography;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.RequestPasswordReset;
 
-internal sealed class RequestPasswordResetCommandHandler(IApplicationDbContext context)
+internal sealed class RequestPasswordResetCommandHandler(
+    IApplicationDbContext context,
+    UserManager<User> userManager)
     : ICommandHandler<RequestPasswordResetCommand>
 {
     public async Task<Result> Handle(RequestPasswordResetCommand command, CancellationToken cancellationToken)
@@ -20,11 +22,9 @@ internal sealed class RequestPasswordResetCommandHandler(IApplicationDbContext c
             return Result.Success();
         }
 
-        user.PasswordResetToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        user.PasswordResetTokenExpiry = DateTime.UtcNow.AddHours(1);
-        user.UpdatedAt = DateTime.UtcNow;
+        string token = await userManager.GeneratePasswordResetTokenAsync(user);
 
-        user.Raise(new PasswordResetRequestedDomainEvent(user.Id, user.Email));
+        user.Raise(new PasswordResetRequestedDomainEvent(user.Id, user.Email!, token));
 
         await context.SaveChangesAsync(cancellationToken);
 

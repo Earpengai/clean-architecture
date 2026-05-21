@@ -1,4 +1,5 @@
-﻿using SharedKernel;
+﻿using Microsoft.AspNetCore.Identity;
+using SharedKernel;
 
 namespace Domain.Users;
 
@@ -47,4 +48,20 @@ public static class UserErrors
     public static readonly Error AccountLocked = Error.Problem(
         "Users.AccountLocked",
         "Your account has been locked due to too many failed login attempts. Please try again later.");
+
+    public static readonly Error PasswordNotCompliant = Error.Problem(
+        "Users.PasswordNotCompliant",
+        "The new password does not meet the security requirements.");
+
+    public static Error FromIdentityResult(IdentityResult result)
+    {
+        IdentityError? firstError = result.Errors.FirstOrDefault();
+
+        if (firstError is not null)
+        {
+            return Error.Failure(firstError.Code, firstError.Description);
+        }
+
+        return Error.Failure("Users.IdentityError", "An unknown identity error occurred.");
+    }
 }

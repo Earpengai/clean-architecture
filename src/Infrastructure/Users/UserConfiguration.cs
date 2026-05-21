@@ -8,11 +8,13 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
+        builder.ToTable("users");
+
         builder.HasKey(u => u.Id);
 
         builder.HasIndex(u => u.Email).IsUnique();
 
-        builder.Property(u => u.EmailVerificationToken).HasMaxLength(128);
-        builder.Property(u => u.PasswordResetToken).HasMaxLength(128);
+        builder.Property(u => u.FirstName).HasMaxLength(100);
+        builder.Property(u => u.LastName).HasMaxLength(100);
     }
 }

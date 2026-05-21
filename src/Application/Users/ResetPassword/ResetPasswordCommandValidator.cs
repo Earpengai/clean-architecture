@@ -6,6 +6,7 @@ internal sealed class ResetPasswordCommandValidator : AbstractValidator<ResetPas
 {
     public ResetPasswordCommandValidator()
     {
+        RuleFor(c => c.UserId).NotEmpty();
         RuleFor(c => c.Token).NotEmpty();
         RuleFor(c => c.NewPassword)
             .NotEmpty()

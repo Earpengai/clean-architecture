@@ -23,11 +23,12 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
         List<Claim> claims =
         [
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
+            new Claim(JwtRegisteredClaimNames.Email, user.Email!),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
             new Claim(JwtRegisteredClaimNames.Nbf, EpochTime.GetIntDate(utcNow).ToString(CultureInfo.InvariantCulture)),
             new Claim("tenant_ids", JsonSerializer.Serialize(tenantIdentifiers)),
-            new Claim("is_system_admin", isSystemAdministrator.ToString().ToUpperInvariant())
+            new Claim("is_system_admin", isSystemAdministrator.ToString().ToUpperInvariant()),
+            new Claim("security_stamp", user.SecurityStamp!)
         ];
 
         var tokenDescriptor = new SecurityTokenDescriptor

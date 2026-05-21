@@ -1,13 +1,15 @@
-﻿using Application.Abstractions.Authentication;
-using Application.Abstractions.Data;
+﻿using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Users.Register;
 
-internal sealed class RegisterUserCommandHandler(IApplicationDbContext context, IPasswordHasher passwordHasher)
+internal sealed class RegisterUserCommandHandler(
+    IApplicationDbContext context,
+    UserManager<User> userManager)
     : ICommandHandler<RegisterUserCommand, Guid>
 {
     public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
@@ -21,16 +23,20 @@ internal sealed class RegisterUserCommandHandler(IApplicationDbContext context, 
         {
             Id = Guid.NewGuid(),
             Email = command.Email,
+            UserName = command.Email,
             FirstName = command.FirstName,
             LastName = command.LastName,
-            PasswordHash = passwordHasher.Hash(command.Password),
-            EmailVerified = false,
             CreatedAt = DateTime.UtcNow
         };
 
-        user.Raise(new UserRegisteredDomainEvent(user.Id));
+        IdentityResult result = await userManager.CreateAsync(user, command.Password);
 
-        context.Users.Add(user);
+        if (!result.Succeeded)
+        {
+            return Result.Failure<Guid>(UserErrors.FromIdentityResult(result));
+        }
+
+        user.Raise(new UserRegisteredDomainEvent(user.Id, user.Email!));
 
         await context.SaveChangesAsync(cancellationToken);
 

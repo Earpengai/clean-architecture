@@ -1,8 +1,8 @@
-using System.Security.Cryptography;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Users;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -10,7 +10,8 @@ namespace Application.Users.RequestEmailVerification;
 
 internal sealed class RequestEmailVerificationCommandHandler(
     IApplicationDbContext context,
-    IUserContext userContext)
+    IUserContext userContext,
+    UserManager<User> userManager)
     : ICommandHandler<RequestEmailVerificationCommand>
 {
     public async Task<Result> Handle(RequestEmailVerificationCommand command, CancellationToken cancellationToken)
@@ -23,16 +24,14 @@ internal sealed class RequestEmailVerificationCommandHandler(
             return Result.Failure(UserErrors.NotFound(userContext.UserId));
         }
 
-        if (user.EmailVerified)
+        if (user.EmailConfirmed)
         {
             return Result.Failure(UserErrors.EmailAlreadyVerified);
         }
 
-        user.EmailVerificationToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-        user.EmailVerificationTokenExpiry = DateTime.UtcNow.AddHours(24);
-        user.UpdatedAt = DateTime.UtcNow;
+        string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
 
-        user.Raise(new EmailVerificationRequestedDomainEvent(user.Id, user.Email));
+        user.Raise(new EmailVerificationRequestedDomainEvent(user.Id, user.Email!, token));
 
         await context.SaveChangesAsync(cancellationToken);
 

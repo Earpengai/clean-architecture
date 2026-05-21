@@ -8,7 +8,7 @@ namespace Web.Api.Endpoints.Users;
 
 internal sealed class ResetPassword : IEndpoint
 {
-    public sealed record Request(string Token, string NewPassword);
+    public sealed record Request(Guid UserId, string Token, string NewPassword);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -17,7 +17,7 @@ internal sealed class ResetPassword : IEndpoint
             ICommandHandler<ResetPasswordCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new ResetPasswordCommand(request.Token, request.NewPassword);
+            var command = new ResetPasswordCommand(request.UserId, request.Token, request.NewPassword);
 
             Result result = await handler.Handle(command, cancellationToken);
 

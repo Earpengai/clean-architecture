@@ -8,7 +8,7 @@ namespace Web.Api.Endpoints.Users;
 
 internal sealed class VerifyEmail : IEndpoint
 {
-    public sealed record Request(string Token);
+    public sealed record Request(Guid UserId, string Token);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -17,7 +17,7 @@ internal sealed class VerifyEmail : IEndpoint
             ICommandHandler<VerifyEmailCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new VerifyEmailCommand(request.Token);
+            var command = new VerifyEmailCommand(request.UserId, request.Token);
 
             Result result = await handler.Handle(command, cancellationToken);
 

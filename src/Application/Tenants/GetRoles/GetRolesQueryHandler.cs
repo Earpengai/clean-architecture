@@ -26,7 +26,7 @@ internal sealed class GetRolesQueryHandler(
             .Select(r => new RoleResponse
             {
                 Id = r.Id,
-                Name = r.Name,
+                Name = r.Name!,
                 Description = r.Description,
                 IsSystem = r.IsSystem,
                 Permissions = r.Permissions.Select(p => p.Permission).ToList()
