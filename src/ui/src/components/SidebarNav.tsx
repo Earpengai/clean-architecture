@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/cn";
 import {
   LayoutDashboard,
@@ -25,18 +25,18 @@ interface NavItem {
 }
 
 function NavItemLink({ item }: { item: NavItem }) {
-  const location = useLocation();
-  const isActive = location.pathname === item.path || location.pathname.startsWith(`${item.path}/`);
-
   return (
     <NavLink
       to={item.path}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-        isActive
-          ? "bg-indigo-50 text-indigo-700"
-          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-      )}
+      end={item.path === "/app"}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-indigo-50 text-indigo-700"
+            : "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+        )
+      }
     >
       {item.icon}
       {item.label}
