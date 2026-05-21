@@ -44,7 +44,7 @@ export function TenantSwitcher() {
         {tenants?.map((tenant) => (
           <DropdownMenuItem
             key={tenant.id}
-            onClick={() => setActiveTenant(tenant.id)}
+            onClick={() => setActiveTenant(tenant.id, tenant.identifier)}
             className="justify-between"
           >
             <span className="flex items-center gap-2">

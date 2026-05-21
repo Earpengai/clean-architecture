@@ -129,9 +129,9 @@ async function apiRequest<T>(path: string, init: RequestInit, retry = true): Pro
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const activeTenantId = useTenantStore.getState().activeTenantId;
-  if (activeTenantId) {
-    headers["X-Tenant-Id"] = activeTenantId;
+  const activeTenantIdentifier = useTenantStore.getState().activeTenantIdentifier;
+  if (activeTenantIdentifier) {
+    headers["X-Tenant-Id"] = activeTenantIdentifier;
   }
 
   const response = await fetch(`${API_BASE}${path}`, {

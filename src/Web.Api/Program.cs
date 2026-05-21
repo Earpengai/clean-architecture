@@ -71,11 +71,11 @@ app.UseRateLimiter();
 
 app.UseCors();
 
+app.UseAuthentication();
+
 app.UseMultiTenant();
 
 app.UseTenantEnforcement();
-
-app.UseAuthentication();
 
 app.UseAuthorization();
 
