@@ -9,6 +9,7 @@ import { Lock, ArrowLeft } from "lucide-react";
 
 export function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
+  const userId = searchParams.get("userId") ?? "";
   const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
@@ -26,13 +27,13 @@ export function ResetPasswordPage() {
       return;
     }
 
-    if (!token) {
-      setError("Invalid or missing reset token.");
+    if (!token || !userId) {
+      setError("Invalid or missing reset link.");
       return;
     }
 
     resetPassword.mutate(
-      { token, newPassword: password },
+      { userId, token, newPassword: password },
       {
         onSuccess: () => setSuccess(true),
         onError: (err) => setError(err.message),
@@ -82,7 +83,7 @@ export function ResetPasswordPage() {
               <Input id="confirm" type="password" placeholder="••••••••" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
-            <Button type="submit" className="w-full" disabled={resetPassword.isPending || !token}>
+            <Button type="submit" className="w-full" disabled={resetPassword.isPending || !token || !userId}>
               {resetPassword.isPending ? "Updating..." : "Reset Password"}
             </Button>
           </form>

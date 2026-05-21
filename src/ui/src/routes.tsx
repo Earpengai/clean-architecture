@@ -18,6 +18,8 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
+import { LoginTwoFactorPage } from "@/pages/LoginTwoFactorPage";
+import { OnboardingGuard } from "@/components/OnboardingGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
 
 export function AppRoutes() {
@@ -30,16 +32,19 @@ export function AppRoutes() {
         <Route path="auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="auth/verify-email" element={<VerifyEmailPage />} />
+        <Route path="auth/login-2fa" element={<LoginTwoFactorPage />} />
       </Route>
 
       {/* === PROTECTED ROUTES === */}
       <Route element={<ProtectedRoute />}>
         {/* Application Section */}
-        <Route path="app" element={<AppShell section="app" />}>
-          <Route index element={<Dashboard />} />
-          <Route path="todos" element={<TodosPage />} />
-          <Route path="todos/:id" element={<TodoDetailPage />} />
-          <Route path="profile" element={<ProfilePage />} />
+        <Route element={<OnboardingGuard />}>
+          <Route path="app" element={<AppShell section="app" />}>
+            <Route index element={<Dashboard />} />
+            <Route path="todos" element={<TodosPage />} />
+            <Route path="todos/:id" element={<TodoDetailPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
         </Route>
 
         {/* Tenant Management Section */}

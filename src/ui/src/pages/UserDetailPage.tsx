@@ -1,17 +1,22 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUserById } from "@/api/users";
+import { useLockUser, useUnlockUser } from "@/api/admin";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Mail, Shield, Calendar } from "lucide-react";
+import { ArrowLeft, User, Mail, Shield, Calendar, Lock, Unlock } from "lucide-react";
 
 export function UserDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const isAdmin = useIsAdmin();
 
   const { data: user, isLoading, error } = useUserById(id);
+  const lockUser = useLockUser();
+  const unlockUser = useUnlockUser();
 
   if (isLoading) {
     return (
@@ -77,11 +82,39 @@ export function UserDetailPage() {
               </div>
               <div>
                 <p className="text-xs text-gray-500">Status</p>
-                <Badge className={user.emailVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
-                  {user.emailVerified ? "Verified" : "Unverified"}
+                <Badge className={user.emailConfirmed ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
+                  {user.emailConfirmed ? "Verified" : "Unverified"}
                 </Badge>
               </div>
             </div>
+
+            {isAdmin && (
+              <>
+                <div className="border-t pt-4 mt-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase mb-3">Admin Actions</p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => lockUser.mutate(user.id)}
+                      disabled={lockUser.isPending}
+                    >
+                      <Lock className="h-4 w-4 mr-1" />
+                      Lock Account
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => unlockUser.mutate(user.id)}
+                      disabled={unlockUser.isPending}
+                    >
+                      <Unlock className="h-4 w-4 mr-1" />
+                      Unlock Account
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>

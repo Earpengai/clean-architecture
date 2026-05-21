@@ -1,10 +1,10 @@
 import { createContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import { getAuthToken, setAuthToken, onAuthTokenChange } from "@/api/client";
+import { getAuthToken, setAuthTokens, onAuthTokenChange } from "@/api/client";
 
 interface AuthContextValue {
   token: string | null;
   isAuthenticated: boolean;
-  login: (token: string) => void;
+  login: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
 }
 
@@ -17,12 +17,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return onAuthTokenChange(setToken);
   }, []);
 
-  const login = useCallback((newToken: string) => {
-    setAuthToken(newToken);
+  const login = useCallback((accessToken: string, refreshToken: string) => {
+    setAuthTokens(accessToken, refreshToken);
   }, []);
 
   const logout = useCallback(() => {
-    setAuthToken(null);
+    setAuthTokens(null, null);
   }, []);
 
   return (

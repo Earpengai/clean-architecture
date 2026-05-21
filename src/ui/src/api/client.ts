@@ -1,30 +1,49 @@
+import type { RefreshTokenResponse } from "./types";
+
 const API_TARGET = import.meta.env.VITE_API_TARGET as string | undefined;
 const API_BASE = API_TARGET ? `${API_TARGET}/api` : "/api";
-const TOKEN_KEY = "auth_token";
+const ACCESS_TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 
 type TokenListener = (token: string | null) => void;
 
 const listeners = new Set<TokenListener>();
 
-function getStoredToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+let refreshPromise: Promise<RefreshTokenResponse | null> | null = null;
+
+function getStoredAccessToken(): string | null {
+  return localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
-function storeToken(token: string | null) {
-  if (token) {
-    localStorage.setItem(TOKEN_KEY, token);
+function getStoredRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+function storeTokens(accessToken: string | null, refreshToken: string | null) {
+  if (accessToken) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
   } else {
-    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(ACCESS_TOKEN_KEY);
+  }
+  if (refreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  } else {
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
   }
 }
 
-export function setAuthToken(token: string | null) {
-  storeToken(token);
-  listeners.forEach((fn) => fn(token));
+function clearTokens() {
+  localStorage.removeItem(ACCESS_TOKEN_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
+}
+
+export function setAuthTokens(accessToken: string | null, refreshToken: string | null) {
+  storeTokens(accessToken, refreshToken);
+  listeners.forEach((fn) => fn(accessToken));
 }
 
 export function getAuthToken(): string | null {
-  return getStoredToken();
+  return getStoredAccessToken();
 }
 
 export function onAuthTokenChange(fn: TokenListener): () => void {
@@ -32,6 +51,46 @@ export function onAuthTokenChange(fn: TokenListener): () => void {
   return () => {
     listeners.delete(fn);
   };
+}
+
+async function refreshAccessToken(): Promise<RefreshTokenResponse | null> {
+  const storedRefreshToken = getStoredRefreshToken();
+  if (!storedRefreshToken) {
+    return null;
+  }
+
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const response = await fetch(`${API_BASE}/users/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: storedRefreshToken }),
+      });
+
+      if (!response.ok) {
+        clearTokens();
+        listeners.forEach((fn) => fn(null));
+        return null;
+      }
+
+      const data = (await response.json()) as RefreshTokenResponse;
+      storeTokens(data.accessToken, data.refreshToken);
+      listeners.forEach((fn) => fn(data.accessToken));
+      return data;
+    } catch {
+      clearTokens();
+      listeners.forEach((fn) => fn(null));
+      return null;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
@@ -58,8 +117,8 @@ export async function apiDelete<T>(path: string): Promise<T> {
   return apiRequest<T>(path, { method: "DELETE" });
 }
 
-async function apiRequest<T>(path: string, init: RequestInit): Promise<T> {
-  const token = getStoredToken();
+async function apiRequest<T>(path: string, init: RequestInit, retry = true): Promise<T> {
+  const token = getStoredAccessToken();
 
   const headers: Record<string, string> = {
     ...(init.headers as Record<string, string> | undefined),
@@ -75,6 +134,19 @@ async function apiRequest<T>(path: string, init: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
+    if (response.status === 401 && retry && getStoredRefreshToken()) {
+      const refreshed = await refreshAccessToken();
+      if (refreshed) {
+        return apiRequest<T>(path, init, false);
+      }
+      throw new ApiError(response.status, "Session expired. Please sign in again.");
+    }
+
+    if (response.status === 401) {
+      clearTokens();
+      listeners.forEach((fn) => fn(null));
+    }
+
     const errorBody = await response.text();
     let detail = "";
     try {
@@ -82,10 +154,6 @@ async function apiRequest<T>(path: string, init: RequestInit): Promise<T> {
       detail = parsed.detail ?? parsed.title ?? errorBody;
     } catch {
       detail = errorBody || response.statusText;
-    }
-
-    if (response.status === 401) {
-      setAuthToken(null);
     }
 
     throw new ApiError(response.status, detail);

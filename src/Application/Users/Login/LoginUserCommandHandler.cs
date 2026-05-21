@@ -44,7 +44,7 @@ internal sealed class LoginUserCommandHandler(
             string twoFactorToken = await userManager.GenerateTwoFactorTokenAsync(
                 user, TokenOptions.DefaultEmailProvider);
 
-            return LoginResponse.TwoFactorRequired(twoFactorToken);
+            return LoginResponse.TwoFactorRequired(twoFactorToken, user.Id);
         }
 
         List<string> tenantIdentifiers = await context.Memberships

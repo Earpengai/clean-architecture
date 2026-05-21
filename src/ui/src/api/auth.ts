@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiPost, apiPut, setAuthToken, getAuthToken } from "./client";
+import { apiPost, apiPut, setAuthTokens, getAuthToken } from "./client";
+import type { LoginResponse, EnableTwoFactorResponse } from "./types";
 
 interface LoginPayload {
   email: string;
@@ -28,18 +29,50 @@ interface UpdateProfilePayload {
 }
 
 interface ResetPasswordPayload {
+  userId: string;
   token: string;
   newPassword: string;
+}
+
+interface VerifyEmailPayload {
+  userId: string;
+  token: string;
+}
+
+interface LoginTwoFactorPayload {
+  userId: string;
+  twoFactorToken: string;
+  code: string;
+}
+
+interface ConfirmTwoFactorPayload {
+  code: string;
 }
 
 export function useLogin() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: LoginPayload) => apiPost<string>("/users/login", payload),
-    onSuccess: (token) => {
-      setAuthToken(token);
-      queryClient.clear();
+    mutationFn: (payload: LoginPayload) => apiPost<LoginResponse>("/users/login", payload),
+    onSuccess: (data) => {
+      if (!data.requiresTwoFactor && data.accessToken && data.refreshToken) {
+        setAuthTokens(data.accessToken, data.refreshToken);
+        queryClient.clear();
+      }
+    },
+  });
+}
+
+export function useLoginTwoFactor() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: LoginTwoFactorPayload) => apiPost<LoginResponse>("/users/login-2fa", payload),
+    onSuccess: (data) => {
+      if (data.accessToken && data.refreshToken) {
+        setAuthTokens(data.accessToken, data.refreshToken);
+        queryClient.clear();
+      }
     },
   });
 }
@@ -54,7 +87,7 @@ export function useLogout() {
   const queryClient = useQueryClient();
 
   return () => {
-    setAuthToken(null);
+    setAuthTokens(null, null);
     queryClient.clear();
   };
 }
@@ -91,13 +124,31 @@ export function useResetPassword() {
 
 export function useVerifyEmail() {
   return useMutation({
-    mutationFn: (payload: { token: string }) => apiPost<void>("/users/verify-email", payload),
+    mutationFn: (payload: VerifyEmailPayload) => apiPost<void>("/users/verify-email", payload),
   });
 }
 
 export function useRequestEmailVerification() {
   return useMutation({
     mutationFn: () => apiPost<void>("/users/request-verification"),
+  });
+}
+
+export function useEnableTwoFactor() {
+  return useMutation({
+    mutationFn: () => apiPost<EnableTwoFactorResponse>("/users/enable-2fa"),
+  });
+}
+
+export function useConfirmTwoFactor() {
+  return useMutation({
+    mutationFn: (payload: ConfirmTwoFactorPayload) => apiPost<void>("/users/confirm-2fa", payload),
+  });
+}
+
+export function useDisableTwoFactor() {
+  return useMutation({
+    mutationFn: () => apiPost<void>("/users/disable-2fa"),
   });
 }
 

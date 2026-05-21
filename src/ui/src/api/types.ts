@@ -51,7 +51,7 @@ export interface UserResponse {
   email: string;
   firstName: string;
   lastName: string;
-  emailVerified: boolean;
+  emailConfirmed: boolean;
   createdAt: string;
   roleName: string;
   roleId: string | null;
@@ -75,4 +75,22 @@ export interface TenantAdminResponse {
   seatCount: number;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface LoginResponse {
+  accessToken: string | null;
+  refreshToken: string | null;
+  requiresTwoFactor: boolean;
+  twoFactorToken: string | null;
+  userId: string | null;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface EnableTwoFactorResponse {
+  sharedKey: string;
+  authenticatorUri: string;
 }

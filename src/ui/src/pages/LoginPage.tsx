@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useLogin } from "@/api/auth";
+import type { LoginResponse } from "@/api/types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,16 @@ export function LoginPage() {
     login.mutate(
       { email, password },
       {
-        onSuccess: () => navigate("/app", { replace: true }),
+        onSuccess: (data: LoginResponse) => {
+          if (data.requiresTwoFactor) {
+            navigate("/auth/login-2fa", {
+              state: { userId: data.userId!, twoFactorToken: data.twoFactorToken! },
+              replace: true,
+            });
+          } else {
+            navigate("/app", { replace: true });
+          }
+        },
         onError: (err) => setError(err.message),
       },
     );

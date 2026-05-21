@@ -51,8 +51,8 @@ export function UsersPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge className={user.emailVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
-                      {user.emailVerified ? "Verified" : "Unverified"}
+                    <Badge className={user.emailConfirmed ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
+                      {user.emailConfirmed ? "Verified" : "Unverified"}
                     </Badge>
                     <Badge className="bg-indigo-50 text-indigo-700">{user.roleName}</Badge>
                     <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>

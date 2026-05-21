@@ -7,6 +7,7 @@ import { CheckCircle, XCircle, ArrowLeft } from "lucide-react";
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
+  const userId = searchParams.get("userId") ?? "";
   const token = searchParams.get("token") ?? "";
 
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
@@ -14,14 +15,14 @@ export function VerifyEmailPage() {
   const verifyEmail = useVerifyEmail();
 
   useEffect(() => {
-    if (!token) {
+    if (!token || !userId) {
       setStatus("error");
-      setErrorMessage("Invalid or missing verification token.");
+      setErrorMessage("Invalid or missing verification link.");
       return;
     }
 
     verifyEmail.mutate(
-      { token },
+      { userId, token },
       {
         onSuccess: () => setStatus("success"),
         onError: (err) => {
@@ -30,7 +31,7 @@ export function VerifyEmailPage() {
         },
       },
     );
-  }, [token]);
+  }, [userId, token]);
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center">
