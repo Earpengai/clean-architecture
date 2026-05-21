@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMyTenants } from "@/api/tenants";
 import { useTenantStore } from "@/stores/tenantStore";
@@ -16,6 +17,19 @@ export function TenantSwitcher() {
   const { data: tenants, isLoading } = useMyTenants();
   const activeTenantId = useTenantStore((state) => state.activeTenantId);
   const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
+
+  useEffect(() => {
+    if (isLoading || !tenants || tenants.length === 0) {
+      return;
+    }
+
+    const exists = tenants.some((t) => t.id === activeTenantId);
+
+    if (!exists) {
+      const first = tenants[0]!;
+      setActiveTenant(first.id, first.identifier);
+    }
+  }, [tenants, isLoading, activeTenantId, setActiveTenant]);
 
   if (isLoading) {
     return (

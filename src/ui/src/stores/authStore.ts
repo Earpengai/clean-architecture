@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { getAuthToken, setAuthTokens, onAuthTokenChange } from "@/api/client";
+import { useTenantStore } from "@/stores/tenantStore";
 import { decodeJwt } from "@/lib/jwt";
 
 interface AuthState {
@@ -32,6 +33,7 @@ export const useAuthStore = create<AuthState>(() => ({
     setAuthTokens(accessToken, refreshToken);
   },
   logout: () => {
+    useTenantStore.getState().clearActiveTenant();
     setAuthTokens(null, null);
   },
 }));

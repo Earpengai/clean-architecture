@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTenantStore } from "@/stores/tenantStore";
 import { apiPost, apiPut, setAuthTokens, getAuthToken } from "./client";
 import type { LoginResponse, EnableTwoFactorResponse } from "./types";
 
@@ -87,6 +88,7 @@ export function useLogout() {
   const queryClient = useQueryClient();
 
   return () => {
+    useTenantStore.getState().clearActiveTenant();
     setAuthTokens(null, null);
     queryClient.clear();
   };
