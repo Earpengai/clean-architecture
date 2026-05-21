@@ -15,14 +15,9 @@ internal sealed class AssignUserRoleCommandHandler(
 {
     public async Task<Result> Handle(AssignUserRoleCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure(UserErrors.Unauthorized());
-        }
-
         Membership? membership = await context.Memberships
             .FirstOrDefaultAsync(m => m.UserId == command.UserId
-                && m.TenantId == userContext.TenantId.Value, cancellationToken);
+                && m.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (membership is null)
         {
@@ -31,7 +26,7 @@ internal sealed class AssignUserRoleCommandHandler(
 
         Role? role = await context.Roles
             .FirstOrDefaultAsync(r => r.Id == command.RoleId
-                && r.TenantId == userContext.TenantId.Value, cancellationToken);
+                && r.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (role is null)
         {

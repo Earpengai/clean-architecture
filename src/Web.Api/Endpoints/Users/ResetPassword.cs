@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Users.ResetPassword;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -23,6 +24,7 @@ internal sealed class ResetPassword : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
+        .ExcludeFromMultiTenantResolution()
         .WithTags(Tags.Users);
     }
 }

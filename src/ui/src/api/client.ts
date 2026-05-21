@@ -1,3 +1,4 @@
+import { useTenantStore } from "@/stores/tenantStore";
 import type { RefreshTokenResponse } from "./types";
 
 const API_TARGET = import.meta.env.VITE_API_TARGET as string | undefined;
@@ -126,6 +127,11 @@ async function apiRequest<T>(path: string, init: RequestInit, retry = true): Pro
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const activeTenantId = useTenantStore.getState().activeTenantId;
+  if (activeTenantId) {
+    headers["X-Tenant-Id"] = activeTenantId;
   }
 
   const response = await fetch(`${API_BASE}${path}`, {

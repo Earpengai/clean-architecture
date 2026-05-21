@@ -30,7 +30,9 @@ internal sealed class CopyTodoCommandHandler(
         }
 
         TodoItem? existingTodo = await context.TodoItems.AsNoTracking()
-            .SingleOrDefaultAsync(t => t.Id == command.TodoId && t.UserId == command.UserId, cancellationToken);
+            .SingleOrDefaultAsync(t => t.Id == command.TodoId
+                && t.UserId == command.UserId
+                && t.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (existingTodo is null)
         {

@@ -1,6 +1,7 @@
 using Application.Abstractions.Messaging;
 using Application.Admin.UpdateTenantSubscription;
 using Domain.Tenants;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -33,6 +34,7 @@ internal sealed class UpdateTenantSubscription : IEndpoint
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
         .RequireAuthorization()
+        .ExcludeFromMultiTenantResolution()
         .WithTags("Admin");
     }
 }

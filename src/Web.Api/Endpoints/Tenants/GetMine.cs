@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Messaging;
 using Application.Tenants.GetTenantsForUser;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -23,6 +24,7 @@ internal sealed class GetMine : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Tenants)
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .ExcludeFromMultiTenantResolution();
     }
 }

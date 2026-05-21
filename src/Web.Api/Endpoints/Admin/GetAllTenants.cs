@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Admin.GetAllTenants;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -21,6 +22,7 @@ internal sealed class GetAllTenants : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .RequireAuthorization()
+        .ExcludeFromMultiTenantResolution()
         .WithTags("Admin");
     }
 }

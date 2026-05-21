@@ -73,6 +73,8 @@ app.UseCors();
 
 app.UseMultiTenant();
 
+app.UseTenantEnforcement();
+
 app.UseAuthentication();
 
 app.UseAuthorization();

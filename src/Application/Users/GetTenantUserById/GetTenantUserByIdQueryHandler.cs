@@ -16,16 +16,11 @@ internal sealed class GetTenantUserByIdQueryHandler(
         GetTenantUserByIdQuery query,
         CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure<UserResponse>(UserErrors.Unauthorized());
-        }
-
         Domain.Tenants.Membership? membership = await context.Memberships
             .Include(m => m.Role)
             .Include(m => m.User)
             .FirstOrDefaultAsync(m =>
-                m.UserId == query.UserId && m.TenantId == userContext.TenantId.Value,
+                m.UserId == query.UserId && m.TenantId == userContext.TenantId!.Value,
                 cancellationToken);
 
         if (membership is null)

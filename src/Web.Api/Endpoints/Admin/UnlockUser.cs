@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Admin.UnlockUser;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -22,6 +23,7 @@ internal sealed class UnlockUser : IEndpoint
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
         .WithTags(Tags.Admin)
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .ExcludeFromMultiTenantResolution();
     }
 }

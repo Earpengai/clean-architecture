@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Users.EnableTwoFactor;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -21,6 +22,7 @@ internal sealed class EnableTwoFactor : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .WithTags(Tags.Users)
-        .RequireAuthorization();
+        .RequireAuthorization()
+        .ExcludeFromMultiTenantResolution();
     }
 }

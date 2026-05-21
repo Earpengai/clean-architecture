@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Tenants.AcceptInvitation;
+using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -28,6 +29,7 @@ internal sealed class AcceptInvitation : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
+        .ExcludeFromMultiTenantResolution()
         .WithTags(Tags.Tenants);
     }
 }

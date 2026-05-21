@@ -15,14 +15,9 @@ internal sealed class DeleteRoleCommandHandler(
 {
     public async Task<Result> Handle(DeleteRoleCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure(UserErrors.Unauthorized());
-        }
-
         Role? role = await context.Roles
             .FirstOrDefaultAsync(r => r.Id == command.RoleId
-                && r.TenantId == userContext.TenantId.Value, cancellationToken);
+                && r.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (role is null)
         {

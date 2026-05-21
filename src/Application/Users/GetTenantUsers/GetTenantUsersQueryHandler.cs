@@ -1,7 +1,6 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -16,13 +15,8 @@ internal sealed class GetTenantUsersQueryHandler(
         GetTenantUsersQuery query,
         CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure<List<UserResponse>>(UserErrors.Unauthorized());
-        }
-
         List<UserResponse> users = await context.Memberships
-            .Where(m => m.TenantId == userContext.TenantId.Value)
+            .Where(m => m.TenantId == userContext.TenantId!.Value)
             .Join(context.Users,
                 m => m.UserId,
                 u => u.Id,

@@ -3,7 +3,6 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Permissions;
 using Domain.Tenants;
-using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -16,13 +15,8 @@ internal sealed class CreateRoleCommandHandler(
 {
     public async Task<Result<Guid>> Handle(CreateRoleCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure<Guid>(UserErrors.Unauthorized());
-        }
-
         bool nameExists = await context.Roles
-            .AnyAsync(r => r.TenantId == userContext.TenantId.Value
+            .AnyAsync(r => r.TenantId == userContext.TenantId!.Value
                 && r.Name == command.Name, cancellationToken);
 
         if (nameExists)
@@ -33,7 +27,7 @@ internal sealed class CreateRoleCommandHandler(
         var role = new Role
         {
             Id = Guid.NewGuid(),
-            TenantId = userContext.TenantId.Value,
+            TenantId = userContext.TenantId!.Value,
             Name = command.Name,
             Description = command.Description,
             IsSystem = false,

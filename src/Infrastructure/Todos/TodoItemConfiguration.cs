@@ -15,6 +15,6 @@ internal sealed class TodoItemConfiguration : IEntityTypeConfiguration<TodoItem>
 
         builder.HasOne<User>().WithMany().HasForeignKey(t => t.UserId);
 
-        builder.Property<Guid>("TenantId").IsRequired();
+        builder.Property(t => t.TenantId).IsRequired();
     }
 }

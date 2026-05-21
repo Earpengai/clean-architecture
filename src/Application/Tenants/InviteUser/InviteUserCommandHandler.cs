@@ -3,7 +3,6 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Tenants;
-using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -16,13 +15,8 @@ internal sealed class InviteUserCommandHandler(
 {
     public async Task<Result<Guid>> Handle(InviteUserCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure<Guid>(UserErrors.Unauthorized());
-        }
-
         bool alreadyMember = await context.Memberships
-            .AnyAsync(m => m.TenantId == userContext.TenantId.Value
+            .AnyAsync(m => m.TenantId == userContext.TenantId!.Value
                 && m.User != null && m.User.Email == command.Email, cancellationToken);
 
         if (alreadyMember)
@@ -32,7 +26,7 @@ internal sealed class InviteUserCommandHandler(
 
         Role? role = await context.Roles
             .FirstOrDefaultAsync(r => r.Id == command.RoleId
-                && r.TenantId == userContext.TenantId.Value, cancellationToken);
+                && r.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (role is null)
         {
@@ -42,7 +36,7 @@ internal sealed class InviteUserCommandHandler(
         var invitation = new Invitation
         {
             Id = Guid.NewGuid(),
-            TenantId = userContext.TenantId.Value,
+            TenantId = userContext.TenantId!.Value,
             Email = command.Email,
             RoleId = command.RoleId,
             Token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)),

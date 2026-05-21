@@ -1,7 +1,6 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -16,13 +15,8 @@ internal sealed class GetInvitationsQueryHandler(
         GetInvitationsQuery query,
         CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure<List<InvitationResponse>>(UserErrors.Unauthorized());
-        }
-
         List<InvitationResponse> invitations = await context.Invitations
-            .Where(i => i.TenantId == userContext.TenantId.Value)
+            .Where(i => i.TenantId == userContext.TenantId!.Value)
             .Join(context.Roles,
                 i => i.RoleId,
                 r => r.Id,

@@ -15,14 +15,9 @@ internal sealed class RemoveUserFromTenantCommandHandler(
 {
     public async Task<Result> Handle(RemoveUserFromTenantCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure(UserErrors.Unauthorized());
-        }
-
         Membership? membership = await context.Memberships
             .FirstOrDefaultAsync(m => m.UserId == command.UserId
-                && m.TenantId == userContext.TenantId.Value, cancellationToken);
+                && m.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (membership is null)
         {

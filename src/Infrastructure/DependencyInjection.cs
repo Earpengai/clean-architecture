@@ -18,6 +18,7 @@ using Infrastructure.Multitenancy;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -255,5 +256,10 @@ public static class DependencyInjection
             .WithStore<TenantStore>(ServiceLifetime.Scoped);
 
         return services;
+    }
+
+    public static IApplicationBuilder UseTenantEnforcement(this IApplicationBuilder app)
+    {
+        return app.UseMiddleware<TenantEnforcementMiddleware>();
     }
 }

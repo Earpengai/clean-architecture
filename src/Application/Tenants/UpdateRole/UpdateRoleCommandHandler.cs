@@ -16,15 +16,10 @@ internal sealed class UpdateRoleCommandHandler(
 {
     public async Task<Result> Handle(UpdateRoleCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.TenantId is null)
-        {
-            return Result.Failure(UserErrors.Unauthorized());
-        }
-
         Role? role = await context.Roles
             .Include(r => r.Permissions)
             .FirstOrDefaultAsync(r => r.Id == command.RoleId
-                && r.TenantId == userContext.TenantId.Value, cancellationToken);
+                && r.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (role is null)
         {
@@ -37,7 +32,7 @@ internal sealed class UpdateRoleCommandHandler(
         }
 
         bool nameExists = await context.Roles
-            .AnyAsync(r => r.TenantId == userContext.TenantId.Value
+            .AnyAsync(r => r.TenantId == userContext.TenantId!.Value
                 && r.Name == command.Name && r.Id != command.RoleId, cancellationToken);
 
         if (nameExists)
