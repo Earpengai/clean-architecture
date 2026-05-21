@@ -39,7 +39,7 @@ export function TodoItem({ todo }: TodoItemProps) {
         "group rounded-md border p-4 cursor-pointer transition-colors hover:border-indigo-300",
         completed ? "border-gray-200 bg-gray-50" : "border-gray-200 bg-white",
       )}
-      onClick={() => navigate(`/todos/${todo.id}`)}
+      onClick={() => navigate(`/app/todos/${todo.id}`)}
     >
       <div className="flex items-start gap-3">
         <button

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useParams } from "react-router-dom";
 import { AuthLayout } from "@/pages/AuthLayout";
 import { AppShell } from "@/components/AppShell";
 import { AdminGuard } from "@/components/AdminGuard";
@@ -21,6 +21,21 @@ import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { LoginTwoFactorPage } from "@/pages/LoginTwoFactorPage";
 import { OnboardingGuard } from "@/components/OnboardingGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
+
+function LegacyTodoRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/app/todos/${id}`} replace />;
+}
+
+function LegacyTenantRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/tenant/tenants/${id}`} replace />;
+}
+
+function LegacyUserRedirect() {
+  const { id } = useParams<{ id: string }>();
+  return <Navigate to={`/tenant/users/${id}`} replace />;
+}
 
 export function AppRoutes() {
   return (
@@ -72,12 +87,12 @@ export function AppRoutes() {
       <Route path="reset-password" element={<Navigate to="/auth/reset-password" replace />} />
       <Route path="verify-email" element={<Navigate to="/auth/verify-email" replace />} />
       <Route path="todos" element={<Navigate to="/app/todos" replace />} />
-      <Route path="todos/:id" element={<Navigate to="/app/todos/:id" replace />} />
+      <Route path="todos/:id" element={<LegacyTodoRedirect />} />
       <Route path="tenants" element={<Navigate to="/tenant/tenants" replace />} />
-      <Route path="tenants/:id" element={<Navigate to="/tenant/tenants/:id" replace />} />
+      <Route path="tenants/:id" element={<LegacyTenantRedirect />} />
       <Route path="roles" element={<Navigate to="/tenant/roles" replace />} />
       <Route path="users" element={<Navigate to="/tenant/users" replace />} />
-      <Route path="users/:id" element={<Navigate to="/tenant/users/:id" replace />} />
+      <Route path="users/:id" element={<LegacyUserRedirect />} />
       <Route path="invitations" element={<Navigate to="/tenant/invitations" replace />} />
       <Route path="profile" element={<Navigate to="/app/profile" replace />} />
 

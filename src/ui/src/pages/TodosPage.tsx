@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { useAuthStore } from "@/stores/authStore";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { TodoList } from "@/features/todos/components/TodoList";
 import { TodoForm } from "@/features/todos/components/TodoForm";
 
 export function TodosPage() {
   const { t } = useTranslation();
-  const userId = "00000000-0000-0000-0000-000000000001";
+  const userId = useAuthStore((state) => state.userId);
 
   return (
     <div>

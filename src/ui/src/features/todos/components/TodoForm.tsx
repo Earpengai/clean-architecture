@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, X } from "lucide-react";
 
 interface TodoFormProps {
-  userId: string;
+  userId: string | null;
 }
 
 export function TodoForm({ userId }: TodoFormProps) {
@@ -33,7 +33,7 @@ export function TodoForm({ userId }: TodoFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!description.trim()) return;
+    if (!description.trim() || !userId) return;
     createTodo.mutate(
       {
         userId,

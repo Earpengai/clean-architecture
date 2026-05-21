@@ -34,7 +34,7 @@ export function TenantsPage() {
             <TenantCard
               key={tenant.id}
               tenant={tenant}
-              onClick={() => navigate(`/tenants/${tenant.id}`)}
+              onClick={() => navigate(`/tenant/tenants/${tenant.id}`)}
             />
           ))}
         </div>

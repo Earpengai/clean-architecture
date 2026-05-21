@@ -3,7 +3,7 @@ import { useTodos } from "@/api/todos";
 import { TodoItem } from "./TodoItem";
 
 interface TodoListProps {
-  userId: string;
+  userId: string | null;
 }
 
 export function TodoList({ userId }: TodoListProps) {

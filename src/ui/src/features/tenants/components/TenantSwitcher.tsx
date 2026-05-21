@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useMyTenants } from "@/api/tenants";
+import { useTenantStore } from "@/stores/tenantStore";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -8,11 +9,13 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Building2, ChevronDown } from "lucide-react";
+import { Building2, ChevronDown, Check } from "lucide-react";
 
 export function TenantSwitcher() {
   const navigate = useNavigate();
   const { data: tenants, isLoading } = useMyTenants();
+  const activeTenantId = useTenantStore((state) => state.activeTenantId);
+  const setActiveTenant = useTenantStore((state) => state.setActiveTenant);
 
   if (isLoading) {
     return (
@@ -23,7 +26,7 @@ export function TenantSwitcher() {
     );
   }
 
-  const activeTenant = tenants?.[0];
+  const activeTenant = tenants?.find((t) => t.id === activeTenantId) ?? tenants?.[0] ?? null;
 
   return (
     <DropdownMenu>
@@ -39,9 +42,18 @@ export function TenantSwitcher() {
       <DropdownMenuContent align="start" className="w-44">
         <DropdownMenuLabel>My Tenants</DropdownMenuLabel>
         {tenants?.map((tenant) => (
-          <DropdownMenuItem key={tenant.id} onClick={() => navigate(`/tenant/tenants/${tenant.id}`)}>
-            <Building2 className="h-4 w-4 mr-2" />
-            {tenant.name}
+          <DropdownMenuItem
+            key={tenant.id}
+            onClick={() => setActiveTenant(tenant.id)}
+            className="justify-between"
+          >
+            <span className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              {tenant.name}
+            </span>
+            {tenant.id === (activeTenantId ?? tenants?.[0]?.id) && (
+              <Check className="h-4 w-4 text-indigo-600" />
+            )}
           </DropdownMenuItem>
         ))}
         <DropdownMenuItem onClick={() => navigate("/tenant/tenants")}>
