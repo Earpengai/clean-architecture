@@ -1,6 +1,7 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Email;
@@ -18,12 +19,14 @@ using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SharedKernel;
 
@@ -131,36 +134,91 @@ public static class DependencyInjection
 
                         using IServiceScope scope = scopeFactory.CreateScope();
 
-                        UserManager<User> userManager = scope.ServiceProvider
-                            .GetRequiredService<UserManager<User>>();
+                        ILoggerFactory loggerFactory = scope.ServiceProvider
+                            .GetRequiredService<ILoggerFactory>();
+                        ILogger logger = loggerFactory.CreateLogger("JwtSecurityStamp");
 
                         string? userId = context.Principal?.FindFirstValue(JwtRegisteredClaimNames.Sub);
                         string? securityStampClaim = context.Principal?.FindFirstValue("security_stamp");
 
                         if (userId is null || securityStampClaim is null)
                         {
+                            logger.LogWarning(
+                                "JWT missing required claims. Sub='{Sub}', SecurityStamp='{Stamp}' - Path: {Path}",
+                                userId ?? "null",
+                                securityStampClaim ?? "null",
+                                context.HttpContext.Request.Path);
+
                             context.Fail("Token is missing required claims.");
                             return;
                         }
 
                         if (!Guid.TryParse(userId, out Guid parsedUserId))
                         {
+                            logger.LogWarning(
+                                "JWT contains invalid user identifier: '{UserId}' - Path: {Path}",
+                                userId,
+                                context.HttpContext.Request.Path);
+
                             context.Fail("Invalid user identifier in token.");
                             return;
                         }
 
-                        User? user = await userManager.FindByIdAsync(parsedUserId.ToString());
-
-                        if (user is null)
+                        try
                         {
-                            context.Fail("User no longer exists.");
-                            return;
-                        }
+                            UserManager<User> userManager = scope.ServiceProvider
+                                .GetRequiredService<UserManager<User>>();
 
-                        if (!string.Equals(securityStampClaim, user.SecurityStamp, StringComparison.Ordinal))
-                        {
-                            context.Fail("Security stamp has changed. Token is no longer valid.");
+                            User? user = await userManager.FindByIdAsync(parsedUserId.ToString());
+
+                            if (user is null)
+                            {
+                                logger.LogWarning(
+                                    "JWT user not found: '{UserId}' - Path: {Path}",
+                                    parsedUserId,
+                                    context.HttpContext.Request.Path);
+
+                                context.Fail("User no longer exists.");
+                                return;
+                            }
+
+                            if (!string.Equals(securityStampClaim, user.SecurityStamp, StringComparison.Ordinal))
+                            {
+                                logger.LogWarning(
+                                    "JWT security stamp mismatch for user '{UserId}'. Token invalidated. Path: {Path}",
+                                    parsedUserId,
+                                    context.HttpContext.Request.Path);
+
+                                context.Fail("Security stamp has changed. Token is no longer valid.");
+                            }
                         }
+                        catch (Exception ex)
+                        {
+                            logger.LogError(ex,
+                                "JWT security stamp validation failed for user '{UserId}'. Path: {Path}",
+                                parsedUserId,
+                                context.HttpContext.Request.Path);
+
+                            context.Fail("Token validation error.");
+                        }
+                    },
+                    OnChallenge = async context =>
+                    {
+                        context.HandleResponse();
+
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/problem+json";
+
+                        var problem = new
+                        {
+                            type = "https://tools.ietf.org/html/rfc7235#section-3.1",
+                            title = "Unauthorized",
+                            status = StatusCodes.Status401Unauthorized,
+                            detail = context.ErrorDescription ?? "Authentication is required to access this resource.",
+                            instance = context.HttpContext.Request.Path.ToString()
+                        };
+
+                        await context.Response.WriteAsync(JsonSerializer.Serialize(problem));
                     }
                 };
             });

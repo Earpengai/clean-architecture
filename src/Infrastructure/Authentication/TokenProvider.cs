@@ -20,6 +20,11 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
 
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
+        string securityStamp = user.SecurityStamp
+            ?? throw new InvalidOperationException(
+                $"Cannot create JWT for user '{user.Id}': SecurityStamp is null. " +
+                "The user may have been created before the Identity migration. Drop and recreate the database.");
+
         List<Claim> claims =
         [
             new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
@@ -28,7 +33,7 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
             new Claim(JwtRegisteredClaimNames.Nbf, EpochTime.GetIntDate(utcNow).ToString(CultureInfo.InvariantCulture)),
             new Claim("tenant_ids", JsonSerializer.Serialize(tenantIdentifiers)),
             new Claim("is_system_admin", isSystemAdministrator.ToString().ToUpperInvariant()),
-            new Claim("security_stamp", user.SecurityStamp!)
+            new Claim("security_stamp", securityStamp)
         ];
 
         var tokenDescriptor = new SecurityTokenDescriptor
