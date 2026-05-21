@@ -94,3 +94,12 @@ export interface EnableTwoFactorResponse {
   sharedKey: string;
   authenticatorUri: string;
 }
+
+export interface UserProfileResponse {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  twoFactorEnabled: boolean;
+  emailConfirmed: boolean;
+}

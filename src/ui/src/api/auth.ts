@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTenantStore } from "@/stores/tenantStore";
-import { apiPost, apiPut, setAuthTokens, getAuthToken } from "./client";
-import type { LoginResponse, EnableTwoFactorResponse } from "./types";
+import { apiGet, apiPost, apiPut, setAuthTokens, getAuthToken } from "./client";
+import type { LoginResponse, EnableTwoFactorResponse, UserProfileResponse } from "./types";
 
 interface LoginPayload {
   email: string;
@@ -151,6 +151,13 @@ export function useConfirmTwoFactor() {
 export function useDisableTwoFactor() {
   return useMutation({
     mutationFn: () => apiPost<void>("/users/disable-2fa"),
+  });
+}
+
+export function useGetProfile() {
+  return useQuery({
+    queryKey: ["user-profile"],
+    queryFn: () => apiGet<UserProfileResponse>("/users/profile"),
   });
 }
 

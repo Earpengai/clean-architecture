@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  useGetProfile,
   useUpdateProfile,
   useChangePassword,
   useChangeEmail,
@@ -49,6 +50,21 @@ export function ProfilePage() {
   const [twoFactorStep, setTwoFactorStep] = useState<"idle" | "enable" | "confirm" | "enabled">("idle");
   const [sharedKey, setSharedKey] = useState("");
   const [authenticatorUri, setAuthenticatorUri] = useState("");
+
+  const { data: profile, isLoading, isError } = useGetProfile();
+
+  useEffect(() => {
+    if (profile) {
+      setFirstName(profile.firstName);
+      setLastName(profile.lastName);
+    }
+  }, [profile]);
+
+  useEffect(() => {
+    if (profile?.twoFactorEnabled) {
+      setTwoFactorStep("enabled");
+    }
+  }, [profile]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,6 +143,10 @@ export function ProfilePage() {
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
       </div>
 
+      {isLoading && <p className="text-sm text-gray-400">Loading...</p>}
+      {isError && <p className="text-sm text-red-500">Failed to load profile.</p>}
+
+      {!isLoading && !isError && (
       <div className="space-y-6 max-w-lg">
         <Card>
           <CardHeader>
@@ -190,6 +210,12 @@ export function ProfilePage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
+            {profile && (
+              <div className="space-y-1">
+                <Label>Current Email</Label>
+                <p className="text-sm text-gray-500">{profile.email}</p>
+              </div>
+            )}
             <form onSubmit={handleChangeEmail} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="newEmail">New Email</Label>
@@ -205,7 +231,9 @@ export function ProfilePage() {
                 <ShieldCheck className="h-4 w-4 text-gray-400" />
                 <span className="text-sm text-gray-600">Email Verification</span>
               </div>
-              {verifySent ? (
+              {profile?.emailConfirmed ? (
+                <span className="text-sm text-green-600 font-medium">Verified</span>
+              ) : verifySent ? (
                 <span className="text-sm text-green-600">Verification email sent.</span>
               ) : (
                 <Button variant="outline" size="sm" onClick={handleRequestVerification} disabled={requestVerification.isPending}>
@@ -299,6 +327,7 @@ export function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+      )}
     </div>
   );
 }
