@@ -59,6 +59,8 @@ internal sealed class GetTenantFeaturesQueryHandler(
         {
             SubscriptionPlan = tenant.SubscriptionPlan.ToString(),
             SubscriptionStatus = tenant.SubscriptionStatus.ToString(),
+            BillingPeriod = tenant.BillingPeriod.ToString(),
+            SubscriptionExpiresAt = tenant.SubscriptionExpiresAt?.ToString("O"),
             Features = features,
             Limits = limits
         };

@@ -141,8 +141,16 @@ export interface LimitState {
 export interface TenantFeaturesResponse {
   subscriptionPlan: string;
   subscriptionStatus: string;
+  billingPeriod: string;
+  subscriptionExpiresAt: string | null;
   features: FeatureState[];
   limits: LimitState[];
+}
+
+export interface PricingResponse {
+  plan: string;
+  billingPeriod: string;
+  amount: number;
 }
 
 export interface InitiatePaymentResponse {

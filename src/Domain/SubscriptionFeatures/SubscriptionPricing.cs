@@ -8,7 +8,7 @@ public static class SubscriptionPricing
         new Dictionary<(SubscriptionPlan, SubscriptionBillingPeriod), decimal>
         {
             [(SubscriptionPlan.Free, SubscriptionBillingPeriod.None)] = 0m,
-            [(SubscriptionPlan.Pro, SubscriptionBillingPeriod.Monthly)] = 29.99m,
+            [(SubscriptionPlan.Pro, SubscriptionBillingPeriod.Monthly)] = 0.01m,
             [(SubscriptionPlan.Pro, SubscriptionBillingPeriod.Yearly)] = 299.99m,
             [(SubscriptionPlan.Enterprise, SubscriptionBillingPeriod.Monthly)] = 99.99m,
             [(SubscriptionPlan.Enterprise, SubscriptionBillingPeriod.Yearly)] = 999.99m,

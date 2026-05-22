@@ -4,6 +4,8 @@ public sealed record TenantFeaturesResponse
 {
     public string SubscriptionPlan { get; init; }
     public string SubscriptionStatus { get; init; }
+    public string BillingPeriod { get; init; }
+    public string? SubscriptionExpiresAt { get; init; }
     public List<FeatureState> Features { get; init; } = [];
     public List<LimitState> Limits { get; init; } = [];
 }

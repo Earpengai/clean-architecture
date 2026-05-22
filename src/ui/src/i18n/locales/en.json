@@ -81,6 +81,8 @@
     "expired": "QR code has expired.",
     "expiredDesc": "Please generate a new QR code to continue.",
     "generateNew": "Generate New QR",
+    "currentPlan": "Current Plan",
+    "expires": "Expires",
     "history": "Payment History",
     "noHistory": "No payment history."
   }

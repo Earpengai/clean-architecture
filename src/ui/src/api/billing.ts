@@ -1,8 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost } from "./client";
-import type { InitiatePaymentResponse, CheckPaymentResponse, PaymentResponse } from "./types";
+import type { InitiatePaymentResponse, CheckPaymentResponse, PaymentResponse, PricingResponse } from "./types";
 
 const BILLING_KEY = ["tenant", "subscription", "payment"] as const;
+const PRICING_KEY = ["tenant", "subscription", "pricing"] as const;
+
+export function usePricing() {
+  return useQuery({
+    queryKey: PRICING_KEY,
+    queryFn: () => apiGet<PricingResponse[]>("/tenant/subscription/pricing"),
+  });
+}
 
 export function useInitiatePayment() {
   const queryClient = useQueryClient();

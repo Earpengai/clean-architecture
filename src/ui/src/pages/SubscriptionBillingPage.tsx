@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import QRCode from "qrcode";
-import { useInitiatePayment, useCheckPayment, usePaymentHistory } from "@/api/billing";
+import { useInitiatePayment, useCheckPayment, usePaymentHistory, usePricing } from "@/api/billing";
+import { useTenantSubscription } from "@/api/subscription";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,55 +19,73 @@ interface PlanOption {
   badgeColor: string;
 }
 
-const plans: PlanOption[] = [
-  {
-    plan: 1,
-    planLabel: "Pro",
-    monthlyPrice: 29.99,
-    yearlyPrice: 299.99,
-    monthlyText: "$29.99/mo",
-    yearlyText: "$299.99/yr",
-    badgeColor: "bg-blue-100 text-blue-700",
-  },
-  {
-    plan: 2,
-    planLabel: "Enterprise",
-    monthlyPrice: 99.99,
-    yearlyPrice: 999.99,
-    monthlyText: "$99.99/mo",
-    yearlyText: "$999.99/yr",
-    badgeColor: "bg-purple-100 text-purple-700",
-  },
-];
+function planBadgeColor(plan: string) {
+  switch (plan) {
+    case "Free": return "bg-gray-100 text-gray-700";
+    case "Pro": return "bg-blue-100 text-blue-700";
+    case "Enterprise": return "bg-purple-100 text-purple-700";
+    default: return "bg-gray-100 text-gray-700";
+  }
+}
+
+function parsePlanLabel(plan: string) {
+  switch (plan) {
+    case "Free": return 0;
+    case "Pro": return 1;
+    case "Enterprise": return 2;
+    default: return -1;
+  }
+}
+
+function parseBillingPeriod(period: string) {
+  switch (period) {
+    case "None": return 0;
+    case "Monthly": return 1;
+    case "Yearly": return 2;
+    default: return -1;
+  }
+}
+
+function periodLabel(period: string) {
+  switch (period) {
+    case "Monthly": return "Monthly";
+    case "Yearly": return "Yearly";
+    default: return "";
+  }
+}
 
 function PlanCard({
   option,
   selected,
   billingPeriod,
+  isCurrent,
   onSelect,
 }: {
   option: PlanOption;
   selected: boolean;
   billingPeriod: number;
+  isCurrent: boolean;
   onSelect: (plan: number, period: number) => void;
 }) {
   const isYearly = billingPeriod === 2;
-  const price = isYearly ? option.yearlyPrice : option.monthlyPrice;
   const priceText = isYearly ? option.yearlyText : option.monthlyText;
 
   return (
     <Card
-      className={`cursor-pointer transition-all ${
-        selected
+      className={`transition-all ${isCurrent ? "opacity-60 ring-1 ring-gray-200" : "cursor-pointer hover:border-gray-300"} ${
+        selected && !isCurrent
           ? "ring-2 ring-indigo-500 border-indigo-200"
-          : "hover:border-gray-300"
+          : ""
       }`}
-      onClick={() => onSelect(option.plan, billingPeriod)}
+      onClick={() => !isCurrent && onSelect(option.plan, billingPeriod)}
     >
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-3">
           <Badge className={option.badgeColor}>{option.planLabel}</Badge>
-          {selected && (
+          {isCurrent && (
+            <Badge className="bg-gray-100 text-gray-600">Current</Badge>
+          )}
+          {selected && !isCurrent && (
             <Badge className="bg-indigo-100 text-indigo-700">
               <Check className="h-3 w-3 mr-1" />
               Selected
@@ -77,28 +96,30 @@ function PlanCard({
         <div className="flex gap-2 mt-4">
           <button
             type="button"
+            disabled={isCurrent}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(option.plan, 1);
+              if (!isCurrent) onSelect(option.plan, 1);
             }}
             className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-              selected && billingPeriod === 1
+              selected && billingPeriod === 1 && !isCurrent
                 ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 text-gray-500 hover:border-gray-300"
+                : "border-gray-200 text-gray-500 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
             }`}
           >
             Monthly
           </button>
           <button
             type="button"
+            disabled={isCurrent}
             onClick={(e) => {
               e.stopPropagation();
-              onSelect(option.plan, 2);
+              if (!isCurrent) onSelect(option.plan, 2);
             }}
             className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-              selected && billingPeriod === 2
+              selected && billingPeriod === 2 && !isCurrent
                 ? "border-indigo-500 bg-indigo-50 text-indigo-700"
-                : "border-gray-200 text-gray-500 hover:border-gray-300"
+                : "border-gray-200 text-gray-500 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
             }`}
           >
             Yearly
@@ -231,8 +252,36 @@ export function SubscriptionBillingPage() {
 
   const initiatePayment = useInitiatePayment();
   const { data: history, isLoading: historyLoading } = usePaymentHistory();
+  const { data: pricing, isLoading: pricingLoading } = usePricing();
+  const { data: currentSub, isLoading: subLoading } = useTenantSubscription();
 
-  const selectedPlanOption = plans.find((p) => p.plan === selectedPlan);
+  const currentPlanNum = currentSub ? parsePlanLabel(currentSub.subscriptionPlan) : -1;
+  const currentPeriodNum = currentSub ? parseBillingPeriod(currentSub.billingPeriod) : -1;
+
+  const plans: PlanOption[] = useMemo(() => {
+    if (!pricing) return [];
+
+    const grouped: Record<string, { monthly: number; yearly: number }> = {};
+    for (const p of pricing) {
+      if (p.plan === "Free") continue;
+      if (!grouped[p.plan]) grouped[p.plan] = { monthly: 0, yearly: 0 };
+      if (p.billingPeriod === "Monthly") grouped[p.plan].monthly = p.amount;
+      if (p.billingPeriod === "Yearly") grouped[p.plan].yearly = p.amount;
+    }
+
+    return Object.entries(grouped).map(([planLabel, prices]) => ({
+      plan: parsePlanLabel(planLabel),
+      planLabel,
+      monthlyPrice: prices.monthly,
+      yearlyPrice: prices.yearly,
+      monthlyText: `$${prices.monthly.toFixed(2)}/mo`,
+      yearlyText: `$${prices.yearly.toFixed(2)}/yr`,
+      badgeColor: planBadgeColor(planLabel),
+    }));
+  }, [pricing]);
+
+  const isCurrentPlan = (planNum: number, periodNum: number) =>
+    planNum === currentPlanNum && periodNum === currentPeriodNum;
 
   const handleSelectPlan = (plan: number, period: number) => {
     setSelectedPlan(plan);
@@ -280,27 +329,59 @@ export function SubscriptionBillingPage() {
         <h1 className="text-2xl font-bold text-gray-900">{t("billing.title")}</h1>
       </div>
 
+      {subLoading ? (
+        <Skeleton className="h-10 w-64" />
+      ) : currentSub && currentSub.subscriptionPlan !== "Free" ? (
+        <div className="flex items-center gap-3 p-3 rounded-md bg-gray-50 border border-gray-100">
+          <span className="text-sm text-gray-500">{t("billing.currentPlan")}:</span>
+          <Badge className={planBadgeColor(currentSub.subscriptionPlan)}>
+            {currentSub.subscriptionPlan}
+          </Badge>
+          {currentSub.billingPeriod !== "None" && (
+            <span className="text-xs text-gray-500">{periodLabel(currentSub.billingPeriod)}</span>
+          )}
+          {currentSub.subscriptionExpiresAt && (
+            <span className="text-xs text-gray-400">
+              {t("billing.expires")}: {new Date(currentSub.subscriptionExpiresAt).toLocaleDateString()}
+            </span>
+          )}
+        </div>
+      ) : null}
+
       {error && (
         <div className="p-3 rounded-md bg-red-50 border border-red-200 text-sm text-red-600">{error}</div>
       )}
 
       {!paymentData && (
         <div>
-          <p className="text-sm text-gray-500 mb-4">{t("billing.selectPlan")}</p>
-          <div className="grid gap-4 md:grid-cols-2">
-            {plans.map((option) => (
-              <PlanCard
-                key={option.plan}
-                option={option}
-                selected={selectedPlan === option.plan}
-                billingPeriod={selectedPlan === option.plan ? billingPeriod : 1}
-                onSelect={handleSelectPlan}
-              />
-            ))}
-          </div>
+          {pricingLoading ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              <Skeleton className="h-48 w-full" />
+              <Skeleton className="h-48 w-full" />
+            </div>
+          ) : plans.length > 0 ? (
+            <>
+              <p className="text-sm text-gray-500 mb-4">{t("billing.selectPlan")}</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                {plans.map((option) => (
+                  <PlanCard
+                    key={option.plan}
+                    option={option}
+                    selected={selectedPlan === option.plan}
+                    billingPeriod={selectedPlan === option.plan ? billingPeriod : 1}
+                    isCurrent={isCurrentPlan(option.plan, 1) || isCurrentPlan(option.plan, 2)}
+                    onSelect={handleSelectPlan}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <p className="text-sm text-gray-400">No plans available.</p>
+          )}
+
           <Button
             className="mt-6 w-full"
-            disabled={selectedPlan === null || initiatePayment.isPending}
+            disabled={selectedPlan === null || initiatePayment.isPending || pricingLoading}
             onClick={handlePay}
           >
             {initiatePayment.isPending ? (
