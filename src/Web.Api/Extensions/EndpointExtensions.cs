@@ -40,4 +40,9 @@ public static class EndpointExtensions
     {
         return app.RequireAuthorization(permission);
     }
+
+    public static RouteHandlerBuilder HasFeature(this RouteHandlerBuilder app, string feature)
+    {
+        return app.RequireAuthorization(feature);
+    }
 }

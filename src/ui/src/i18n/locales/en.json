@@ -11,6 +11,8 @@
     "invitations": "Invitations",
     "profile": "Profile",
     "admin": "Admin",
+    "adminTenants": "Tenants",
+    "subscription": "Subscription",
     "backToApp": "Back to Application"
   },
   "section": {
@@ -53,5 +55,16 @@
     "complete": "Complete",
     "backToTodos": "Back to Todos",
     "todoDetail": "Todo Detail"
+  },
+  "subscription": {
+    "adminTitle": "Subscription Plans",
+    "title": "Subscription",
+    "plan": "Plan",
+    "status": "Status",
+    "features": "Features",
+    "limits": "Limits",
+    "unlimited": "Unlimited",
+    "noFeatures": "No features available.",
+    "noLimits": "No limits configured."
   }
 }

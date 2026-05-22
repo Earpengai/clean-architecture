@@ -15,4 +15,12 @@ public static class TenantErrors
     public static Error NotFound(string identifier) => Error.NotFound(
         "Tenants.NotFound",
         $"The tenant with the identifier = '{identifier}' was not found");
+
+    public static readonly Error FeatureNotFound = Error.NotFound(
+        "Tenants.FeatureNotFound",
+        "The specified subscription feature was not found");
+
+    public static readonly Error LimitNotFound = Error.NotFound(
+        "Tenants.LimitNotFound",
+        "The specified subscription limit was not found");
 }

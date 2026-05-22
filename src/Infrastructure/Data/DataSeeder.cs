@@ -1,5 +1,10 @@
+using System.Collections.Immutable;
+using Application.Abstractions.Data;
+using Domain.SubscriptionFeatures;
+using Domain.Tenants;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -7,10 +12,18 @@ namespace Infrastructure.Data;
 
 internal sealed class DataSeeder(
     UserManager<User> userManager,
+    IApplicationDbContext dbContext,
     IConfiguration configuration,
     ILogger<DataSeeder> logger)
 {
     public async Task SeedAsync()
+    {
+        await SeedSystemAdministratorAsync();
+        await SeedPlanFeaturesAsync();
+        await SeedPlanLimitsAsync();
+    }
+
+    private async Task SeedSystemAdministratorAsync()
     {
         string? adminEmail = configuration["AdminSettings:Email"];
         string? adminPassword = configuration["AdminSettings:Password"];
@@ -54,5 +67,71 @@ internal sealed class DataSeeder(
                 logger.LogError("Identity error: {Code} - {Description}", error.Code, error.Description);
             }
         }
+    }
+
+    private async Task SeedPlanFeaturesAsync()
+    {
+        bool hasAny = await dbContext.PlanFeatures.AnyAsync();
+
+        if (hasAny)
+        {
+            return;
+        }
+
+        foreach (SubscriptionPlan plan in Enum.GetValues<SubscriptionPlan>())
+        {
+            HashSet<string> features = DefaultPlanFeatures.GetDefaults(plan);
+
+            foreach (string feature in SubscriptionFeature.All)
+            {
+                var planFeature = new PlanFeature
+                {
+                    Plan = plan,
+                    Feature = feature,
+                    IsEnabled = features.Contains(feature)
+                };
+
+                dbContext.PlanFeatures.Add(planFeature);
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        logger.LogInformation("Default plan features seeded for {PlanCount} plans", Enum.GetValues<SubscriptionPlan>().Length);
+    }
+
+    private async Task SeedPlanLimitsAsync()
+    {
+        bool hasAny = await dbContext.PlanLimits.AnyAsync();
+
+        if (hasAny)
+        {
+            return;
+        }
+
+        foreach (SubscriptionPlan plan in Enum.GetValues<SubscriptionPlan>())
+        {
+            IReadOnlyDictionary<string, int> limits = DefaultPlanLimits.GetDefaults(plan);
+
+            foreach (string limit in SubscriptionLimit.All)
+            {
+                int value = limits.TryGetValue(limit, out int existingValue)
+                    ? existingValue
+                    : SubscriptionLimit.Unlimited;
+
+                var planLimit = new PlanLimit
+                {
+                    Plan = plan,
+                    Limit = limit,
+                    Value = value
+                };
+
+                dbContext.PlanLimits.Add(planLimit);
+            }
+        }
+
+        await dbContext.SaveChangesAsync();
+
+        logger.LogInformation("Default plan limits seeded for {PlanCount} plans", Enum.GetValues<SubscriptionPlan>().Length);
     }
 }

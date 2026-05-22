@@ -10,6 +10,8 @@ import {
   Mail,
   User,
   ArrowLeft,
+  CreditCard,
+  Settings2,
 } from "lucide-react";
 
 export type SidebarSection = "app" | "tenant" | "admin";
@@ -57,10 +59,12 @@ export function SidebarNav({ section }: SidebarNavProps) {
     { label: t("nav.roles"), path: "/tenant/roles", icon: <Shield className="h-4 w-4" /> },
     { label: t("nav.users"), path: "/tenant/users", icon: <Users className="h-4 w-4" /> },
     { label: t("nav.invitations"), path: "/tenant/invitations", icon: <Mail className="h-4 w-4" /> },
+    { label: t("nav.subscription"), path: "/tenant/subscription", icon: <CreditCard className="h-4 w-4" /> },
   ];
 
   const adminItems: NavItem[] = [
-    { label: t("nav.admin"), path: "/admin/tenants", icon: <Building2 className="h-4 w-4" /> },
+    { label: t("nav.adminTenants"), path: "/admin/tenants", icon: <Building2 className="h-4 w-4" /> },
+    { label: t("nav.subscription"), path: "/admin/subscription", icon: <Settings2 className="h-4 w-4" /> },
   ];
 
   const items =

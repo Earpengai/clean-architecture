@@ -22,12 +22,16 @@ internal sealed class PermissionAuthorizationPolicyProvider : DefaultAuthorizati
             return policy;
         }
 
-        AuthorizationPolicy permissionPolicy = new AuthorizationPolicyBuilder()
-            .AddRequirements(new PermissionRequirement(policyName))
+        IAuthorizationRequirement requirement = policyName.StartsWith("feature:", StringComparison.Ordinal)
+            ? new SubscriptionFeatureRequirement(policyName)
+            : new PermissionRequirement(policyName);
+
+        AuthorizationPolicy newPolicy = new AuthorizationPolicyBuilder()
+            .AddRequirements(requirement)
             .Build();
 
-        _authorizationOptions.AddPolicy(policyName, permissionPolicy);
+        _authorizationOptions.AddPolicy(policyName, newPolicy);
 
-        return permissionPolicy;
+        return newPolicy;
     }
 }

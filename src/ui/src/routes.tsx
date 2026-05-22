@@ -21,6 +21,8 @@ import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { LoginTwoFactorPage } from "@/pages/LoginTwoFactorPage";
 import { OnboardingGuard } from "@/components/OnboardingGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
+import { AdminSubscriptionPage } from "@/pages/admin/AdminSubscriptionPage";
+import { SubscriptionPage } from "@/pages/SubscriptionPage";
 
 function LegacyTodoRedirect() {
   const { id } = useParams<{ id: string }>();
@@ -70,12 +72,14 @@ export function AppRoutes() {
           <Route path="users" element={<UsersPage />} />
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
+          <Route path="subscription" element={<SubscriptionPage />} />
         </Route>
 
         {/* Admin Section */}
         <Route element={<AdminGuard />}>
           <Route path="admin" element={<AppShell section="admin" />}>
             <Route path="tenants" element={<AdminTenantsPage />} />
+            <Route path="subscription" element={<AdminSubscriptionPage />} />
           </Route>
         </Route>
       </Route>

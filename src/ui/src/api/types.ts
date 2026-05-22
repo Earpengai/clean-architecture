@@ -115,3 +115,32 @@ export interface UserProfileResponse {
   twoFactorEnabled: boolean;
   emailConfirmed: boolean;
 }
+
+export interface PlanFeatureResponse {
+  plan: string;
+  feature: string;
+  isEnabled: boolean;
+}
+
+export interface PlanLimitResponse {
+  plan: string;
+  limit: string;
+  value: number;
+}
+
+export interface FeatureState {
+  feature: string;
+  isEnabled: boolean;
+}
+
+export interface LimitState {
+  limit: string;
+  value: number;
+}
+
+export interface TenantFeaturesResponse {
+  subscriptionPlan: string;
+  subscriptionStatus: string;
+  features: FeatureState[];
+  limits: LimitState[];
+}

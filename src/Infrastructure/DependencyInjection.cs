@@ -5,6 +5,7 @@ using System.Text.Json;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Email;
+using Application.Abstractions.SubscriptionFeatures;
 using Domain.Tenants;
 using Domain.Users;
 using Finbuckle.MultiTenant;
@@ -15,6 +16,7 @@ using Infrastructure.Database;
 using Infrastructure.DomainEvents;
 using Infrastructure.Email;
 using Infrastructure.Multitenancy;
+using Infrastructure.SubscriptionFeatures;
 using Infrastructure.Time;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -57,6 +59,8 @@ public static class DependencyInjection
         services.AddTransient<DataSeeder>();
 
         services.AddScoped<IEmailService, MailHogEmailService>();
+
+        services.AddScoped<ISubscriptionFeatureProvider, SubscriptionFeatureProvider>();
 
         return services;
     }
@@ -245,6 +249,8 @@ public static class DependencyInjection
         services.AddTransient<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
         services.AddTransient<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
+
+        services.AddTransient<IAuthorizationHandler, SubscriptionFeatureAuthorizationHandler>();
 
         return services;
     }
