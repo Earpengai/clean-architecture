@@ -23,4 +23,8 @@ public static class InvitationErrors
     public static readonly Error EmailAlreadyMember = Error.Conflict(
         "Invitations.EmailAlreadyMember",
         "This email is already a member of the tenant");
+
+    public static readonly Error EmailMismatch = Error.Problem(
+        "Invitations.EmailMismatch",
+        "The authenticated user's email does not match the invitation email");
 }

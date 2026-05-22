@@ -12,6 +12,7 @@ import { RolesPage } from "@/pages/RolesPage";
 import { UsersPage } from "@/pages/UsersPage";
 import { UserDetailPage } from "@/pages/UserDetailPage";
 import { InvitationsPage } from "@/pages/InvitationsPage";
+import { AcceptInvitationPage } from "@/pages/AcceptInvitationPage";
 import { LoginPage } from "@/pages/LoginPage";
 import { RegisterPage } from "@/pages/RegisterPage";
 import { ProfilePage } from "@/pages/ProfilePage";
@@ -52,6 +53,9 @@ export function AppRoutes() {
         <Route path="auth/verify-email" element={<VerifyEmailPage />} />
         <Route path="auth/login-2fa" element={<LoginTwoFactorPage />} />
       </Route>
+
+      {/* === PUBLIC ACCEPT INVITATION === */}
+      <Route path="invitations/:token/accept" element={<AcceptInvitationPage />} />
 
       {/* === PROTECTED ROUTES === */}
       <Route element={<ProtectedRoute />}>

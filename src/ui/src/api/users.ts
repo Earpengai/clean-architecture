@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiDelete, setAuthTokens } from "./client";
-import type { UserResponse, InvitationResponse, AcceptInvitationResponse } from "./types";
+import type { UserResponse, InvitationResponse, MyInvitationResponse, AcceptInvitationResponse } from "./types";
+import { TENANTS_KEY } from "./tenants";
 
 const USERS_KEY = ["users"] as const;
 const INVITATIONS_KEY = ["invitations"] as const;
+const MY_INVITATIONS_KEY = ["invitations", "my"] as const;
 
 export function useUsers() {
   return useQuery({
@@ -70,6 +72,27 @@ export function useAcceptInvitation() {
     onSuccess: (data) => {
       setAuthTokens(data.accessToken, data.refreshToken);
       queryClient.clear();
+    },
+  });
+}
+
+export function useMyInvitations() {
+  return useQuery({
+    queryKey: MY_INVITATIONS_KEY,
+    queryFn: () => apiGet<MyInvitationResponse[]>("/invitations/my"),
+  });
+}
+
+export function useAcceptInvitationAuthenticated() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (token: string) =>
+      apiPost<AcceptInvitationResponse>(`/invitations/${encodeURIComponent(token)}/accept-authenticated`),
+    onSuccess: (data) => {
+      setAuthTokens(data.accessToken, data.refreshToken);
+      queryClient.invalidateQueries({ queryKey: MY_INVITATIONS_KEY });
+      queryClient.invalidateQueries({ queryKey: TENANTS_KEY });
     },
   });
 }

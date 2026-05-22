@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, setAuthTokens } from "./client";
 import type { TenantResponse, CreateTenantPayload, CreateTenantResponse } from "./types";
 
-const TENANTS_KEY = ["tenants"] as const;
+export const TENANTS_KEY = ["tenants"] as const;
 
 export function useMyTenants() {
   return useQuery({

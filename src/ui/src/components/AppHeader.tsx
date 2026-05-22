@@ -5,6 +5,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useLogout } from "@/api/auth";
 import { useSidebar } from "@/components/SidebarProvider";
 import { TenantSwitcher } from "@/features/tenants/components/TenantSwitcher";
+import { InvitationNotification } from "@/features/invitations/components/InvitationNotification";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -103,6 +104,8 @@ export function AppHeader({ section }: AppHeaderProps) {
       </DropdownMenu>
 
       {isAuthenticated && <TenantSwitcher />}
+
+      {isAuthenticated && <InvitationNotification />}
 
       <div className="flex items-center gap-2">
         {isAuthenticated ? (

@@ -66,6 +66,15 @@ export interface InvitationResponse {
   tokenExpiry: string;
 }
 
+export interface MyInvitationResponse {
+  id: string;
+  tenantName: string;
+  roleName: string;
+  token: string;
+  createdAt: string;
+  tokenExpiry: string;
+}
+
 export interface TenantAdminResponse {
   id: string;
   name: string;

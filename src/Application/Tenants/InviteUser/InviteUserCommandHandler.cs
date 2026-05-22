@@ -33,6 +33,14 @@ internal sealed class InviteUserCommandHandler(
             return Result.Failure<Guid>(RoleErrors.NotFound(command.RoleId));
         }
 
+        Tenant? tenant = await context.Tenants
+            .FirstOrDefaultAsync(t => t.Id == userContext.TenantId!.Value, cancellationToken);
+
+        if (tenant is null)
+        {
+            return Result.Failure<Guid>(TenantErrors.NotFound(userContext.TenantId!.Value));
+        }
+
         var invitation = new Invitation
         {
             Id = Guid.NewGuid(),
@@ -44,6 +52,9 @@ internal sealed class InviteUserCommandHandler(
             Status = InvitationStatus.Pending,
             CreatedAt = DateTime.UtcNow
         };
+
+        invitation.Raise(new InvitationCreatedDomainEvent(
+            invitation.Id, invitation.Email, invitation.Token, tenant.Name));
 
         context.Invitations.Add(invitation);
 
