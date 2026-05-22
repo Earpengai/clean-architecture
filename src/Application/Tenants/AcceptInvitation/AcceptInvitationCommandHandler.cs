@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Tenants;
@@ -10,10 +12,11 @@ namespace Application.Tenants.AcceptInvitation;
 
 internal sealed class AcceptInvitationCommandHandler(
     IApplicationDbContext context,
-    UserManager<User> userManager)
-    : ICommandHandler<AcceptInvitationCommand, Guid>
+    UserManager<User> userManager,
+    ITokenProvider tokenProvider)
+    : ICommandHandler<AcceptInvitationCommand, AcceptInvitationResponse>
 {
-    public async Task<Result<Guid>> Handle(AcceptInvitationCommand command, CancellationToken cancellationToken)
+    public async Task<Result<AcceptInvitationResponse>> Handle(AcceptInvitationCommand command, CancellationToken cancellationToken)
     {
         Invitation? invitation = await context.Invitations
             .Include(i => i.Role)
@@ -21,17 +24,17 @@ internal sealed class AcceptInvitationCommandHandler(
 
         if (invitation is null)
         {
-            return Result.Failure<Guid>(InvitationErrors.NotFound);
+            return Result.Failure<AcceptInvitationResponse>(InvitationErrors.NotFound);
         }
 
         if (invitation.Status != InvitationStatus.Pending)
         {
-            return Result.Failure<Guid>(InvitationErrors.AlreadyAccepted);
+            return Result.Failure<AcceptInvitationResponse>(InvitationErrors.AlreadyAccepted);
         }
 
         if (invitation.TokenExpiry < DateTime.UtcNow)
         {
-            return Result.Failure<Guid>(InvitationErrors.Expired);
+            return Result.Failure<AcceptInvitationResponse>(InvitationErrors.Expired);
         }
 
         User? existingUser = await userManager.FindByEmailAsync(invitation.Email);
@@ -45,7 +48,7 @@ internal sealed class AcceptInvitationCommandHandler(
 
             if (alreadyMember)
             {
-                return Result.Failure<Guid>(InvitationErrors.EmailAlreadyMember);
+                return Result.Failure<AcceptInvitationResponse>(InvitationErrors.EmailAlreadyMember);
             }
 
             user = existingUser;
@@ -67,7 +70,7 @@ internal sealed class AcceptInvitationCommandHandler(
 
             if (!result.Succeeded)
             {
-                return Result.Failure<Guid>(UserErrors.FromIdentityResult(result));
+                return Result.Failure<AcceptInvitationResponse>(UserErrors.FromIdentityResult(result));
             }
         }
 
@@ -85,6 +88,34 @@ internal sealed class AcceptInvitationCommandHandler(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return user.Id;
+        List<string> tenantIdentifiers = await context.Memberships
+            .Where(m => m.UserId == user.Id)
+            .Join(context.Tenants,
+                m => m.TenantId,
+                t => t.Id,
+                (m, t) => t.Identifier)
+            .ToListAsync(cancellationToken);
+
+        string accessToken = tokenProvider.Create(
+            user, tenantIdentifiers, user.IsSystemAdministrator);
+
+        string plainRefreshToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+        string refreshTokenHash = Convert.ToHexString(
+            SHA256.HashData(Convert.FromHexString(plainRefreshToken)));
+
+        var refreshToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.RefreshTokens.Add(refreshToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return new AcceptInvitationResponse(user.Id, accessToken, plainRefreshToken);
     }
 }

@@ -16,7 +16,7 @@ internal sealed class Create : IEndpoint
     {
         app.MapPost("tenants", async (
             Request request,
-            ICommandHandler<CreateTenantCommand, Guid> handler,
+            ICommandHandler<CreateTenantCommand, CreateTenantResponse> handler,
             IUserContext userContext,
             CancellationToken cancellationToken) =>
         {
@@ -25,7 +25,7 @@ internal sealed class Create : IEndpoint
                 request.Identifier,
                 userContext.UserId);
 
-            Result<Guid> result = await handler.Handle(command, cancellationToken);
+            Result<CreateTenantResponse> result = await handler.Handle(command, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

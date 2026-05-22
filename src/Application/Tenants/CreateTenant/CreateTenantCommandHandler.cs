@@ -1,23 +1,28 @@
+using System.Security.Cryptography;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Permissions;
 using Domain.Tenants;
+using Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Tenants.CreateTenant;
 
-internal sealed class CreateTenantCommandHandler(IApplicationDbContext context)
-    : ICommandHandler<CreateTenantCommand, Guid>
+internal sealed class CreateTenantCommandHandler(
+    IApplicationDbContext context,
+    ITokenProvider tokenProvider)
+    : ICommandHandler<CreateTenantCommand, CreateTenantResponse>
 {
-    public async Task<Result<Guid>> Handle(CreateTenantCommand command, CancellationToken cancellationToken)
+    public async Task<Result<CreateTenantResponse>> Handle(CreateTenantCommand command, CancellationToken cancellationToken)
     {
         bool identifierExists = await context.Tenants
             .AnyAsync(t => t.Identifier == command.Identifier, cancellationToken);
 
         if (identifierExists)
         {
-            return Result.Failure<Guid>(TenantErrors.IdentifierNotUnique);
+            return Result.Failure<CreateTenantResponse>(TenantErrors.IdentifierNotUnique);
         }
 
         var tenant = new Tenant
@@ -51,7 +56,38 @@ internal sealed class CreateTenantCommandHandler(IApplicationDbContext context)
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return tenant.Id;
+        User? user = await context.Users.FirstOrDefaultAsync(
+            u => u.Id == command.OwnerId, cancellationToken);
+
+        List<string> tenantIdentifiers = await context.Memberships
+            .Where(m => m.UserId == command.OwnerId)
+            .Join(context.Tenants,
+                m => m.TenantId,
+                t => t.Id,
+                (m, t) => t.Identifier)
+            .ToListAsync(cancellationToken);
+
+        string accessToken = tokenProvider.Create(
+            user!, tenantIdentifiers, user!.IsSystemAdministrator);
+
+        string plainRefreshToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
+        string refreshTokenHash = Convert.ToHexString(
+            SHA256.HashData(Convert.FromHexString(plainRefreshToken)));
+
+        var refreshToken = new RefreshToken
+        {
+            Id = Guid.NewGuid(),
+            UserId = command.OwnerId,
+            TokenHash = refreshTokenHash,
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+            CreatedAt = DateTime.UtcNow
+        };
+
+        context.RefreshTokens.Add(refreshToken);
+
+        await context.SaveChangesAsync(cancellationToken);
+
+        return new CreateTenantResponse(tenant.Id, accessToken, plainRefreshToken);
     }
 
     private static Role CreateSystemRole(Guid tenantId, string name, HashSet<string> permissions)

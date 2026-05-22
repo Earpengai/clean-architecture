@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPost, apiDelete } from "./client";
-import type { UserResponse, InvitationResponse } from "./types";
+import { apiGet, apiPost, apiDelete, setAuthTokens } from "./client";
+import type { UserResponse, InvitationResponse, AcceptInvitationResponse } from "./types";
 
 const USERS_KEY = ["users"] as const;
 const INVITATIONS_KEY = ["invitations"] as const;
@@ -62,8 +62,14 @@ export function useInvitations() {
 }
 
 export function useAcceptInvitation() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: (payload: { token: string; firstName: string; lastName: string; password: string }) =>
-      apiPost<string>(`/invitations/${encodeURIComponent(payload.token)}/accept`, payload),
+      apiPost<AcceptInvitationResponse>(`/invitations/${encodeURIComponent(payload.token)}/accept`, payload),
+    onSuccess: (data) => {
+      setAuthTokens(data.accessToken, data.refreshToken);
+      queryClient.clear();
+    },
   });
 }

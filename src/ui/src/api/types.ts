@@ -90,6 +90,18 @@ export interface RefreshTokenResponse {
   refreshToken: string;
 }
 
+export interface CreateTenantResponse {
+  tenantId: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface AcceptInvitationResponse {
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface EnableTwoFactorResponse {
   sharedKey: string;
   authenticatorUri: string;

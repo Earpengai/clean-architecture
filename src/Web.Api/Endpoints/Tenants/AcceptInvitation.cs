@@ -16,7 +16,7 @@ internal sealed class AcceptInvitation : IEndpoint
         app.MapPost("invitations/{token}/accept", async (
             string token,
             Request request,
-            ICommandHandler<AcceptInvitationCommand, Guid> handler,
+            ICommandHandler<AcceptInvitationCommand, AcceptInvitationResponse> handler,
             CancellationToken cancellationToken) =>
         {
             var command = new AcceptInvitationCommand(
@@ -25,7 +25,7 @@ internal sealed class AcceptInvitation : IEndpoint
                 request.LastName,
                 request.Password);
 
-            Result<Guid> result = await handler.Handle(command, cancellationToken);
+            Result<AcceptInvitationResponse> result = await handler.Handle(command, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

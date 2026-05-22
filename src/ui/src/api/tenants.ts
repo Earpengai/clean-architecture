@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiGet, apiPost } from "./client";
-import type { TenantResponse, CreateTenantPayload } from "./types";
+import { apiGet, apiPost, setAuthTokens } from "./client";
+import type { TenantResponse, CreateTenantPayload, CreateTenantResponse } from "./types";
 
 const TENANTS_KEY = ["tenants"] as const;
 
@@ -23,8 +23,9 @@ export function useCreateTenant() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: CreateTenantPayload) => apiPost<string>("/tenants", payload),
-    onSuccess: () => {
+    mutationFn: (payload: CreateTenantPayload) => apiPost<CreateTenantResponse>("/tenants", payload),
+    onSuccess: (data) => {
+      setAuthTokens(data.accessToken, data.refreshToken);
       queryClient.invalidateQueries({ queryKey: TENANTS_KEY });
     },
   });
