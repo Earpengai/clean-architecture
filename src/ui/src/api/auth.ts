@@ -54,7 +54,7 @@ export function useLogin() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: LoginPayload) => apiPost<LoginResponse>("/users/login", payload),
+    mutationFn: (payload: LoginPayload) => apiPost<LoginResponse>("/auth/login", payload),
     onSuccess: (data) => {
       if (!data.requiresTwoFactor && data.accessToken && data.refreshToken) {
         setAuthTokens(data.accessToken, data.refreshToken);
@@ -68,7 +68,7 @@ export function useLoginTwoFactor() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: LoginTwoFactorPayload) => apiPost<LoginResponse>("/users/login-2fa", payload),
+    mutationFn: (payload: LoginTwoFactorPayload) => apiPost<LoginResponse>("/auth/login-2fa", payload),
     onSuccess: (data) => {
       if (data.accessToken && data.refreshToken) {
         setAuthTokens(data.accessToken, data.refreshToken);
@@ -80,7 +80,7 @@ export function useLoginTwoFactor() {
 
 export function useRegister() {
   return useMutation({
-    mutationFn: (payload: RegisterPayload) => apiPost<string>("/users/register", payload),
+    mutationFn: (payload: RegisterPayload) => apiPost<string>("/auth/register", payload),
   });
 }
 
@@ -96,68 +96,68 @@ export function useLogout() {
 
 export function useChangePassword() {
   return useMutation({
-    mutationFn: (payload: ChangePasswordPayload) => apiPost<void>("/users/change-password", payload),
+    mutationFn: (payload: ChangePasswordPayload) => apiPost<void>("/profile/change-password", payload),
   });
 }
 
 export function useChangeEmail() {
   return useMutation({
-    mutationFn: (payload: ChangeEmailPayload) => apiPost<void>("/users/change-email", payload),
+    mutationFn: (payload: ChangeEmailPayload) => apiPost<void>("/profile/change-email", payload),
   });
 }
 
 export function useUpdateProfile() {
   return useMutation({
-    mutationFn: (payload: UpdateProfilePayload) => apiPut<void>("/users/profile", payload),
+    mutationFn: (payload: UpdateProfilePayload) => apiPut<void>("/profile", payload),
   });
 }
 
 export function useRequestPasswordReset() {
   return useMutation({
-    mutationFn: (payload: { email: string }) => apiPost<void>("/users/request-password-reset", payload),
+    mutationFn: (payload: { email: string }) => apiPost<void>("/auth/request-password-reset", payload),
   });
 }
 
 export function useResetPassword() {
   return useMutation({
-    mutationFn: (payload: ResetPasswordPayload) => apiPost<void>("/users/reset-password", payload),
+    mutationFn: (payload: ResetPasswordPayload) => apiPost<void>("/auth/reset-password", payload),
   });
 }
 
 export function useVerifyEmail() {
   return useMutation({
-    mutationFn: (payload: VerifyEmailPayload) => apiPost<void>("/users/verify-email", payload),
+    mutationFn: (payload: VerifyEmailPayload) => apiPost<void>("/auth/verify-email", payload),
   });
 }
 
 export function useRequestEmailVerification() {
   return useMutation({
-    mutationFn: () => apiPost<void>("/users/request-verification"),
+    mutationFn: () => apiPost<void>("/profile/request-verification"),
   });
 }
 
 export function useEnableTwoFactor() {
   return useMutation({
-    mutationFn: () => apiPost<EnableTwoFactorResponse>("/users/enable-2fa"),
+    mutationFn: () => apiPost<EnableTwoFactorResponse>("/profile/enable-2fa"),
   });
 }
 
 export function useConfirmTwoFactor() {
   return useMutation({
-    mutationFn: (payload: ConfirmTwoFactorPayload) => apiPost<void>("/users/confirm-2fa", payload),
+    mutationFn: (payload: ConfirmTwoFactorPayload) => apiPost<void>("/profile/confirm-2fa", payload),
   });
 }
 
 export function useDisableTwoFactor() {
   return useMutation({
-    mutationFn: () => apiPost<void>("/users/disable-2fa"),
+    mutationFn: () => apiPost<void>("/profile/disable-2fa"),
   });
 }
 
 export function useGetProfile() {
   return useQuery({
     queryKey: ["user-profile"],
-    queryFn: () => apiGet<UserProfileResponse>("/users/profile"),
+    queryFn: () => apiGet<UserProfileResponse>("/profile"),
   });
 }
 

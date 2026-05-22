@@ -27,6 +27,7 @@
     <!-- Billing / Payments -->
     <PackageVersion Include="Kh.Gov.Nbc.BakongKHQR" Version="1.0.0.16" />
     <!-- Web.Api -->
+    <PackageVersion Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
     <PackageVersion Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.7" />

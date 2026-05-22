@@ -5,13 +5,13 @@ using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Profile;
 
 internal sealed class EnableTwoFactor : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/enable-2fa", async (
+        app.MapPost("profile/enable-2fa", async (
             ICommandHandler<EnableTwoFactorCommand, EnableTwoFactorResponse> handler,
             CancellationToken cancellationToken) =>
         {
@@ -21,7 +21,7 @@ internal sealed class EnableTwoFactor : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
-        .WithTags(Tags.Users)
+        .WithTags(Tags.Profile)
         .RequireAuthorization()
         .ExcludeFromMultiTenantResolution();
     }

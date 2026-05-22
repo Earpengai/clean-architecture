@@ -5,7 +5,7 @@ using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Auth;
 
 internal sealed class ResetPassword : IEndpoint
 {
@@ -13,7 +13,7 @@ internal sealed class ResetPassword : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/reset-password", async (
+        app.MapPost("auth/reset-password", async (
             Request request,
             ICommandHandler<ResetPasswordCommand> handler,
             CancellationToken cancellationToken) =>
@@ -25,6 +25,6 @@ internal sealed class ResetPassword : IEndpoint
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
         .ExcludeFromMultiTenantResolution()
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Auth);
     }
 }

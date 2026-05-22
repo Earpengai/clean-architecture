@@ -1,25 +1,24 @@
 using Application.Abstractions.Messaging;
 using Application.Users.Login;
-using Application.Users.LoginTwoFactor;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Auth;
 
-internal sealed class LoginTwoFactor : IEndpoint
+internal sealed class Login : IEndpoint
 {
-    public sealed record Request(Guid UserId, string TwoFactorToken, string Code);
+    public sealed record Request(string Email, string Password);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/login-2fa", async (
+        app.MapPost("auth/login", async (
             Request request,
-            ICommandHandler<LoginTwoFactorCommand, LoginResponse> handler,
+            ICommandHandler<LoginUserCommand, LoginResponse> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new LoginTwoFactorCommand(request.UserId, request.TwoFactorToken, request.Code);
+            var command = new LoginUserCommand(request.Email, request.Password);
 
             Result<LoginResponse> result = await handler.Handle(command, cancellationToken);
 
@@ -27,6 +26,6 @@ internal sealed class LoginTwoFactor : IEndpoint
         })
         .RequireRateLimiting("AuthRateLimit")
         .ExcludeFromMultiTenantResolution()
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Auth);
     }
 }

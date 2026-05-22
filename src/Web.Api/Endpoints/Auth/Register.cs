@@ -1,11 +1,11 @@
-﻿using Application.Abstractions.Messaging;
+using Application.Abstractions.Messaging;
 using Application.Users.Register;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Auth;
 
 internal sealed class Register : IEndpoint
 {
@@ -13,7 +13,7 @@ internal sealed class Register : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/register", async (
+        app.MapPost("auth/register", async (
             Request request,
             ICommandHandler<RegisterUserCommand, Guid> handler,
             CancellationToken cancellationToken) =>
@@ -30,6 +30,6 @@ internal sealed class Register : IEndpoint
         })
         .RequireRateLimiting("AuthRateLimit")
         .ExcludeFromMultiTenantResolution()
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Auth);
     }
 }

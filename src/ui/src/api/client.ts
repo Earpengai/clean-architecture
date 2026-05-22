@@ -2,7 +2,7 @@ import { useTenantStore } from "@/stores/tenantStore";
 import type { RefreshTokenResponse } from "./types";
 
 const API_TARGET = import.meta.env.VITE_API_TARGET as string | undefined;
-const API_BASE = API_TARGET ? `${API_TARGET}/api` : "/api";
+const API_BASE = API_TARGET ? `${API_TARGET}/api/v1` : "/api/v1";
 const ACCESS_TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 
@@ -66,7 +66,7 @@ async function refreshAccessToken(): Promise<RefreshTokenResponse | null> {
 
   refreshPromise = (async () => {
     try {
-      const response = await fetch(`${API_BASE}/users/refresh`, {
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken: storedRefreshToken }),

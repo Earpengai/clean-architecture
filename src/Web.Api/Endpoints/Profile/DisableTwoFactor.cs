@@ -1,30 +1,27 @@
 using Application.Abstractions.Messaging;
-using Application.Users.UpdateProfile;
+using Application.Users.DisableTwoFactor;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Profile;
 
-internal sealed class UpdateProfile : IEndpoint
+internal sealed class DisableTwoFactor : IEndpoint
 {
-    public sealed record Request(string FirstName, string LastName);
-
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("users/profile", async (
-            Request request,
-            ICommandHandler<UpdateUserProfileCommand> handler,
+        app.MapPost("profile/disable-2fa", async (
+            ICommandHandler<DisableTwoFactorCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new UpdateUserProfileCommand(request.FirstName, request.LastName);
+            var command = new DisableTwoFactorCommand();
 
             Result result = await handler.Handle(command, cancellationToken);
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Users)
+        .WithTags(Tags.Profile)
         .RequireAuthorization()
         .ExcludeFromMultiTenantResolution();
     }

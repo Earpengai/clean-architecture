@@ -1,24 +1,24 @@
 using Application.Abstractions.Messaging;
-using Application.Users.RequestPasswordReset;
+using Application.Users.VerifyEmail;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Auth;
 
-internal sealed class RequestPasswordReset : IEndpoint
+internal sealed class VerifyEmail : IEndpoint
 {
-    public sealed record Request(string Email);
+    public sealed record Request(Guid UserId, string Token);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/request-password-reset", async (
+        app.MapPost("auth/verify-email", async (
             Request request,
-            ICommandHandler<RequestPasswordResetCommand> handler,
+            ICommandHandler<VerifyEmailCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new RequestPasswordResetCommand(request.Email);
+            var command = new VerifyEmailCommand(request.UserId, request.Token);
 
             Result result = await handler.Handle(command, cancellationToken);
 
@@ -26,6 +26,6 @@ internal sealed class RequestPasswordReset : IEndpoint
         })
         .RequireRateLimiting("AuthRateLimit")
         .ExcludeFromMultiTenantResolution()
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Auth);
     }
 }

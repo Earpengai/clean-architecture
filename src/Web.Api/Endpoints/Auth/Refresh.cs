@@ -5,7 +5,7 @@ using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Auth;
 
 internal sealed class Refresh : IEndpoint
 {
@@ -13,7 +13,7 @@ internal sealed class Refresh : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/refresh", async (
+        app.MapPost("auth/refresh", async (
             Request request,
             ICommandHandler<RefreshTokenCommand, RefreshTokenResponse> handler,
             CancellationToken cancellationToken) =>
@@ -26,6 +26,6 @@ internal sealed class Refresh : IEndpoint
         })
         .RequireRateLimiting("AuthRateLimit")
         .ExcludeFromMultiTenantResolution()
-        .WithTags(Tags.Users);
+        .WithTags(Tags.Auth);
     }
 }

@@ -5,7 +5,7 @@ using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Profile;
 
 internal sealed class ConfirmTwoFactor : IEndpoint
 {
@@ -13,7 +13,7 @@ internal sealed class ConfirmTwoFactor : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/confirm-2fa", async (
+        app.MapPost("profile/confirm-2fa", async (
             Request request,
             ICommandHandler<ConfirmTwoFactorCommand> handler,
             CancellationToken cancellationToken) =>
@@ -24,7 +24,7 @@ internal sealed class ConfirmTwoFactor : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Users)
+        .WithTags(Tags.Profile)
         .RequireAuthorization()
         .ExcludeFromMultiTenantResolution();
     }

@@ -4,13 +4,13 @@ using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Profile;
 
 internal sealed class GetProfile : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapGet("users/profile", async (
+        app.MapGet("profile", async (
             IQueryHandler<GetCurrentUserProfileQuery, UserProfileResponse> handler,
             CancellationToken cancellationToken) =>
         {
@@ -20,7 +20,7 @@ internal sealed class GetProfile : IEndpoint
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
-        .WithTags(Tags.Users)
+        .WithTags(Tags.Profile)
         .RequireAuthorization()
         .ExcludeFromMultiTenantResolution();
     }

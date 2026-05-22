@@ -2,6 +2,8 @@ using System.Reflection;
 using System.Globalization;
 using System.Threading.RateLimiting;
 using Application;
+using Asp.Versioning;
+using Asp.Versioning.Builder;
 using Finbuckle.MultiTenant;
 using HealthChecks.UI.Client;
 using Infrastructure;
@@ -39,7 +41,15 @@ builder.Services.AddEndpoints(Assembly.GetExecutingAssembly());
 
 WebApplication app = builder.Build();
 
-app.MapEndpoints(app.MapGroup("/api"));
+ApiVersionSet apiVersionSet = app.NewApiVersionSet()
+    .HasApiVersion(new ApiVersion(1, 0))
+    .ReportApiVersions()
+    .Build();
+
+RouteGroupBuilder versionedGroup = app.MapGroup("/api/v{version:apiVersion}")
+    .WithApiVersionSet(apiVersionSet);
+
+app.MapEndpoints(versionedGroup);
 
 if (app.Environment.IsDevelopment())
 {

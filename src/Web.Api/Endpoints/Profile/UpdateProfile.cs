@@ -1,30 +1,30 @@
 using Application.Abstractions.Messaging;
-using Application.Users.ChangeEmail;
+using Application.Users.UpdateProfile;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Profile;
 
-internal sealed class ChangeEmail : IEndpoint
+internal sealed class UpdateProfile : IEndpoint
 {
-    public sealed record Request(string NewEmail);
+    public sealed record Request(string FirstName, string LastName);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/change-email", async (
+        app.MapPut("profile", async (
             Request request,
-            ICommandHandler<ChangeEmailCommand> handler,
+            ICommandHandler<UpdateUserProfileCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new ChangeEmailCommand(request.NewEmail);
+            var command = new UpdateUserProfileCommand(request.FirstName, request.LastName);
 
             Result result = await handler.Handle(command, cancellationToken);
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Users)
+        .WithTags(Tags.Profile)
         .RequireAuthorization()
         .ExcludeFromMultiTenantResolution();
     }

@@ -1,27 +1,27 @@
 using Application.Abstractions.Messaging;
-using Application.Users.DisableTwoFactor;
+using Application.Users.RequestEmailVerification;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
-namespace Web.Api.Endpoints.Users;
+namespace Web.Api.Endpoints.Profile;
 
-internal sealed class DisableTwoFactor : IEndpoint
+internal sealed class RequestEmailVerification : IEndpoint
 {
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("users/disable-2fa", async (
-            ICommandHandler<DisableTwoFactorCommand> handler,
+        app.MapPost("profile/request-verification", async (
+            ICommandHandler<RequestEmailVerificationCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new DisableTwoFactorCommand();
+            var command = new RequestEmailVerificationCommand();
 
             Result result = await handler.Handle(command, cancellationToken);
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
-        .WithTags(Tags.Users)
+        .WithTags(Tags.Profile)
         .RequireAuthorization()
         .ExcludeFromMultiTenantResolution();
     }

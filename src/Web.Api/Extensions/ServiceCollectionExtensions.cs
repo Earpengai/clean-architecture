@@ -9,6 +9,8 @@ internal static class ServiceCollectionExtensions
     {
         services.AddSwaggerGen(static o =>
         {
+            o.SwaggerDoc("v1", new OpenApiInfo { Title = "Clean Architecture API", Version = "v1" });
+
             o.CustomSchemaIds(id => id.FullName!.Replace('+', '-'));
 
             var securityScheme = new OpenApiSecurityScheme
