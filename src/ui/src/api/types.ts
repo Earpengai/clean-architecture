@@ -144,3 +144,37 @@ export interface TenantFeaturesResponse {
   features: FeatureState[];
   limits: LimitState[];
 }
+
+export interface InitiatePaymentResponse {
+  paymentId: string;
+  qr: string;
+  md5: string;
+}
+
+export interface CheckPaymentResponse {
+  isCompleted: boolean;
+  transaction: TransactionCheckResult | null;
+}
+
+export interface TransactionCheckResult {
+  hash: string;
+  fromAccountId: string;
+  toAccountId: string;
+  currency: string;
+  amount: number;
+  description: string;
+  createdDateMs: number;
+  acknowledgedDateMs: number;
+  externalRef: string;
+}
+
+export interface PaymentResponse {
+  id: string;
+  plan: string;
+  billingPeriod: string;
+  amount: number;
+  currency: string;
+  status: string;
+  createdAt: string;
+  completedAt: string | null;
+}

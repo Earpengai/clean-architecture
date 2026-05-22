@@ -9,6 +9,8 @@ public sealed class Tenant : Entity
     public string Identifier { get; set; }
     public SubscriptionPlan SubscriptionPlan { get; set; }
     public SubscriptionStatus SubscriptionStatus { get; set; }
+    public SubscriptionBillingPeriod BillingPeriod { get; set; }
+    public DateTime? SubscriptionExpiresAt { get; set; }
     public int SeatCount { get; set; }
     public string? StripeCustomerId { get; set; }
     public string? StripeSubscriptionId { get; set; }

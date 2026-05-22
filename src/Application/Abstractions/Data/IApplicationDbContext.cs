@@ -1,4 +1,5 @@
-﻿using Domain.Tenants;
+﻿using Domain.Payments;
+using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ public interface IApplicationDbContext
     DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<PlanFeature> PlanFeatures { get; }
     DbSet<PlanLimit> PlanLimits { get; }
+    DbSet<Payment> Payments { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

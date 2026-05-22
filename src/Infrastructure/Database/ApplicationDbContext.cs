@@ -1,4 +1,5 @@
 ﻿using Application.Abstractions.Data;
+using Domain.Payments;
 using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
@@ -29,6 +30,8 @@ public sealed class ApplicationDbContext(
     public DbSet<PlanFeature> PlanFeatures { get; set; }
 
     public DbSet<PlanLimit> PlanLimits { get; set; }
+
+    public DbSet<Payment> Payments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

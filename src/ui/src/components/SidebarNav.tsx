@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   CreditCard,
   Settings2,
+  Banknote,
 } from "lucide-react";
 
 export type SidebarSection = "app" | "tenant" | "admin";
@@ -60,6 +61,7 @@ export function SidebarNav({ section }: SidebarNavProps) {
     { label: t("nav.users"), path: "/tenant/users", icon: <Users className="h-4 w-4" /> },
     { label: t("nav.invitations"), path: "/tenant/invitations", icon: <Mail className="h-4 w-4" /> },
     { label: t("nav.subscription"), path: "/tenant/subscription", icon: <CreditCard className="h-4 w-4" /> },
+    { label: t("nav.billing"), path: "/tenant/billing", icon: <Banknote className="h-4 w-4" /> },
   ];
 
   const adminItems: NavItem[] = [

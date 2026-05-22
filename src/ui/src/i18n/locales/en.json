@@ -13,6 +13,7 @@
     "admin": "Admin",
     "adminTenants": "Tenants",
     "subscription": "Subscription",
+    "billing": "Billing",
     "backToApp": "Back to Application"
   },
   "section": {
@@ -66,5 +67,21 @@
     "unlimited": "Unlimited",
     "noFeatures": "No features available.",
     "noLimits": "No limits configured."
+  },
+  "billing": {
+    "title": "Subscribe & Billing",
+    "selectPlan": "Select a plan to upgrade or renew your subscription.",
+    "pay": "Pay with Bakong",
+    "generating": "Generating QR...",
+    "scanQr": "Scan QR Code with Bakong App",
+    "qrHint": "Open Bakong app, scan the QR code above to complete payment.",
+    "polling": "Waiting for payment confirmation...",
+    "paymentSuccess": "Payment Successful",
+    "paymentSuccessDesc": "Your subscription has been upgraded.",
+    "expired": "QR code has expired.",
+    "expiredDesc": "Please generate a new QR code to continue.",
+    "generateNew": "Generate New QR",
+    "history": "Payment History",
+    "noHistory": "No payment history."
   }
 }

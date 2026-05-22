@@ -23,6 +23,7 @@ import { OnboardingGuard } from "@/components/OnboardingGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
 import { AdminSubscriptionPage } from "@/pages/admin/AdminSubscriptionPage";
 import { SubscriptionPage } from "@/pages/SubscriptionPage";
+import { SubscriptionBillingPage } from "@/pages/SubscriptionBillingPage";
 
 function LegacyTodoRedirect() {
   const { id } = useParams<{ id: string }>();
@@ -73,6 +74,7 @@ export function AppRoutes() {
           <Route path="users/:id" element={<UserDetailPage />} />
           <Route path="invitations" element={<InvitationsPage />} />
           <Route path="subscription" element={<SubscriptionPage />} />
+          <Route path="billing" element={<SubscriptionBillingPage />} />
         </Route>
 
         {/* Admin Section */}

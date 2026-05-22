@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Application.Abstractions.Authentication;
+using Application.Abstractions.Billing;
 using Application.Abstractions.Data;
 using Application.Abstractions.Email;
 using Application.Abstractions.SubscriptionFeatures;
@@ -11,6 +12,7 @@ using Domain.Users;
 using Finbuckle.MultiTenant;
 using Infrastructure.Authentication;
 using Infrastructure.Authorization;
+using Infrastructure.Billing;
 using Infrastructure.Data;
 using Infrastructure.Database;
 using Infrastructure.DomainEvents;
@@ -30,6 +32,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SharedKernel;
 
@@ -42,7 +45,7 @@ public static class DependencyInjection
         IConfiguration configuration,
         IWebHostEnvironment environment) =>
         services
-            .AddServices()
+            .AddServices(configuration)
             .AddDatabase(configuration)
             .AddIdentityInternal()
             .AddHealthChecks(configuration)
@@ -50,7 +53,7 @@ public static class DependencyInjection
             .AddAuthorizationInternal()
             .AddMultiTenancy();
 
-    private static IServiceCollection AddServices(this IServiceCollection services)
+    private static IServiceCollection AddServices(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
 
@@ -61,6 +64,14 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, MailHogEmailService>();
 
         services.AddScoped<ISubscriptionFeatureProvider, SubscriptionFeatureProvider>();
+
+        services.Configure<BakongOptions>(configuration.GetSection(BakongOptions.Section));
+
+        services.AddHttpClient();
+
+        services.AddScoped<IBakongService, BakongService>();
+
+        services.AddHostedService<SubscriptionExpirationService>();
 
         return services;
     }
