@@ -4,7 +4,7 @@ import { usePlanFeatures, useUpdatePlanFeature, usePlanLimits, useUpdatePlanLimi
 import { useToastStore } from "@/stores/toastStore";
 import { extractErrorDetail } from "@/lib/errors";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -39,7 +39,6 @@ function planBadgeColor(plan: string) {
 }
 
 function FeaturesTab() {
-  const { t } = useTranslation();
   const { data: features, isLoading, error } = usePlanFeatures();
   const updateFeature = useUpdatePlanFeature();
   const addToast = useToastStore((state) => state.addToast);
@@ -132,7 +131,6 @@ function FeaturesTab() {
 }
 
 function LimitsTab() {
-  const { t } = useTranslation();
   const { data: limits, isLoading, error } = usePlanLimits();
   const updateLimit = useUpdatePlanLimit();
   const [editingValues, setEditingValues] = useState<Record<string, number>>({});

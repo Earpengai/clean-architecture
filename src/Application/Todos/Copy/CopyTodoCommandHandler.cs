@@ -16,11 +16,6 @@ internal sealed class CopyTodoCommandHandler(
 {
     public async Task<Result<Guid>> Handle(CopyTodoCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.UserId != command.UserId)
-        {
-            return Result.Failure<Guid>(UserErrors.Unauthorized());
-        }
-
         User? user = await context.Users.AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
 
@@ -31,7 +26,6 @@ internal sealed class CopyTodoCommandHandler(
 
         TodoItem? existingTodo = await context.TodoItems.AsNoTracking()
             .SingleOrDefaultAsync(t => t.Id == command.TodoId
-                && t.UserId == command.UserId
                 && t.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (existingTodo is null)
@@ -42,11 +36,13 @@ internal sealed class CopyTodoCommandHandler(
         var copiedTodoItem = new TodoItem
         {
             UserId = user.Id,
+            TenantId = userContext.TenantId!.Value,
+            ParentId = existingTodo.ParentId,
             Description = existingTodo.Description,
             Priority = existingTodo.Priority,
             DueDate = existingTodo.DueDate,
-            Labels = existingTodo.Labels.ToList(), // Create a new list to avoid reference issues
-            IsCompleted = false, // Reset completion status for the copy
+            Labels = existingTodo.Labels.ToList(),
+            IsCompleted = false,
             CreatedAt = dateTimeProvider.UtcNow
         };
 

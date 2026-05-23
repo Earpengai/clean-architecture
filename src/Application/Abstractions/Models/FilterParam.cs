@@ -2,11 +2,11 @@ namespace Application.Abstractions.Models;
 
 public sealed record FilterParam
 {
-    public required string Column { get; init; }
+    public string Column { get; set; } = string.Empty;
 
-    public required FilterOperator Operator { get; init; }
+    public FilterOperator Operator { get; set; }
 
-    public string? Value { get; init; }
+    public string? Value { get; set; }
 
-    public string? ValueTo { get; init; }
+    public string? ValueTo { get; set; }
 }

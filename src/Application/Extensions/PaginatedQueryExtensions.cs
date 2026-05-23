@@ -5,7 +5,7 @@ using Application.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
-namespace Infrastructure.Extensions;
+namespace Application.Extensions;
 
 public static class PaginatedQueryExtensions
 {
@@ -24,9 +24,10 @@ public static class PaginatedQueryExtensions
             .Replace("\\", "\\\\")
             .Replace("%", "\\%")
             .Replace("_", "\\_");
-        string pattern = $"%{escaped}%";
+        string pattern = $"%{escaped.ToUpperInvariant()}%";
 
         MethodInfo likeMethod = GetLikeMethod();
+        MethodInfo toUpperMethod = typeof(string).GetMethod(nameof(string.ToUpper), Type.EmptyTypes)!;
         ConstantExpression efFunctions = Expression.Constant(EF.Functions);
 
         Expression? combined = null;
@@ -34,10 +35,11 @@ public static class PaginatedQueryExtensions
         foreach (Expression<Func<T, string>> fieldSelector in searchMap.Values)
         {
             Expression fieldAccess = BuildAccessor(fieldSelector, parameter);
+            Expression upperFieldAccess = Expression.Call(fieldAccess, toUpperMethod);
             Expression likeCall = Expression.Call(
                 likeMethod,
                 efFunctions,
-                fieldAccess,
+                upperFieldAccess,
                 Expression.Constant(pattern));
 
             combined = combined is null ? likeCall : Expression.OrElse(combined, likeCall);

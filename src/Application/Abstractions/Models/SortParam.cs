@@ -4,7 +4,7 @@ namespace Application.Abstractions.Models;
 
 public sealed record SortParam
 {
-    public required string Column { get; init; }
+    public string Column { get; set; } = string.Empty;
 
-    public required SortDirection Direction { get; init; }
+    public SortDirection Direction { get; set; }
 }

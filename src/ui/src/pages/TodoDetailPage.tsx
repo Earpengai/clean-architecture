@@ -79,6 +79,11 @@ export function TodoDetailPage() {
                 <span className={cn("text-xs font-medium", completed ? "text-green-600" : "text-gray-500")}>
                   {completed ? "Completed" : "Pending"}
                 </span>
+                {todo.priority !== undefined && (
+                  <span className="rounded bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                    P: {todo.priority}
+                  </span>
+                )}
               </div>
               <CardTitle className={cn(completed && "line-through text-gray-400")}>{todo.description}</CardTitle>
             </div>

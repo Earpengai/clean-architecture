@@ -16,7 +16,6 @@ internal sealed class UpdateTodoCommandHandler(
     {
         TodoItem? todoItem = await context.TodoItems
             .SingleOrDefaultAsync(t => t.Id == command.TodoItemId
-                && t.UserId == userContext.UserId
                 && t.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (todoItem is null)
@@ -25,6 +24,26 @@ internal sealed class UpdateTodoCommandHandler(
         }
 
         todoItem.Description = command.Description;
+
+        if (command.ParentId is not null)
+        {
+            todoItem.ParentId = command.ParentId;
+        }
+
+        if (command.DueDate is not null)
+        {
+            todoItem.DueDate = command.DueDate;
+        }
+
+        if (command.Labels is not null)
+        {
+            todoItem.Labels = command.Labels;
+        }
+
+        if (command.Priority is not null)
+        {
+            todoItem.Priority = command.Priority.Value;
+        }
 
         todoItem.Raise(new TodoItemUpdatedDomainEvent(todoItem.Id));
 

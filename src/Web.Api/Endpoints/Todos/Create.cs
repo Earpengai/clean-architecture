@@ -12,6 +12,7 @@ internal sealed class Create : IEndpoint
     public sealed class Request
     {
         public Guid UserId { get; set; }
+        public Guid? ParentId { get; set; }
         public string Description { get; set; }
         public DateTime? DueDate { get; set; }
         public List<string> Labels { get; set; } = [];
@@ -28,6 +29,7 @@ internal sealed class Create : IEndpoint
             var command = new CreateTodoCommand
             {
                 UserId = request.UserId,
+                ParentId = request.ParentId,
                 Description = request.Description,
                 DueDate = request.DueDate,
                 Labels = request.Labels,

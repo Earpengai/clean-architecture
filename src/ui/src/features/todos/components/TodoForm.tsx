@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useCreateTodo } from "@/api/todos";
+import { useCreateTodo, useTodosPaginated } from "@/api/todos";
 import { useToastStore } from "@/stores/toastStore";
 import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
@@ -19,8 +19,11 @@ export function TodoForm({ userId }: TodoFormProps) {
   const [labels, setLabels] = useState<string[]>([]);
   const [labelInput, setLabelInput] = useState("");
   const [priority, setPriority] = useState(0);
+  const [parentId, setParentId] = useState("");
   const createTodo = useCreateTodo();
   const addToast = useToastStore((state) => state.addToast);
+  const { data: todosData } = useTodosPaginated({ pageSize: 200 });
+  const existingTodos = todosData?.items ?? [];
 
   const addLabel = () => {
     const trimmed = labelInput.trim();
@@ -44,6 +47,7 @@ export function TodoForm({ userId }: TodoFormProps) {
         dueDate: dueDate ? new Date(dueDate).toISOString() : null,
         labels: labels.length > 0 ? labels : undefined,
         priority,
+        parentId: parentId || null,
       },
       {
         onSuccess: () => {
@@ -51,6 +55,7 @@ export function TodoForm({ userId }: TodoFormProps) {
           setDueDate("");
           setLabels([]);
           setPriority(0);
+          setParentId("");
         },
         onError: (err) => {
           addToast(extractErrorDetail(err), "error");
@@ -74,7 +79,7 @@ export function TodoForm({ userId }: TodoFormProps) {
         </Button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="space-y-1">
           <Label htmlFor="dueDate">Due Date</Label>
           <Input
@@ -92,9 +97,27 @@ export function TodoForm({ userId }: TodoFormProps) {
             onChange={(e) => setPriority(Number(e.target.value))}
             className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
           >
-            <option value={0}>Low</option>
-            <option value={1}>Medium</option>
-            <option value={2}>High</option>
+            <option value={0}>Normal</option>
+            <option value={1}>Low</option>
+            <option value={2}>Medium</option>
+            <option value={3}>High</option>
+            <option value={4}>Top</option>
+          </select>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="parentId">Parent</Label>
+          <select
+            id="parentId"
+            value={parentId}
+            onChange={(e) => setParentId(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+          >
+            <option value="">None (top-level)</option>
+            {existingTodos.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.description}
+              </option>
+            ))}
           </select>
         </div>
       </div>

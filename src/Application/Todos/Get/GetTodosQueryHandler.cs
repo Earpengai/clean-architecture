@@ -1,38 +1,66 @@
-﻿using Application.Abstractions.Authentication;
+﻿using System.Linq.Expressions;
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.Users;
-using Microsoft.EntityFrameworkCore;
+using Application.Abstractions.Models;
+using Domain.Todos;
+using Application.Extensions;
 using SharedKernel;
 
 namespace Application.Todos.Get;
 
-internal sealed class GetTodosQueryHandler(IApplicationDbContext context, IUserContext userContext)
-    : IQueryHandler<GetTodosQuery, List<TodoResponse>>
+internal sealed class GetTodosQueryHandler(
+    IApplicationDbContext context,
+    IUserContext userContext)
+    : IQueryHandler<GetTodosQuery, PaginatedList<TodoResponse>>
 {
-    public async Task<Result<List<TodoResponse>>> Handle(GetTodosQuery query, CancellationToken cancellationToken)
+    private static readonly Dictionary<string, Expression<Func<TodoItem, string>>> SearchMap = new()
     {
-        if (query.UserId != userContext.UserId)
-        {
-            return Result.Failure<List<TodoResponse>>(UserErrors.Unauthorized());
-        }
+        ["description"] = t => t.Description,
+    };
 
-        List<TodoResponse> todos = await context.TodoItems
-            .Where(todoItem => todoItem.UserId == query.UserId
-                && todoItem.TenantId == userContext.TenantId!.Value)
-            .Select(todoItem => new TodoResponse
+    private static readonly Dictionary<string, Expression<Func<TodoItem, object>>> SortMap = new()
+    {
+        ["description"] = t => t.Description,
+        ["dueDate"] = t => t.DueDate,
+        ["createdAt"] = t => t.CreatedAt,
+        ["priority"] = t => t.Priority,
+        ["isCompleted"] = t => t.IsCompleted,
+    };
+
+    private static readonly Dictionary<string, Expression<Func<TodoItem, object>>> FilterMap = new()
+    {
+        ["description"] = t => t.Description,
+        ["dueDate"] = t => t.DueDate,
+        ["priority"] = t => t.Priority,
+        ["isCompleted"] = t => t.IsCompleted,
+        ["createdAt"] = t => t.CreatedAt,
+    };
+
+    public async Task<Result<PaginatedList<TodoResponse>>> Handle(
+        GetTodosQuery query,
+        CancellationToken cancellationToken)
+    {
+        PaginatedList<TodoResponse> result = await context.TodoItems
+            .Where(t => t.TenantId == userContext.TenantId!.Value)
+            .ApplyFilters(query.Filters, FilterMap)
+            .ApplySearch(query.Search, SearchMap)
+            .ApplySort(query.Sorts, SortMap, t => t.CreatedAt)
+            .Select(t => new TodoResponse
             {
-                Id = todoItem.Id,
-                UserId = todoItem.UserId,
-                Description = todoItem.Description,
-                DueDate = todoItem.DueDate,
-                Labels = todoItem.Labels,
-                IsCompleted = todoItem.IsCompleted,
-                CreatedAt = todoItem.CreatedAt,
-                CompletedAt = todoItem.CompletedAt
+                Id = t.Id,
+                UserId = t.UserId,
+                ParentId = t.ParentId,
+                Description = t.Description,
+                DueDate = t.DueDate,
+                Labels = t.Labels,
+                Priority = t.Priority,
+                IsCompleted = t.IsCompleted,
+                CreatedAt = t.CreatedAt,
+                CompletedAt = t.CompletedAt,
             })
-            .ToListAsync(cancellationToken);
+            .ToPaginatedListAsync(query.Page, query.PageSize, cancellationToken);
 
-        return todos;
+        return result;
     }
 }

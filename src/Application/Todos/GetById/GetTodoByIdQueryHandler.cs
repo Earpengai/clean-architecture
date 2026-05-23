@@ -14,18 +14,19 @@ internal sealed class GetTodoByIdQueryHandler(IApplicationDbContext context, IUs
     {
         TodoResponse? todo = await context.TodoItems
             .Where(todoItem => todoItem.Id == query.TodoItemId
-                && todoItem.UserId == userContext.UserId
                 && todoItem.TenantId == userContext.TenantId!.Value)
             .Select(todoItem => new TodoResponse
             {
                 Id = todoItem.Id,
                 UserId = todoItem.UserId,
+                ParentId = todoItem.ParentId,
                 Description = todoItem.Description,
                 DueDate = todoItem.DueDate,
                 Labels = todoItem.Labels,
                 IsCompleted = todoItem.IsCompleted,
                 CreatedAt = todoItem.CreatedAt,
-                CompletedAt = todoItem.CompletedAt
+                CompletedAt = todoItem.CompletedAt,
+                Priority = todoItem.Priority
             })
             .SingleOrDefaultAsync(cancellationToken);
 

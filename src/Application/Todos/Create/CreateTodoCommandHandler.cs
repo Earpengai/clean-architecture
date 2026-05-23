@@ -16,11 +16,6 @@ internal sealed class CreateTodoCommandHandler(
 {
     public async Task<Result<Guid>> Handle(CreateTodoCommand command, CancellationToken cancellationToken)
     {
-        if (userContext.UserId != command.UserId)
-        {
-            return Result.Failure<Guid>(UserErrors.Unauthorized());
-        }
-
         User? user = await context.Users.AsNoTracking()
             .SingleOrDefaultAsync(u => u.Id == command.UserId, cancellationToken);
 
@@ -33,6 +28,8 @@ internal sealed class CreateTodoCommandHandler(
         {
             Id = Guid.NewGuid(),
             UserId = user.Id,
+            TenantId = userContext.TenantId!.Value,
+            ParentId = command.ParentId,
             Description = command.Description,
             Priority = command.Priority,
             DueDate = command.DueDate,

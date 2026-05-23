@@ -1,15 +1,34 @@
 import { useNavigate } from "react-router-dom";
-import type { TodoItem as TodoItemType } from "@/api/types";
+import type { TodoCardData } from "@/api/types";
 import { useCompleteTodo, useDeleteTodo, useCopyTodo } from "@/api/todos";
+import { useAuthStore } from "@/stores/authStore";
 import { cn } from "@/lib/cn";
 import { Check, Trash2, Copy, Circle } from "lucide-react";
 
+const PRIORITY_LABELS: Record<number, string> = {
+  4: "Top",
+  3: "High",
+  2: "Medium",
+  1: "Low",
+  0: "Normal",
+};
+
+const PRIORITY_BADGE: Record<number, string> = {
+  4: "bg-red-100 text-red-700",
+  3: "bg-orange-100 text-orange-700",
+  2: "bg-yellow-100 text-yellow-700",
+  1: "bg-blue-100 text-blue-700",
+  0: "bg-gray-100 text-gray-600",
+};
+
 interface TodoItemProps {
-  todo: TodoItemType;
+  todo: TodoCardData;
+  prefix?: React.ReactNode;
 }
 
-export function TodoItem({ todo }: TodoItemProps) {
+export function TodoItem({ todo, prefix }: TodoItemProps) {
   const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.userId);
   const completeTodo = useCompleteTodo();
   const deleteTodo = useDeleteTodo();
   const copyTodo = useCopyTodo();
@@ -30,7 +49,7 @@ export function TodoItem({ todo }: TodoItemProps) {
 
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation();
-    copyTodo.mutate({ id: todo.id, userId: todo.userId });
+    copyTodo.mutate({ id: todo.id, userId: userId! });
   };
 
   return (
@@ -42,6 +61,7 @@ export function TodoItem({ todo }: TodoItemProps) {
       onClick={() => navigate(`/app/todos/${todo.id}`)}
     >
       <div className="flex items-start gap-3">
+        {prefix}
         <button
           type="button"
           onClick={handleToggle}
@@ -56,7 +76,12 @@ export function TodoItem({ todo }: TodoItemProps) {
           {completed ? <Check className="h-3 w-3" /> : <Circle className="h-3 w-3 text-transparent" />}
         </button>
         <div className="flex-1 min-w-0">
-          <p className={cn("text-sm", completed && "line-through text-gray-400")}>{todo.description}</p>
+          <div className="flex items-center gap-2">
+            <p className={cn("text-sm", completed && "line-through text-gray-400")}>{todo.description}</p>
+            <span className={cn("rounded px-1.5 py-0.5 text-xs font-medium", PRIORITY_BADGE[todo.priority] ?? "bg-gray-100 text-gray-600")}>
+              {PRIORITY_LABELS[todo.priority] ?? `P${todo.priority}`}
+            </span>
+          </div>
           {todo.labels.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {todo.labels.map((label) => (

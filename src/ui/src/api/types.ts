@@ -1,20 +1,58 @@
-export interface TodoItem {
+export interface TodoCardData {
   id: string;
-  userId: string;
   description: string;
   dueDate: string | null;
   labels: string[];
   isCompleted: boolean;
+  priority: number;
+}
+
+export interface TodoItem extends TodoCardData {
+  userId: string;
+  parentId: string | null;
   createdAt: string;
   completedAt: string | null;
 }
 
 export interface CreateTodoPayload {
   userId: string;
+  parentId?: string | null;
   description: string;
   dueDate?: string | null;
   labels?: string[];
   priority?: number;
+}
+
+export interface PaginatedList<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
+export interface KanbanColumn<TColumn, TItem> {
+  key: TColumn;
+  label: string;
+  order: number;
+  items: TItem[];
+}
+
+export interface KanbanList<TColumn, TItem> {
+  columns: KanbanColumn<TColumn, TItem>[];
+}
+
+export interface TreeList<T> {
+  roots: T[];
+}
+
+export interface TodoTreeItem extends TodoCardData {
+  userId: string;
+  parentId: string | null;
+  createdAt: string;
+  children: TodoTreeItem[];
 }
 
 export interface TenantResponse {

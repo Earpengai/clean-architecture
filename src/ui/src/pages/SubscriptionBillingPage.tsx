@@ -265,8 +265,9 @@ export function SubscriptionBillingPage() {
     for (const p of pricing) {
       if (p.plan === "Free") continue;
       if (!grouped[p.plan]) grouped[p.plan] = { monthly: 0, yearly: 0 };
-      if (p.billingPeriod === "Monthly") grouped[p.plan].monthly = p.amount;
-      if (p.billingPeriod === "Yearly") grouped[p.plan].yearly = p.amount;
+      const planPrices = grouped[p.plan]!;
+      if (p.billingPeriod === "Monthly") planPrices.monthly = p.amount;
+      if (p.billingPeriod === "Yearly") planPrices.yearly = p.amount;
     }
 
     return Object.entries(grouped).map(([planLabel, prices]) => ({

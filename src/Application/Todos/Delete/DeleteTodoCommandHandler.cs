@@ -14,7 +14,6 @@ internal sealed class DeleteTodoCommandHandler(IApplicationDbContext context, IU
     {
         TodoItem? todoItem = await context.TodoItems
             .SingleOrDefaultAsync(t => t.Id == command.TodoItemId
-                && t.UserId == userContext.UserId
                 && t.TenantId == userContext.TenantId!.Value, cancellationToken);
 
         if (todoItem is null)

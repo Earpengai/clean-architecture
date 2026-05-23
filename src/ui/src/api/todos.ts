@@ -1,8 +1,42 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, apiPut, apiDelete } from "./client";
-import type { TodoItem, CreateTodoPayload } from "./types";
+import type { TodoItem, CreateTodoPayload, PaginatedList, KanbanList, TreeList, TodoTreeItem } from "./types";
 
 const TODOS_KEY = ["todos"] as const;
+
+export interface PaginatedParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+}
+
+export function useTodosPaginated(params: PaginatedParams = {}) {
+  const { page = 1, pageSize = 20, search = "" } = params;
+
+  const queryParts = [`page=${encodeURIComponent(page)}`, `pageSize=${encodeURIComponent(pageSize)}`];
+  if (search) {
+    queryParts.push(`search=${encodeURIComponent(search)}`);
+  }
+
+  return useQuery({
+    queryKey: [...TODOS_KEY, "paginated", page, pageSize, search],
+    queryFn: () => apiGet<PaginatedList<TodoItem>>(`/todos?${queryParts.join("&")}`),
+  });
+}
+
+export function useTodosKanban() {
+  return useQuery({
+    queryKey: [...TODOS_KEY, "kanban"],
+    queryFn: () => apiGet<KanbanList<number, TodoItem>>("/todos/kanban"),
+  });
+}
+
+export function useTodosTree() {
+  return useQuery({
+    queryKey: [...TODOS_KEY, "tree"],
+    queryFn: () => apiGet<TreeList<TodoTreeItem>>("/todos/tree"),
+  });
+}
 
 export function useTodos(userId: string | null | undefined) {
   return useQuery({
@@ -25,8 +59,8 @@ export function useCreateTodo() {
 
   return useMutation({
     mutationFn: (payload: CreateTodoPayload) => apiPost<TodoItem>("/todos", payload),
-    onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [...TODOS_KEY, variables.userId] });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TODOS_KEY });
     },
   });
 }
