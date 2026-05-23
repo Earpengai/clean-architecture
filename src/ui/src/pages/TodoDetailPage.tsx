@@ -1,6 +1,9 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTodoById, useCompleteTodo, useDeleteTodo } from "@/api/todos";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
@@ -14,6 +17,7 @@ export function TodoDetailPage() {
   const { data: todo, isLoading, error } = useTodoById(id);
   const completeTodo = useCompleteTodo();
   const deleteTodo = useDeleteTodo();
+  const addToast = useToastStore((state) => state.addToast);
 
   if (isLoading) {
     return (
@@ -26,7 +30,7 @@ export function TodoDetailPage() {
   if (error || !todo) {
     return (
       <div className="text-center py-12">
-        <p className="text-sm text-red-500">{t("todos.error")}</p>
+        <ErrorDisplay error={error} />
         <Button variant="outline" className="mt-4" onClick={() => navigate("/app/todos")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Todos
@@ -40,12 +44,15 @@ export function TodoDetailPage() {
   const handleDelete = () => {
     deleteTodo.mutate(todo.id, {
       onSuccess: () => navigate("/app/todos"),
+      onError: (err) => addToast(extractErrorDetail(err), "error"),
     });
   };
 
   const handleComplete = () => {
     if (!completed) {
-      completeTodo.mutate(todo.id);
+      completeTodo.mutate(todo.id, {
+        onError: (err) => addToast(extractErrorDetail(err), "error"),
+      });
     }
   };
 

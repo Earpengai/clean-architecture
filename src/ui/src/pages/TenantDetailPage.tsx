@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useTenantById } from "@/api/tenants";
+import { usePermission } from "@/hooks/usePermission";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +34,8 @@ export function TenantDetailPage() {
   const { t } = useTranslation();
 
   const { data: tenant, isLoading, error } = useTenantById(id);
+  const canReadUsers = usePermission("users:read");
+  const canReadRoles = usePermission("roles:read");
 
   if (isLoading) {
     return (
@@ -44,7 +48,7 @@ export function TenantDetailPage() {
   if (error || !tenant) {
     return (
       <div className="text-center py-12">
-        <p className="text-sm text-red-500">{t("todos.error")}</p>
+        <ErrorDisplay error={error} />
         <Button variant="outline" className="mt-4" onClick={() => navigate("/tenant/tenants")}>
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back to Tenants
@@ -123,12 +127,16 @@ export function TenantDetailPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full" onClick={() => navigate("/tenant/users")}>
-                Manage Members
-              </Button>
-              <Button variant="outline" className="w-full" onClick={() => navigate("/tenant/roles")}>
-                Manage Roles
-              </Button>
+              {canReadUsers && (
+                <Button variant="outline" className="w-full" onClick={() => navigate("/tenant/users")}>
+                  Manage Members
+                </Button>
+              )}
+              {canReadRoles && (
+                <Button variant="outline" className="w-full" onClick={() => navigate("/tenant/roles")}>
+                  Manage Roles
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

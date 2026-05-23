@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Billing.GetPaymentHistory;
+using Domain.Permissions;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -21,6 +22,7 @@ internal sealed class GetPaymentHistory : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .RequireAuthorization()
+        .HasPermission(Permission.TenantsWrite)
         .WithTags(Tags.Subscription);
     }
 }

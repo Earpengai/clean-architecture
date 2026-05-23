@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useRemoveUser } from "@/api/users";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,12 +23,17 @@ export function RemoveUserDialog({ user }: RemoveUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const remove = useRemoveUser();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleRemove = () => {
     setError("");
     remove.mutate(user.id, {
       onSuccess: () => setOpen(false),
-      onError: (err) => setError(err.message),
+      onError: (err) => {
+        const message = extractErrorDetail(err);
+        setError(message);
+        addToast(message, "error");
+      },
     });
   };
 

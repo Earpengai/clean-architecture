@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Billing.CheckPayment;
+using Domain.Permissions;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
@@ -22,6 +23,7 @@ internal sealed class CheckPayment : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .RequireAuthorization()
+        .HasPermission(Permission.TenantsWrite)
         .WithTags(Tags.Subscription);
     }
 }

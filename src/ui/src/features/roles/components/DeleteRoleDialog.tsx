@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useDeleteRole } from "@/api/roles";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -21,12 +23,17 @@ export function DeleteRoleDialog({ role }: DeleteRoleDialogProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState("");
   const deleteRole = useDeleteRole();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleDelete = () => {
     setError("");
     deleteRole.mutate(role.id, {
       onSuccess: () => setOpen(false),
-      onError: (err) => setError(err.message),
+      onError: (err) => {
+        const message = extractErrorDetail(err);
+        setError(message);
+        addToast(message, "error");
+      },
     });
   };
 

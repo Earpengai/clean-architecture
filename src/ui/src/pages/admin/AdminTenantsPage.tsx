@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAdminTenants, useEnableTenant, useDisableTenant, useUpdateTenantSubscription } from "@/api/admin";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +48,7 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
   const [error, setError] = useState("");
 
   const update = useUpdateTenantSubscription();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +57,11 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
       { id: tenant.id, subscriptionPlan: plan, subscriptionStatus: status, seatCount: seats },
       {
         onSuccess: () => setOpen(false),
-        onError: (err) => setError(err.message),
+        onError: (err) => {
+          const message = extractErrorDetail(err);
+          setError(message);
+          addToast(message, "error");
+        },
       },
     );
   };
@@ -114,6 +122,7 @@ export function AdminTenantsPage() {
   const { data: tenants, isLoading, error } = useAdminTenants();
   const enable = useEnableTenant();
   const disable = useDisableTenant();
+  const addToast = useToastStore((state) => state.addToast);
 
   return (
     <div>
@@ -122,7 +131,7 @@ export function AdminTenantsPage() {
       </div>
 
       {isLoading && <p className="text-sm text-gray-400">{t("todos.loading")}</p>}
-      {error && <p className="text-sm text-red-500">{t("todos.error")}</p>}
+      {error && <ErrorDisplay error={error} className="mb-4" />}
 
       {tenants && tenants.length === 0 && (
         <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
@@ -162,7 +171,9 @@ export function AdminTenantsPage() {
                             variant="ghost"
                             size="icon"
                             className="text-red-600 hover:bg-red-50"
-                            onClick={() => disable.mutate(tenant.id)}
+                            onClick={() => disable.mutate(tenant.id, {
+                              onError: (err) => addToast(extractErrorDetail(err), "error"),
+                            })}
                             disabled={disable.isPending}
                             title="Disable"
                           >
@@ -173,7 +184,9 @@ export function AdminTenantsPage() {
                             variant="ghost"
                             size="icon"
                             className="text-green-600 hover:bg-green-50"
-                            onClick={() => enable.mutate(tenant.id)}
+                            onClick={() => enable.mutate(tenant.id, {
+                              onError: (err) => addToast(extractErrorDetail(err), "error"),
+                            })}
                             disabled={enable.isPending}
                             title="Enable"
                           >

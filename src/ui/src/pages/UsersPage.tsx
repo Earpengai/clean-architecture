@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useUsers } from "@/api/users";
+import { PermissionGate } from "@/components/PermissionGate";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { InviteUserDialog } from "@/features/users/components/InviteUserDialog";
 import { AssignRoleDialog } from "@/features/users/components/AssignRoleDialog";
 import { RemoveUserDialog } from "@/features/users/components/RemoveUserDialog";
@@ -17,11 +19,13 @@ export function UsersPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-        <InviteUserDialog />
+        <PermissionGate permission="users:write">
+          <InviteUserDialog />
+        </PermissionGate>
       </div>
 
       {isLoading && <p className="text-sm text-gray-400">{t("todos.loading")}</p>}
-      {error && <p className="text-sm text-red-500">{t("todos.error")}</p>}
+      {error && <ErrorDisplay error={error} className="mb-4" />}
 
       {users && users.length === 0 && (
         <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
@@ -56,8 +60,12 @@ export function UsersPage() {
                     </Badge>
                     <Badge className="bg-indigo-50 text-indigo-700">{user.roleName}</Badge>
                     <div className="flex items-center gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
-                      <AssignRoleDialog user={user} />
-                      <RemoveUserDialog user={user} />
+                      <PermissionGate permission="roles:write">
+                        <AssignRoleDialog user={user} />
+                      </PermissionGate>
+                      <PermissionGate permission="users:delete">
+                        <RemoveUserDialog user={user} />
+                      </PermissionGate>
                     </div>
                   </div>
                 </div>

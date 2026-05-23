@@ -3,6 +3,7 @@ import { AuthLayout } from "@/pages/AuthLayout";
 import { AppShell } from "@/components/AppShell";
 import { AdminGuard } from "@/components/AdminGuard";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PermissionGuard } from "@/components/PermissionGuard";
 import { Dashboard } from "@/pages/Dashboard";
 import { TodosPage } from "@/pages/TodosPage";
 import { TodoDetailPage } from "@/pages/TodoDetailPage";
@@ -73,12 +74,18 @@ export function AppRoutes() {
         <Route path="tenant" element={<AppShell section="tenant" />}>
           <Route path="tenants" element={<TenantsPage />} />
           <Route path="tenants/:id" element={<TenantDetailPage />} />
-          <Route path="roles" element={<RolesPage />} />
-          <Route path="users" element={<UsersPage />} />
-          <Route path="users/:id" element={<UserDetailPage />} />
-          <Route path="invitations" element={<InvitationsPage />} />
-          <Route path="subscription" element={<SubscriptionPage />} />
-          <Route path="billing" element={<SubscriptionBillingPage />} />
+          <Route element={<PermissionGuard permissions={["roles:read"]} />}>
+            <Route path="roles" element={<RolesPage />} />
+          </Route>
+          <Route element={<PermissionGuard permissions={["users:read"]} />}>
+            <Route path="users" element={<UsersPage />} />
+            <Route path="users/:id" element={<UserDetailPage />} />
+            <Route path="invitations" element={<InvitationsPage />} />
+          </Route>
+          <Route element={<PermissionGuard permissions={["tenants:write"]} />}>
+            <Route path="subscription" element={<SubscriptionPage />} />
+            <Route path="billing" element={<SubscriptionBillingPage />} />
+          </Route>
         </Route>
 
         {/* Admin Section */}

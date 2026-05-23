@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useInviteUser } from "@/api/users";
 import { useRoles } from "@/api/roles";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +25,7 @@ export function InviteUserDialog() {
 
   const invite = useInviteUser();
   const { data: roles } = useRoles();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +39,11 @@ export function InviteUserDialog() {
           setEmail("");
           setRoleId("");
         },
-        onError: (err) => setError(err.message),
+        onError: (err) => {
+          const message = extractErrorDetail(err);
+          setError(message);
+          addToast(message, "error");
+        },
       },
     );
   };

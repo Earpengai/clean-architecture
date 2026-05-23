@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/api/queryClient";
 import { useTenantStore } from "@/stores/tenantStore";
 import { ToastContainer } from "@/stores/ToastContainer";
+import { PermissionsSync } from "@/components/PermissionsSync";
 import { AppRoutes } from "@/routes";
 
 function TenantChangeInvalidator() {
@@ -24,6 +25,7 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <TenantChangeInvalidator />
+        <PermissionsSync />
         <AppRoutes />
         <ToastContainer />
       </BrowserRouter>

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useCreateTodo } from "@/api/todos";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +20,7 @@ export function TodoForm({ userId }: TodoFormProps) {
   const [labelInput, setLabelInput] = useState("");
   const [priority, setPriority] = useState(0);
   const createTodo = useCreateTodo();
+  const addToast = useToastStore((state) => state.addToast);
 
   const addLabel = () => {
     const trimmed = labelInput.trim();
@@ -48,6 +51,9 @@ export function TodoForm({ userId }: TodoFormProps) {
           setDueDate("");
           setLabels([]);
           setPriority(0);
+        },
+        onError: (err) => {
+          addToast(extractErrorDetail(err), "error");
         },
       },
     );

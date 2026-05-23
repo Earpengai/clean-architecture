@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useInvitations } from "@/api/users";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Mail, Clock } from "lucide-react";
@@ -25,7 +26,7 @@ export function InvitationsPage() {
       </div>
 
       {isLoading && <p className="text-sm text-gray-400">{t("todos.loading")}</p>}
-      {error && <p className="text-sm text-red-500">{t("todos.error")}</p>}
+      {error && <ErrorDisplay error={error} className="mb-4" />}
 
       {invitations && invitations.length === 0 && (
         <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">

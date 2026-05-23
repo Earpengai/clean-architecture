@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useAssignRole } from "@/api/users";
 import { useRoles } from "@/api/roles";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,6 +27,7 @@ export function AssignRoleDialog({ user }: AssignRoleDialogProps) {
 
   const assign = useAssignRole();
   const { data: roles } = useRoles();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +37,11 @@ export function AssignRoleDialog({ user }: AssignRoleDialogProps) {
       { userId: user.id, roleId },
       {
         onSuccess: () => setOpen(false),
-        onError: (err) => setError(err.message),
+        onError: (err) => {
+          const message = extractErrorDetail(err);
+          setError(message);
+          addToast(message, "error");
+        },
       },
     );
   };

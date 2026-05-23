@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/cn";
+import { usePermission } from "@/hooks/usePermission";
 import {
   LayoutDashboard,
   ListTodo,
@@ -49,20 +50,28 @@ function NavItemLink({ item }: { item: NavItem }) {
 
 export function SidebarNav({ section }: SidebarNavProps) {
   const { t } = useTranslation();
+  const canReadRoles = usePermission("roles:read");
+  const canReadUsers = usePermission("users:read");
+  const canWriteTenants = usePermission("tenants:write");
 
   const appItems: NavItem[] = [
     { label: t("nav.dashboard"), path: "/app", icon: <LayoutDashboard className="h-4 w-4" /> },
     { label: t("nav.todos"), path: "/app/todos", icon: <ListTodo className="h-4 w-4" /> },
   ];
 
-  const tenantItems: NavItem[] = [
-    { label: t("nav.tenants"), path: "/tenant/tenants", icon: <Building2 className="h-4 w-4" /> },
-    { label: t("nav.roles"), path: "/tenant/roles", icon: <Shield className="h-4 w-4" /> },
-    { label: t("nav.users"), path: "/tenant/users", icon: <Users className="h-4 w-4" /> },
-    { label: t("nav.invitations"), path: "/tenant/invitations", icon: <Mail className="h-4 w-4" /> },
-    { label: t("nav.subscription"), path: "/tenant/subscription", icon: <CreditCard className="h-4 w-4" /> },
-    { label: t("nav.billing"), path: "/tenant/billing", icon: <Banknote className="h-4 w-4" /> },
-  ];
+  const tenantItems: NavItem[] = [];
+  tenantItems.push({ label: t("nav.tenants"), path: "/tenant/tenants", icon: <Building2 className="h-4 w-4" /> });
+  if (canReadRoles) {
+    tenantItems.push({ label: t("nav.roles"), path: "/tenant/roles", icon: <Shield className="h-4 w-4" /> });
+  }
+  if (canReadUsers) {
+    tenantItems.push({ label: t("nav.users"), path: "/tenant/users", icon: <Users className="h-4 w-4" /> });
+    tenantItems.push({ label: t("nav.invitations"), path: "/tenant/invitations", icon: <Mail className="h-4 w-4" /> });
+  }
+  if (canWriteTenants) {
+    tenantItems.push({ label: t("nav.subscription"), path: "/tenant/subscription", icon: <CreditCard className="h-4 w-4" /> });
+    tenantItems.push({ label: t("nav.billing"), path: "/tenant/billing", icon: <Banknote className="h-4 w-4" /> });
+  }
 
   const adminItems: NavItem[] = [
     { label: t("nav.adminTenants"), path: "/admin/tenants", icon: <Building2 className="h-4 w-4" /> },

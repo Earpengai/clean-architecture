@@ -185,6 +185,10 @@ export interface TransactionCheckResult {
   externalRef: string;
 }
 
+export interface MyPermissionsResponse {
+  permissions: string[];
+}
+
 export interface PaymentResponse {
   id: string;
   plan: string;

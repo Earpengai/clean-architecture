@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useTenantSubscription } from "@/api/subscription";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,7 +57,7 @@ export function SubscriptionPage() {
   }
 
   if (error) {
-    return <p className="text-sm text-red-500">{t("todos.error")}</p>;
+    return <ErrorDisplay error={error} />;
   }
 
   if (!sub) {

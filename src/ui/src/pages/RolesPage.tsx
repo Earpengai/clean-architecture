@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useRoles } from "@/api/roles";
+import { PermissionGate } from "@/components/PermissionGate";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { RoleFormDialog } from "@/features/roles/components/RoleFormDialog";
 import { DeleteRoleDialog } from "@/features/roles/components/DeleteRoleDialog";
 import { Badge } from "@/components/ui/badge";
@@ -14,17 +16,21 @@ export function RolesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Roles</h1>
-        <RoleFormDialog />
+        <PermissionGate permission="roles:write">
+          <RoleFormDialog />
+        </PermissionGate>
       </div>
 
       {isLoading && <p className="text-sm text-gray-400">{t("todos.loading")}</p>}
-      {error && <p className="text-sm text-red-500">{t("todos.error")}</p>}
+      {error && <ErrorDisplay error={error} className="mb-4" />}
 
       {roles && roles.length === 0 && (
         <div className="rounded-lg border border-dashed border-gray-300 p-8 text-center">
           <p className="text-sm text-gray-500">No custom roles yet.</p>
           <div className="mt-4">
-            <RoleFormDialog />
+            <PermissionGate permission="roles:write">
+              <RoleFormDialog />
+            </PermissionGate>
           </div>
         </div>
       )}
@@ -55,15 +61,19 @@ export function RolesPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <RoleFormDialog
-                      role={role}
-                      trigger={
-                        <button className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-indigo-600">
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                      }
-                    />
-                    <DeleteRoleDialog role={role} />
+                    <PermissionGate permission="roles:write">
+                      <RoleFormDialog
+                        role={role}
+                        trigger={
+                          <button className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-indigo-600">
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        }
+                      />
+                    </PermissionGate>
+                    <PermissionGate permission="roles:delete">
+                      <DeleteRoleDialog role={role} />
+                    </PermissionGate>
                   </div>
                 </div>
               </CardContent>

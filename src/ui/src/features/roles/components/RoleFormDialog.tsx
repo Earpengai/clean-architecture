@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useCreateRole, useUpdateRole } from "@/api/roles";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +44,7 @@ export function RoleFormDialog({ role, trigger }: RoleFormDialogProps) {
   const isEdit = Boolean(role);
   const create = useCreateRole();
   const update = useUpdateRole();
+  const addToast = useToastStore((state) => state.addToast);
 
   useEffect(() => {
     if (role) {
@@ -77,13 +80,21 @@ export function RoleFormDialog({ role, trigger }: RoleFormDialogProps) {
         { id: role.id, payload },
         {
           onSuccess: () => setOpen(false),
-          onError: (err) => setError(err.message),
+          onError: (err) => {
+            const message = extractErrorDetail(err);
+            setError(message);
+            addToast(message, "error");
+          },
         },
       );
     } else {
       create.mutate(payload, {
         onSuccess: () => setOpen(false),
-        onError: (err) => setError(err.message),
+        onError: (err) => {
+          const message = extractErrorDetail(err);
+          setError(message);
+          addToast(message, "error");
+        },
       });
     }
   };

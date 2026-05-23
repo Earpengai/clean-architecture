@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useCreateTenant } from "@/api/tenants";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +22,7 @@ export function CreateTenantDialog() {
   const [identifier, setIdentifier] = useState("");
   const [error, setError] = useState("");
   const create = useCreateTenant();
+  const addToast = useToastStore((state) => state.addToast);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +36,11 @@ export function CreateTenantDialog() {
           setName("");
           setIdentifier("");
         },
-        onError: (err) => setError(err.message),
+        onError: (err) => {
+          const message = extractErrorDetail(err);
+          setError(message);
+          addToast(message, "error");
+        },
       },
     );
   };

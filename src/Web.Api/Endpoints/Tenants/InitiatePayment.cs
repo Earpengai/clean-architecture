@@ -1,5 +1,6 @@
 using Application.Abstractions.Messaging;
 using Application.Billing.InitiatePayment;
+using Domain.Permissions;
 using Domain.Tenants;
 using SharedKernel;
 using Web.Api.Extensions;
@@ -27,6 +28,7 @@ internal sealed class InitiatePayment : IEndpoint
             return result.Match(Results.Ok, CustomResults.Problem);
         })
         .RequireAuthorization()
+        .HasPermission(Permission.TenantsWrite)
         .WithTags(Tags.Subscription);
     }
 }

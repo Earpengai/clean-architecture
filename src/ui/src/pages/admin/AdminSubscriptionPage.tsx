@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePlanFeatures, useUpdatePlanFeature, usePlanLimits, useUpdatePlanLimit } from "@/api/subscription";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
+import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -39,6 +42,7 @@ function FeaturesTab() {
   const { t } = useTranslation();
   const { data: features, isLoading, error } = usePlanFeatures();
   const updateFeature = useUpdatePlanFeature();
+  const addToast = useToastStore((state) => state.addToast);
 
   if (isLoading) {
     return (
@@ -51,7 +55,7 @@ function FeaturesTab() {
   }
 
   if (error) {
-    return <p className="text-sm text-red-500">{t("todos.error")}</p>;
+    return <ErrorDisplay error={error} />;
   }
 
   if (!features || features.length === 0) {
@@ -68,7 +72,12 @@ function FeaturesTab() {
   }
 
   function handleToggle(plan: string, feature: string, current: boolean) {
-    updateFeature.mutate({ plan, feature, isEnabled: !current });
+    updateFeature.mutate(
+      { plan, feature, isEnabled: !current },
+      {
+        onError: (err) => addToast(extractErrorDetail(err), "error"),
+      },
+    );
   }
 
   return (
@@ -127,6 +136,7 @@ function LimitsTab() {
   const { data: limits, isLoading, error } = usePlanLimits();
   const updateLimit = useUpdatePlanLimit();
   const [editingValues, setEditingValues] = useState<Record<string, number>>({});
+  const addToast = useToastStore((state) => state.addToast);
 
   if (isLoading) {
     return (
@@ -139,7 +149,7 @@ function LimitsTab() {
   }
 
   if (error) {
-    return <p className="text-sm text-red-500">{t("todos.error")}</p>;
+    return <ErrorDisplay error={error} />;
   }
 
   if (!limits || limits.length === 0) {
@@ -171,7 +181,12 @@ function LimitsTab() {
     const key = getEditKey(plan, limit);
     const val = editingValues[key];
     if (val !== undefined && val !== currentValue(plan, limit)) {
-      updateLimit.mutate({ plan, limit, value: val });
+      updateLimit.mutate(
+        { plan, limit, value: val },
+        {
+          onError: (err) => addToast(extractErrorDetail(err), "error"),
+        },
+      );
     }
     setEditingValues((prev) => {
       const next = { ...prev };
