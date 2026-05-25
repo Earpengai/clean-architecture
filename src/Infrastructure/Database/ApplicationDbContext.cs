@@ -4,6 +4,7 @@ using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
 using Infrastructure.DomainEvents;
+using Infrastructure.Jobs;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -32,6 +33,8 @@ public sealed class ApplicationDbContext(
     public DbSet<PlanLimit> PlanLimits { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
+
+    public DbSet<BackgroundJob> BackgroundJobs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {

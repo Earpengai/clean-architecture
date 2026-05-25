@@ -6,9 +6,11 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Billing;
 using Application.Abstractions.Data;
 using Application.Abstractions.Email;
+using Application.Abstractions.Jobs;
 using Application.Abstractions.SubscriptionFeatures;
 using Domain.Tenants;
 using Domain.Users;
+using DomainRole = Domain.Tenants.Role;
 using Finbuckle.MultiTenant;
 using Infrastructure.Authentication;
 using Infrastructure.Authorization;
@@ -17,6 +19,7 @@ using Infrastructure.Data;
 using Infrastructure.Database;
 using Infrastructure.DomainEvents;
 using Infrastructure.Email;
+using Infrastructure.Jobs;
 using Infrastructure.Multitenancy;
 using Infrastructure.SubscriptionFeatures;
 using Infrastructure.Time;
@@ -35,6 +38,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using SharedKernel;
+using StackExchange.Redis;
 
 namespace Infrastructure;
 
@@ -61,7 +65,23 @@ public static class DependencyInjection
 
         services.AddTransient<DataSeeder>();
 
-        services.AddScoped<IEmailService, MailHogEmailService>();
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+        {
+            string? connectionString = configuration["Redis:ConnectionString"] ?? "localhost:6379";
+
+            var options = ConfigurationOptions.Parse(connectionString);
+            options.AbortOnConnectFail = false;
+
+            return ConnectionMultiplexer.Connect(options);
+        });
+
+        services.AddScoped<IBackgroundJobQueue, DatabaseBackgroundJobQueue>();
+
+        services.AddScoped<IEmailService, QueuedEmailService>();
+
+        services.AddScoped<MailHogEmailService>();
+
+        services.AddScoped<IBackgroundJobHandler<SendEmailJob>, SendEmailJobHandler>();
 
         services.AddScoped<ISubscriptionFeatureProvider, SubscriptionFeatureProvider>();
 
@@ -70,6 +90,8 @@ public static class DependencyInjection
         services.AddHttpClient();
 
         services.AddScoped<IBakongService, BakongService>();
+
+        services.AddHostedService<BackgroundJobProcessor>();
 
         services.AddHostedService<SubscriptionExpirationService>();
 
@@ -108,7 +130,7 @@ public static class DependencyInjection
                 options.User.RequireUniqueEmail = true;
                 options.SignIn.RequireConfirmedEmail = false;
             })
-            .AddRoles<Role>()
+            .AddRoles<DomainRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
@@ -119,7 +141,8 @@ public static class DependencyInjection
     {
         services
             .AddHealthChecks()
-            .AddNpgSql(configuration.GetConnectionString("Database")!);
+            .AddNpgSql(configuration.GetConnectionString("Database")!)
+            .AddRedis(configuration["Redis:ConnectionString"] ?? "localhost:6379");
 
         return services;
     }
