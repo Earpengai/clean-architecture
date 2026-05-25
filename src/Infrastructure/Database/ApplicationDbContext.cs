@@ -1,5 +1,6 @@
 ﻿using Application.Abstractions.Data;
 using Domain.Payments;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
@@ -33,6 +34,10 @@ public sealed class ApplicationDbContext(
     public DbSet<PlanLimit> PlanLimits { get; set; }
 
     public DbSet<Payment> Payments { get; set; }
+
+    public DbSet<SubscriptionPlan> SubscriptionPlans { get; set; }
+
+    public DbSet<Subscription> Subscriptions { get; set; }
 
     public DbSet<BackgroundJob> BackgroundJobs { get; set; }
 

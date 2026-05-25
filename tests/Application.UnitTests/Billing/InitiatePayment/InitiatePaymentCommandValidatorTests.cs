@@ -9,9 +9,9 @@ public sealed class InitiatePaymentCommandValidatorTests
     private readonly InitiatePaymentCommandValidator _validator = new();
 
     [Fact]
-    public void ShouldHaveError_WhenPlanIsFree()
+    public void ShouldHaveError_WhenSubscriptionPlanIdIsEmpty()
     {
-        var command = new InitiatePaymentCommand(SubscriptionPlan.Free, SubscriptionBillingPeriod.Monthly);
+        var command = new InitiatePaymentCommand(Guid.Empty, SubscriptionBillingPeriod.Monthly);
 
         TestValidationResult<InitiatePaymentCommand> result = _validator.TestValidate(command);
 
@@ -19,9 +19,9 @@ public sealed class InitiatePaymentCommandValidatorTests
     }
 
     [Fact]
-    public void ShouldNotHaveError_WhenPlanIsPro()
+    public void ShouldNotHaveError_WhenSubscriptionPlanIdIsValid()
     {
-        var command = new InitiatePaymentCommand(SubscriptionPlan.Pro, SubscriptionBillingPeriod.Monthly);
+        var command = new InitiatePaymentCommand(Guid.NewGuid(), SubscriptionBillingPeriod.Monthly);
 
         TestValidationResult<InitiatePaymentCommand> result = _validator.TestValidate(command);
 
@@ -29,9 +29,9 @@ public sealed class InitiatePaymentCommandValidatorTests
     }
 
     [Fact]
-    public void ShouldNotHaveError_WhenPlanIsEnterprise()
+    public void ShouldNotHaveError_WhenBillingPeriodIsYearly()
     {
-        var command = new InitiatePaymentCommand(SubscriptionPlan.Enterprise, SubscriptionBillingPeriod.Yearly);
+        var command = new InitiatePaymentCommand(Guid.NewGuid(), SubscriptionBillingPeriod.Yearly);
 
         TestValidationResult<InitiatePaymentCommand> result = _validator.TestValidate(command);
 

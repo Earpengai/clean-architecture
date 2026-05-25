@@ -1,6 +1,5 @@
 using Application.Abstractions.Messaging;
 using Application.SubscriptionFeatures.UpdatePlanFeature;
-using Domain.Tenants;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
@@ -14,14 +13,14 @@ internal sealed class UpdatePlanFeature : IEndpoint
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPut("admin/subscription/plans/{plan}/features/{feature}", async (
-            SubscriptionPlan plan,
+        app.MapPut("admin/subscription/plans/{planId:guid}/features/{feature}", async (
+            Guid planId,
             string feature,
             Request request,
             ICommandHandler<UpdatePlanFeatureCommand> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new UpdatePlanFeatureCommand(plan, feature, request.IsEnabled);
+            var command = new UpdatePlanFeatureCommand(planId, feature, request.IsEnabled);
 
             Result result = await handler.Handle(command, cancellationToken);
 

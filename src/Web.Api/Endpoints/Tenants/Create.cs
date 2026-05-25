@@ -10,7 +10,7 @@ namespace Web.Api.Endpoints.Tenants;
 
 internal sealed class Create : IEndpoint
 {
-    public sealed record Request(string Name, string Identifier);
+    public sealed record Request(string Name, string Identifier, Guid? SubscriptionPlanId = null);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -23,7 +23,8 @@ internal sealed class Create : IEndpoint
             var command = new CreateTenantCommand(
                 request.Name,
                 request.Identifier,
-                userContext.UserId);
+                userContext.UserId,
+                request.SubscriptionPlanId);
 
             Result<CreateTenantResponse> result = await handler.Handle(command, cancellationToken);
 

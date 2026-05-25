@@ -3,6 +3,7 @@ using Application.Abstractions.Billing;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Payments;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -60,16 +61,30 @@ internal sealed class CheckPaymentQueryHandler(
         payment.TransactionHash = result.Hash;
         payment.CompletedAt = DateTime.UtcNow;
 
-        tenant.SubscriptionPlan = payment.Plan;
-        tenant.BillingPeriod = payment.BillingPeriod;
-        tenant.SubscriptionStatus = SubscriptionStatus.Active;
-        tenant.SubscriptionExpiresAt = payment.BillingPeriod switch
+        Subscription? subscription = await context.Subscriptions
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId, cancellationToken);
+
+        if (subscription is null)
+        {
+            subscription = new Subscription
+            {
+                Id = Guid.NewGuid(),
+                TenantId = tenantId,
+                CreatedAt = DateTime.UtcNow
+            };
+            context.Subscriptions.Add(subscription);
+        }
+
+        subscription.SubscriptionPlanId = payment.SubscriptionPlanId;
+        subscription.BillingPeriod = payment.BillingPeriod;
+        subscription.Status = SubscriptionStatus.Active;
+        subscription.ExpiresAt = payment.BillingPeriod switch
         {
             SubscriptionBillingPeriod.Monthly => DateTime.UtcNow.AddMonths(1),
             SubscriptionBillingPeriod.Yearly => DateTime.UtcNow.AddYears(1),
             _ => null
         };
-        tenant.UpdatedAt = DateTime.UtcNow;
+        subscription.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
 

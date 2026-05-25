@@ -4,5 +4,5 @@ using Domain.Tenants;
 namespace Application.Billing.InitiatePayment;
 
 public sealed record InitiatePaymentCommand(
-    SubscriptionPlan Plan,
+    Guid SubscriptionPlanId,
     SubscriptionBillingPeriod BillingPeriod) : ICommand<InitiatePaymentResponse>;

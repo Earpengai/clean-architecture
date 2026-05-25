@@ -5,6 +5,6 @@ namespace Application.Admin.UpdateTenantSubscription;
 
 public sealed record UpdateTenantSubscriptionCommand(
     Guid TenantId,
-    SubscriptionPlan SubscriptionPlan,
+    Guid SubscriptionPlanId,
     SubscriptionStatus SubscriptionStatus,
     int SeatCount) : ICommand;

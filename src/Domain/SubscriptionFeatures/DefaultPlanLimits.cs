@@ -1,5 +1,3 @@
-using Domain.Tenants;
-
 namespace Domain.SubscriptionFeatures;
 
 public static class DefaultPlanLimits
@@ -8,28 +6,31 @@ public static class DefaultPlanLimits
     {
         [SubscriptionLimit.MaxUsers] = 3,
         [SubscriptionLimit.MaxTodos] = 50,
-        [SubscriptionLimit.StorageMb] = 100
+        [SubscriptionLimit.StorageMb] = 100,
+        [SubscriptionLimit.MaxTenantsPerUser] = 1
     };
 
     public static IReadOnlyDictionary<string, int> Pro { get; } = new Dictionary<string, int>
     {
         [SubscriptionLimit.MaxUsers] = 20,
         [SubscriptionLimit.MaxTodos] = 500,
-        [SubscriptionLimit.StorageMb] = 1024
+        [SubscriptionLimit.StorageMb] = 1024,
+        [SubscriptionLimit.MaxTenantsPerUser] = SubscriptionLimit.Unlimited
     };
 
     public static IReadOnlyDictionary<string, int> Enterprise { get; } = new Dictionary<string, int>
     {
         [SubscriptionLimit.MaxUsers] = SubscriptionLimit.Unlimited,
         [SubscriptionLimit.MaxTodos] = SubscriptionLimit.Unlimited,
-        [SubscriptionLimit.StorageMb] = SubscriptionLimit.Unlimited
+        [SubscriptionLimit.StorageMb] = SubscriptionLimit.Unlimited,
+        [SubscriptionLimit.MaxTenantsPerUser] = SubscriptionLimit.Unlimited
     };
 
-    public static IReadOnlyDictionary<string, int> GetDefaults(SubscriptionPlan plan) => plan switch
+    public static IReadOnlyDictionary<string, int> GetDefaults(string planName) => planName switch
     {
-        SubscriptionPlan.Free => Free,
-        SubscriptionPlan.Pro => Pro,
-        SubscriptionPlan.Enterprise => Enterprise,
+        "Free" => Free,
+        "Pro" => Pro,
+        "Enterprise" => Enterprise,
         _ => new Dictionary<string, int>()
     };
 }

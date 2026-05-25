@@ -1,6 +1,6 @@
-using System.Collections.Immutable;
 using Application.Abstractions.Data;
 using Domain.SubscriptionFeatures;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
@@ -19,8 +19,7 @@ internal sealed class DataSeeder(
     public async Task SeedAsync()
     {
         await SeedSystemAdministratorAsync();
-        await SeedPlanFeaturesAsync();
-        await SeedPlanLimitsAsync();
+        await SeedSubscriptionPlansAsync();
     }
 
     private async Task SeedSystemAdministratorAsync()
@@ -69,69 +68,108 @@ internal sealed class DataSeeder(
         }
     }
 
-    private async Task SeedPlanFeaturesAsync()
+    private async Task SeedSubscriptionPlansAsync()
     {
-        bool hasAny = await dbContext.PlanFeatures.AnyAsync();
+        bool hasAny = await dbContext.SubscriptionPlans.AnyAsync();
 
         if (hasAny)
         {
             return;
         }
 
-        foreach (SubscriptionPlan plan in Enum.GetValues<SubscriptionPlan>())
+        var free = new SubscriptionPlan
         {
-            HashSet<string> features = DefaultPlanFeatures.GetDefaults(plan);
+            Id = Guid.NewGuid(),
+            Name = "Free",
+            Description = "Free plan with basic features",
+            PriceMonthly = 0m,
+            PriceYearly = 0m,
+            TrialDays = 0,
+            SortOrder = 0,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
 
-            foreach (string feature in SubscriptionFeature.All)
-            {
-                var planFeature = new PlanFeature
-                {
-                    Plan = plan,
-                    Feature = feature,
-                    IsEnabled = features.Contains(feature)
-                };
+        var pro = new SubscriptionPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Pro",
+            Description = "Pro plan with advanced features",
+            PriceMonthly = 0.01m,
+            PriceYearly = 299.99m,
+            TrialDays = 14,
+            SortOrder = 1,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
 
-                dbContext.PlanFeatures.Add(planFeature);
-            }
-        }
+        var enterprise = new SubscriptionPlan
+        {
+            Id = Guid.NewGuid(),
+            Name = "Enterprise",
+            Description = "Enterprise plan with all features",
+            PriceMonthly = 99.99m,
+            PriceYearly = 999.99m,
+            TrialDays = 14,
+            SortOrder = 2,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        dbContext.SubscriptionPlans.Add(free);
+        dbContext.SubscriptionPlans.Add(pro);
+        dbContext.SubscriptionPlans.Add(enterprise);
 
         await dbContext.SaveChangesAsync();
 
-        logger.LogInformation("Default plan features seeded for {PlanCount} plans", Enum.GetValues<SubscriptionPlan>().Length);
+        SeedPlanFeatures(free);
+        SeedPlanFeatures(pro);
+        SeedPlanFeatures(enterprise);
+
+        SeedPlanLimits(free);
+        SeedPlanLimits(pro);
+        SeedPlanLimits(enterprise);
+
+        await dbContext.SaveChangesAsync();
+
+        logger.LogInformation("Default subscription plans, features, and limits seeded for 3 plans");
     }
 
-    private async Task SeedPlanLimitsAsync()
+    private void SeedPlanFeatures(SubscriptionPlan plan)
     {
-        bool hasAny = await dbContext.PlanLimits.AnyAsync();
+        HashSet<string> features = DefaultPlanFeatures.GetDefaults(plan.Name);
 
-        if (hasAny)
+        foreach (string feature in SubscriptionFeature.All)
         {
-            return;
-        }
-
-        foreach (SubscriptionPlan plan in Enum.GetValues<SubscriptionPlan>())
-        {
-            IReadOnlyDictionary<string, int> limits = DefaultPlanLimits.GetDefaults(plan);
-
-            foreach (string limit in SubscriptionLimit.All)
+            var planFeature = new PlanFeature
             {
-                int value = limits.TryGetValue(limit, out int existingValue)
-                    ? existingValue
-                    : SubscriptionLimit.Unlimited;
+                SubscriptionPlanId = plan.Id,
+                Feature = feature,
+                IsEnabled = features.Contains(feature)
+            };
 
-                var planLimit = new PlanLimit
-                {
-                    Plan = plan,
-                    Limit = limit,
-                    Value = value
-                };
-
-                dbContext.PlanLimits.Add(planLimit);
-            }
+            dbContext.PlanFeatures.Add(planFeature);
         }
+    }
 
-        await dbContext.SaveChangesAsync();
+    private void SeedPlanLimits(SubscriptionPlan plan)
+    {
+        IReadOnlyDictionary<string, int> limits = DefaultPlanLimits.GetDefaults(plan.Name);
 
-        logger.LogInformation("Default plan limits seeded for {PlanCount} plans", Enum.GetValues<SubscriptionPlan>().Length);
+        foreach (string limit in SubscriptionLimit.All)
+        {
+            int value = limits.TryGetValue(limit, out int existingValue)
+                ? existingValue
+                : SubscriptionLimit.Unlimited;
+
+            var planLimit = new PlanLimit
+            {
+                SubscriptionPlanId = plan.Id,
+                Limit = limit,
+                Value = value
+            };
+
+            dbContext.PlanLimits.Add(planLimit);
+        }
     }
 }

@@ -21,17 +21,19 @@ internal sealed class GetPlanLimitsQueryHandler(
                 Domain.Users.UserErrors.Unauthorized());
         }
 
+#pragma warning disable IDE0031
         List<PlanLimitResponse> limits = await context.PlanLimits
             .AsNoTracking()
-            .OrderBy(pl => pl.Plan)
+            .OrderBy(pl => pl.SubscriptionPlan != null ? pl.SubscriptionPlan.Name : string.Empty)
             .ThenBy(pl => pl.Limit)
             .Select(pl => new PlanLimitResponse
             {
-                Plan = pl.Plan.ToString(),
+                Plan = pl.SubscriptionPlan != null ? pl.SubscriptionPlan.Name : string.Empty,
                 Limit = pl.Limit,
                 Value = pl.Value
             })
             .ToListAsync(cancellationToken);
+#pragma warning restore IDE0031
 
         return limits;
     }

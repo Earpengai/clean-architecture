@@ -21,6 +21,8 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
 
         Domain.Tenants.Tenant? tenant = await context.Tenants
             .AsNoTracking()
+            .Include(t => t.Subscription)
+            .ThenInclude(s => s!.SubscriptionPlan)
             .FirstOrDefaultAsync(t => t.Identifier == identifier);
 
         if (tenant is null)
@@ -44,6 +46,8 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
 
         Domain.Tenants.Tenant? tenant = await context.Tenants
             .AsNoTracking()
+            .Include(t => t.Subscription)
+            .ThenInclude(s => s!.SubscriptionPlan)
             .FirstOrDefaultAsync(t => t.Id == tenantId);
 
         if (tenant is null)
@@ -62,6 +66,8 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
 
         List<Domain.Tenants.Tenant> tenants = await context.Tenants
             .AsNoTracking()
+            .Include(t => t.Subscription)
+            .ThenInclude(s => s!.SubscriptionPlan)
             .ToListAsync();
 
         return tenants.Select(MapToAppTenantInfo);
@@ -75,6 +81,8 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
 
         List<Domain.Tenants.Tenant> tenants = await context.Tenants
             .AsNoTracking()
+            .Include(t => t.Subscription)
+            .ThenInclude(s => s!.SubscriptionPlan)
             .Skip(skip)
             .Take(take)
             .ToListAsync();
@@ -100,8 +108,6 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             Id = Guid.Parse(tenantInfo.Id!),
             Name = tenantInfo.Name!,
             Identifier = tenantInfo.Identifier!,
-            SubscriptionPlan = Enum.Parse<Domain.Tenants.SubscriptionPlan>(tenantInfo.SubscriptionPlan),
-            SubscriptionStatus = Enum.Parse<Domain.Tenants.SubscriptionStatus>(tenantInfo.SubscriptionStatus),
             SeatCount = tenantInfo.SeatCount,
             CreatedAt = DateTime.UtcNow
         };
@@ -147,8 +153,6 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
         }
 
         tenant.Name = tenantInfo.Name!;
-        tenant.SubscriptionPlan = Enum.Parse<Domain.Tenants.SubscriptionPlan>(tenantInfo.SubscriptionPlan);
-        tenant.SubscriptionStatus = Enum.Parse<Domain.Tenants.SubscriptionStatus>(tenantInfo.SubscriptionStatus);
         tenant.SeatCount = tenantInfo.SeatCount;
         tenant.UpdatedAt = DateTime.UtcNow;
 
@@ -164,8 +168,8 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             Id = tenant.Id.ToString(),
             Name = tenant.Name,
             Identifier = tenant.Identifier,
-            SubscriptionPlan = tenant.SubscriptionPlan.ToString(),
-            SubscriptionStatus = tenant.SubscriptionStatus.ToString(),
+            SubscriptionPlan = tenant.Subscription?.SubscriptionPlan?.Name ?? string.Empty,
+            SubscriptionStatus = tenant.Subscription?.Status.ToString() ?? string.Empty,
             SeatCount = tenant.SeatCount
         };
     }

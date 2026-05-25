@@ -23,4 +23,8 @@ public static class TenantErrors
     public static readonly Error LimitNotFound = Error.NotFound(
         "Tenants.LimitNotFound",
         "The specified subscription limit was not found");
+
+    public static Error MaxFreeTenantsReached(Guid planId) => Error.Problem(
+        "Tenants.MaxFreeTenantsReached",
+        $"You have reached the maximum number of allowed tenants for the plan with Id = '{planId}'");
 }

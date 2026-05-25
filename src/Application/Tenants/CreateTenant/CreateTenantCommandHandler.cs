@@ -3,6 +3,8 @@ using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Permissions;
+using Domain.SubscriptionFeatures;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -25,16 +27,62 @@ internal sealed class CreateTenantCommandHandler(
             return Result.Failure<CreateTenantResponse>(TenantErrors.IdentifierNotUnique);
         }
 
+        SubscriptionPlan? plan = command.SubscriptionPlanId is not null
+            ? await context.SubscriptionPlans
+                .FirstOrDefaultAsync(p => p.Id == command.SubscriptionPlanId.Value, cancellationToken)
+            : await context.SubscriptionPlans
+                .Where(p => p.IsActive)
+                .OrderBy(p => p.SortOrder)
+                .FirstOrDefaultAsync(cancellationToken);
+
+        if (plan is null)
+        {
+            return Result.Failure<CreateTenantResponse>(SubscriptionErrors.NoActivePlanAvailable);
+        }
+
+        int? limitValue = await context.PlanLimits
+            .Where(pl => pl.SubscriptionPlanId == plan.Id && pl.Limit == SubscriptionLimit.MaxTenantsPerUser)
+            .Select(pl => (int?)pl.Value)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (limitValue is not null && limitValue != SubscriptionLimit.Unlimited)
+        {
+            List<Guid> userTenantIds = await context.Memberships
+                .Where(m => m.UserId == command.OwnerId && m.Role.Name == "Owner")
+                .Select(m => m.TenantId)
+                .ToListAsync(cancellationToken);
+
+            int ownedCount = await context.Subscriptions
+                .Where(s => userTenantIds.Contains(s.TenantId) && s.SubscriptionPlanId == plan.Id)
+                .CountAsync(cancellationToken);
+
+            if (ownedCount >= limitValue.Value)
+            {
+                return Result.Failure<CreateTenantResponse>(
+                    TenantErrors.MaxFreeTenantsReached(plan.Id));
+            }
+        }
+
+        var subscription = new Subscription
+        {
+            Id = Guid.NewGuid(),
+            SubscriptionPlanId = plan.Id,
+            Status = SubscriptionStatus.Trialing,
+            BillingPeriod = SubscriptionBillingPeriod.None,
+            ExpiresAt = plan.TrialDays > 0 ? DateTime.UtcNow.AddDays(plan.TrialDays) : null,
+            CreatedAt = DateTime.UtcNow
+        };
+
         var tenant = new Tenant
         {
             Id = Guid.NewGuid(),
             Name = command.Name,
             Identifier = command.Identifier,
-            SubscriptionPlan = SubscriptionPlan.Free,
-            SubscriptionStatus = SubscriptionStatus.Trialing,
             SeatCount = 1,
             CreatedAt = DateTime.UtcNow
         };
+
+        subscription.TenantId = tenant.Id;
 
         Role ownerRole = CreateSystemRole(tenant.Id, "Owner", DefaultPermissions.Owner);
         Role adminRole = CreateSystemRole(tenant.Id, "Admin", DefaultPermissions.Admin);
@@ -49,6 +97,7 @@ internal sealed class CreateTenantCommandHandler(
         };
 
         context.Tenants.Add(tenant);
+        context.Subscriptions.Add(subscription);
         context.Roles.Add(ownerRole);
         context.Roles.Add(adminRole);
         context.Roles.Add(memberRole);

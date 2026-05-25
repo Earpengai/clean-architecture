@@ -1,3 +1,4 @@
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Domain.Users;
 
@@ -10,7 +11,7 @@ public sealed class Payment
     public Tenant Tenant { get; set; }
     public Guid UserId { get; set; }
     public User User { get; set; }
-    public SubscriptionPlan Plan { get; set; }
+    public Guid SubscriptionPlanId { get; set; }
     public SubscriptionBillingPeriod BillingPeriod { get; set; }
     public decimal Amount { get; set; }
     public string Currency { get; set; }
@@ -20,4 +21,6 @@ public sealed class Payment
     public string? TransactionHash { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+
+    public SubscriptionPlan? SubscriptionPlan { get; set; }
 }

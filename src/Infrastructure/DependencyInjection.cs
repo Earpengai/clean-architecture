@@ -8,7 +8,6 @@ using Application.Abstractions.Data;
 using Application.Abstractions.Email;
 using Application.Abstractions.Jobs;
 using Application.Abstractions.SubscriptionFeatures;
-using Domain.Tenants;
 using Domain.Users;
 using DomainRole = Domain.Tenants.Role;
 using Finbuckle.MultiTenant;

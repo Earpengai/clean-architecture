@@ -7,7 +7,7 @@ internal sealed class UpdatePlanLimitCommandValidator : AbstractValidator<Update
 {
     public UpdatePlanLimitCommandValidator()
     {
-        RuleFor(c => c.Plan).IsInEnum();
+        RuleFor(c => c.SubscriptionPlanId).NotEmpty();
         RuleFor(c => c.Limit).NotEmpty().Must(l => SubscriptionLimit.All.Contains(l))
             .WithMessage("The specified limit is not recognized.");
         RuleFor(c => c.Value)

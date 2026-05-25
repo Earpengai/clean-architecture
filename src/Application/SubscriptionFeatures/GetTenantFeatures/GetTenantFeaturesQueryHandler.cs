@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -24,18 +25,19 @@ internal sealed class GetTenantFeaturesQueryHandler(
 
         Guid tenantId = userContext.TenantId.Value;
 
-        Tenant? tenant = await context.Tenants
+        Subscription? subscription = await context.Subscriptions
             .AsNoTracking()
-            .FirstOrDefaultAsync(t => t.Id == tenantId, cancellationToken);
+            .Include(s => s.SubscriptionPlan)
+            .FirstOrDefaultAsync(s => s.TenantId == tenantId, cancellationToken);
 
-        if (tenant is null)
+        if (subscription is null)
         {
             return Result.Failure<TenantFeaturesResponse>(TenantErrors.NotFound(tenantId));
         }
 
         List<FeatureState> features = await context.PlanFeatures
             .AsNoTracking()
-            .Where(pf => pf.Plan == tenant.SubscriptionPlan)
+            .Where(pf => pf.SubscriptionPlanId == subscription.SubscriptionPlanId)
             .OrderBy(pf => pf.Feature)
             .Select(pf => new FeatureState
             {
@@ -46,7 +48,7 @@ internal sealed class GetTenantFeaturesQueryHandler(
 
         List<LimitState> limits = await context.PlanLimits
             .AsNoTracking()
-            .Where(pl => pl.Plan == tenant.SubscriptionPlan)
+            .Where(pl => pl.SubscriptionPlanId == subscription.SubscriptionPlanId)
             .OrderBy(pl => pl.Limit)
             .Select(pl => new LimitState
             {
@@ -57,10 +59,10 @@ internal sealed class GetTenantFeaturesQueryHandler(
 
         TenantFeaturesResponse response = new()
         {
-            SubscriptionPlan = tenant.SubscriptionPlan.ToString(),
-            SubscriptionStatus = tenant.SubscriptionStatus.ToString(),
-            BillingPeriod = tenant.BillingPeriod.ToString(),
-            SubscriptionExpiresAt = tenant.SubscriptionExpiresAt?.ToString("O"),
+            SubscriptionPlan = subscription.SubscriptionPlan?.Name ?? string.Empty,
+            SubscriptionStatus = subscription.Status.ToString(),
+            BillingPeriod = subscription.BillingPeriod.ToString(),
+            SubscriptionExpiresAt = subscription.ExpiresAt?.ToString("O"),
             Features = features,
             Limits = limits
         };

@@ -3,7 +3,7 @@ using Application.Abstractions.Billing;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Domain.Payments;
-using Domain.SubscriptionFeatures;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -42,7 +42,18 @@ internal sealed class InitiatePaymentCommandHandler(
             return Result.Failure<InitiatePaymentResponse>(TenantErrors.NotFound(tenantId));
         }
 
-        decimal amount = SubscriptionPricing.GetPrice(command.Plan, command.BillingPeriod);
+        SubscriptionPlan? plan = await context.SubscriptionPlans
+            .FirstOrDefaultAsync(p => p.Id == command.SubscriptionPlanId, cancellationToken);
+
+        if (plan is null)
+        {
+            return Result.Failure<InitiatePaymentResponse>(
+                SubscriptionErrors.PlanNotFound(command.SubscriptionPlanId));
+        }
+
+        decimal amount = command.BillingPeriod == SubscriptionBillingPeriod.Monthly
+            ? plan.PriceMonthly
+            : plan.PriceYearly;
 
         BakongGenerationRequest qrRequest = new()
         {
@@ -58,7 +69,7 @@ internal sealed class InitiatePaymentCommandHandler(
             Id = Guid.NewGuid(),
             TenantId = tenantId,
             UserId = userId,
-            Plan = command.Plan,
+            SubscriptionPlanId = command.SubscriptionPlanId,
             BillingPeriod = command.BillingPeriod,
             Amount = amount,
             Currency = "USD",

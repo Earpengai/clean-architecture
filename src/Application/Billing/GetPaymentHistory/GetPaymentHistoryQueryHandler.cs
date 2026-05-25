@@ -17,6 +17,7 @@ internal sealed class GetPaymentHistoryQueryHandler(
     {
         Guid tenantId = userContext.TenantId ?? Guid.Empty;
 
+#pragma warning disable IDE0031
         List<PaymentResponse> payments = await context.Payments
             .AsNoTracking()
             .Where(p => p.TenantId == tenantId)
@@ -24,7 +25,7 @@ internal sealed class GetPaymentHistoryQueryHandler(
             .Select(p => new PaymentResponse
             {
                 Id = p.Id,
-                Plan = p.Plan.ToString(),
+                Plan = p.SubscriptionPlan != null ? p.SubscriptionPlan.Name : string.Empty,
                 BillingPeriod = p.BillingPeriod.ToString(),
                 Amount = p.Amount,
                 Currency = p.Currency,
@@ -33,6 +34,7 @@ internal sealed class GetPaymentHistoryQueryHandler(
                 CompletedAt = p.CompletedAt
             })
             .ToListAsync(cancellationToken);
+#pragma warning restore IDE0031
 
         return payments;
     }

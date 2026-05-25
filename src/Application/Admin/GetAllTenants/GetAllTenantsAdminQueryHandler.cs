@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
@@ -21,6 +22,7 @@ internal sealed class GetAllTenantsAdminQueryHandler(
                 Domain.Users.UserErrors.Unauthorized());
         }
 
+#pragma warning disable IDE0031
         List<TenantAdminResponse> tenants = await context.Tenants
             .AsNoTracking()
             .OrderByDescending(t => t.CreatedAt)
@@ -29,13 +31,14 @@ internal sealed class GetAllTenantsAdminQueryHandler(
                 Id = t.Id,
                 Name = t.Name,
                 Identifier = t.Identifier,
-                SubscriptionPlan = t.SubscriptionPlan,
-                SubscriptionStatus = t.SubscriptionStatus,
+                SubscriptionPlanName = t.Subscription != null ? t.Subscription.SubscriptionPlan!.Name : null,
+                SubscriptionStatus = t.Subscription != null ? t.Subscription.Status : (SubscriptionStatus?)null,
                 SeatCount = t.SeatCount,
                 IsActive = t.IsActive,
                 CreatedAt = t.CreatedAt
             })
             .ToListAsync(cancellationToken);
+#pragma warning restore IDE0031
 
         return tenants;
     }

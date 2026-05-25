@@ -13,6 +13,7 @@ internal sealed class GetTenantsForUserQueryHandler(IApplicationDbContext contex
         GetTenantsForUserQuery query,
         CancellationToken cancellationToken)
     {
+#pragma warning disable IDE0031
         List<TenantResponse> tenants = await context.Memberships
             .Where(m => m.UserId == query.UserId)
             .Join(context.Tenants,
@@ -26,11 +27,12 @@ internal sealed class GetTenantsForUserQueryHandler(IApplicationDbContext contex
                     x.Tenant.Id,
                     x.Tenant.Name,
                     x.Tenant.Identifier,
-                    x.Tenant.SubscriptionPlan,
-                    x.Tenant.SubscriptionStatus,
+                    x.Tenant.Subscription != null ? x.Tenant.Subscription.SubscriptionPlan!.Name : null,
+                    x.Tenant.Subscription != null ? x.Tenant.Subscription.Status : (SubscriptionStatus?)null,
                     x.Tenant.SeatCount,
                     r.Name!))
             .ToListAsync(cancellationToken);
+#pragma warning restore IDE0031
 
         return tenants;
     }

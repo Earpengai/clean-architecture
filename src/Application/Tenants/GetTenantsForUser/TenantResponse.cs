@@ -6,7 +6,7 @@ public sealed record TenantResponse(
     Guid Id,
     string Name,
     string Identifier,
-    SubscriptionPlan SubscriptionPlan,
-    SubscriptionStatus SubscriptionStatus,
+    string? SubscriptionPlanName,
+    SubscriptionStatus? SubscriptionStatus,
     int SeatCount,
     string Role);

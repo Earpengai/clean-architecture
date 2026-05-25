@@ -11,7 +11,7 @@ namespace Web.Api.Endpoints.Tenants;
 internal sealed class InitiatePayment : IEndpoint
 {
     public sealed record Request(
-        SubscriptionPlan Plan,
+        Guid SubscriptionPlanId,
         SubscriptionBillingPeriod BillingPeriod);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
@@ -21,7 +21,7 @@ internal sealed class InitiatePayment : IEndpoint
             ICommandHandler<InitiatePaymentCommand, InitiatePaymentResponse> handler,
             CancellationToken cancellationToken) =>
         {
-            InitiatePaymentCommand command = new(request.Plan, request.BillingPeriod);
+            InitiatePaymentCommand command = new(request.SubscriptionPlanId, request.BillingPeriod);
 
             Result<InitiatePaymentResponse> result = await handler.Handle(command, cancellationToken);
 

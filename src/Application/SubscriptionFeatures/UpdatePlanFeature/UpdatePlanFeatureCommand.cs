@@ -1,9 +1,8 @@
 using Application.Abstractions.Messaging;
-using Domain.Tenants;
 
 namespace Application.SubscriptionFeatures.UpdatePlanFeature;
 
 public sealed record UpdatePlanFeatureCommand(
-    SubscriptionPlan Plan,
+    Guid SubscriptionPlanId,
     string Feature,
     bool IsEnabled) : ICommand;

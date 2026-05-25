@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -28,8 +29,24 @@ internal sealed class UpdateTenantSubscriptionCommandHandler(
             return Result.Failure(TenantErrors.NotFound(command.TenantId));
         }
 
-        tenant.SubscriptionPlan = command.SubscriptionPlan;
-        tenant.SubscriptionStatus = command.SubscriptionStatus;
+        Subscription? subscription = await context.Subscriptions
+            .FirstOrDefaultAsync(s => s.TenantId == command.TenantId, cancellationToken);
+
+        if (subscription is null)
+        {
+            subscription = new Subscription
+            {
+                Id = Guid.NewGuid(),
+                TenantId = command.TenantId,
+                CreatedAt = DateTime.UtcNow
+            };
+            context.Subscriptions.Add(subscription);
+        }
+
+        subscription.SubscriptionPlanId = command.SubscriptionPlanId;
+        subscription.Status = command.SubscriptionStatus;
+        subscription.UpdatedAt = DateTime.UtcNow;
+
         tenant.SeatCount = command.SeatCount;
         tenant.UpdatedAt = DateTime.UtcNow;
 

@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -19,8 +20,16 @@ internal sealed class UpdatePlanFeatureCommandHandler(
             return Result.Failure(Domain.Users.UserErrors.Unauthorized());
         }
 
+        SubscriptionPlan? plan = await context.SubscriptionPlans
+            .FirstOrDefaultAsync(p => p.Id == command.SubscriptionPlanId, cancellationToken);
+
+        if (plan is null)
+        {
+            return Result.Failure(SubscriptionErrors.PlanNotFound(command.SubscriptionPlanId));
+        }
+
         PlanFeature? planFeature = await context.PlanFeatures
-            .FirstOrDefaultAsync(pf => pf.Plan == command.Plan && pf.Feature == command.Feature, cancellationToken);
+            .FirstOrDefaultAsync(pf => pf.SubscriptionPlanId == command.SubscriptionPlanId && pf.Feature == command.Feature, cancellationToken);
 
         if (planFeature is not null)
         {
@@ -30,7 +39,7 @@ internal sealed class UpdatePlanFeatureCommandHandler(
         {
             planFeature = new PlanFeature
             {
-                Plan = command.Plan,
+                SubscriptionPlanId = command.SubscriptionPlanId,
                 Feature = command.Feature,
                 IsEnabled = command.IsEnabled
             };

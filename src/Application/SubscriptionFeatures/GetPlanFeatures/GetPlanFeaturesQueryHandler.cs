@@ -21,17 +21,19 @@ internal sealed class GetPlanFeaturesQueryHandler(
                 Domain.Users.UserErrors.Unauthorized());
         }
 
+#pragma warning disable IDE0031
         List<PlanFeatureResponse> features = await context.PlanFeatures
             .AsNoTracking()
-            .OrderBy(pf => pf.Plan)
+            .OrderBy(pf => pf.SubscriptionPlan != null ? pf.SubscriptionPlan.Name : string.Empty)
             .ThenBy(pf => pf.Feature)
             .Select(pf => new PlanFeatureResponse
             {
-                Plan = pf.Plan.ToString(),
+                Plan = pf.SubscriptionPlan != null ? pf.SubscriptionPlan.Name : string.Empty,
                 Feature = pf.Feature,
                 IsEnabled = pf.IsEnabled
             })
             .ToListAsync(cancellationToken);
+#pragma warning restore IDE0031
 
         return features;
     }

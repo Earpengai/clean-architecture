@@ -1,6 +1,5 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.SubscriptionFeatures;
-using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,18 +13,18 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
         IApplicationDbContext context = scope.ServiceProvider
             .GetRequiredService<IApplicationDbContext>();
 
-        SubscriptionPlan? plan = await context.Tenants
-            .Where(t => t.Id == tenantId)
-            .Select(t => (SubscriptionPlan?)t.SubscriptionPlan)
+        Guid? planId = await context.Subscriptions
+            .Where(s => s.TenantId == tenantId)
+            .Select(s => (Guid?)s.SubscriptionPlanId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (plan is null)
+        if (planId is null)
         {
             return [];
         }
 
         List<string> features = await context.PlanFeatures
-            .Where(pf => pf.Plan == plan.Value && pf.IsEnabled)
+            .Where(pf => pf.SubscriptionPlanId == planId.Value && pf.IsEnabled)
             .Select(pf => pf.Feature)
             .ToListAsync(cancellationToken);
 
@@ -38,18 +37,18 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
         IApplicationDbContext context = scope.ServiceProvider
             .GetRequiredService<IApplicationDbContext>();
 
-        SubscriptionPlan? plan = await context.Tenants
-            .Where(t => t.Id == tenantId)
-            .Select(t => (SubscriptionPlan?)t.SubscriptionPlan)
+        Guid? planId = await context.Subscriptions
+            .Where(s => s.TenantId == tenantId)
+            .Select(s => (Guid?)s.SubscriptionPlanId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (plan is null)
+        if (planId is null)
         {
             return null;
         }
 
         int? value = await context.PlanLimits
-            .Where(pl => pl.Plan == plan.Value && pl.Limit == limitKey)
+            .Where(pl => pl.SubscriptionPlanId == planId.Value && pl.Limit == limitKey)
             .Select(pl => (int?)pl.Value)
             .FirstOrDefaultAsync(cancellationToken);
 

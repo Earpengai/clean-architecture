@@ -1,26 +1,46 @@
+using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
-using Domain.SubscriptionFeatures;
-using Domain.Tenants;
+using Domain.Subscriptions;
+using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.SubscriptionFeatures.GetPricing;
 
-internal sealed class GetPricingQueryHandler
+internal sealed class GetPricingQueryHandler(IApplicationDbContext context)
     : IQueryHandler<GetPricingQuery, List<PricingResponse>>
 {
-    public Task<Result<List<PricingResponse>>> Handle(
+    public async Task<Result<List<PricingResponse>>> Handle(
         GetPricingQuery query,
         CancellationToken cancellationToken)
     {
-        var pricing = SubscriptionPricing.Prices
-            .Select(kvp => new PricingResponse
-            {
-                Plan = kvp.Key.Plan.ToString(),
-                BillingPeriod = kvp.Key.Period.ToString(),
-                Amount = kvp.Value
-            })
-            .ToList();
+        List<SubscriptionPlan> plans = await context.SubscriptionPlans
+            .AsNoTracking()
+            .Where(p => p.IsActive)
+            .OrderBy(p => p.SortOrder)
+            .ToListAsync(cancellationToken);
 
-        return Task.FromResult<Result<List<PricingResponse>>>(pricing);
+        List<PricingResponse> pricing = [];
+
+        foreach (SubscriptionPlan plan in plans)
+        {
+            pricing.Add(new PricingResponse
+            {
+                Plan = plan.Name,
+                BillingPeriod = "Monthly",
+                Amount = plan.PriceMonthly
+            });
+
+            if (plan.PriceYearly > 0)
+            {
+                pricing.Add(new PricingResponse
+                {
+                    Plan = plan.Name,
+                    BillingPeriod = "Yearly",
+                    Amount = plan.PriceYearly
+                });
+            }
+        }
+
+        return pricing;
     }
 }

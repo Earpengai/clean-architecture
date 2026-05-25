@@ -1,6 +1,7 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -19,8 +20,16 @@ internal sealed class UpdatePlanLimitCommandHandler(
             return Result.Failure(Domain.Users.UserErrors.Unauthorized());
         }
 
+        SubscriptionPlan? plan = await context.SubscriptionPlans
+            .FirstOrDefaultAsync(p => p.Id == command.SubscriptionPlanId, cancellationToken);
+
+        if (plan is null)
+        {
+            return Result.Failure(SubscriptionErrors.PlanNotFound(command.SubscriptionPlanId));
+        }
+
         PlanLimit? planLimit = await context.PlanLimits
-            .FirstOrDefaultAsync(pl => pl.Plan == command.Plan && pl.Limit == command.Limit, cancellationToken);
+            .FirstOrDefaultAsync(pl => pl.SubscriptionPlanId == command.SubscriptionPlanId && pl.Limit == command.Limit, cancellationToken);
 
         if (planLimit is not null)
         {
@@ -30,7 +39,7 @@ internal sealed class UpdatePlanLimitCommandHandler(
         {
             planLimit = new PlanLimit
             {
-                Plan = command.Plan,
+                SubscriptionPlanId = command.SubscriptionPlanId,
                 Limit = command.Limit,
                 Value = command.Value
             };

@@ -1,3 +1,4 @@
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,10 +9,13 @@ internal sealed class PlanFeatureConfiguration : IEntityTypeConfiguration<PlanFe
 {
     public void Configure(EntityTypeBuilder<PlanFeature> builder)
     {
-        builder.HasKey(pf => new { pf.Plan, pf.Feature });
+        builder.HasKey(pf => new { pf.SubscriptionPlanId, pf.Feature });
 
         builder.Property(pf => pf.Feature).HasMaxLength(100);
 
-        builder.Property(pf => pf.Plan).HasConversion<string>();
+        builder.HasOne(pf => pf.SubscriptionPlan)
+            .WithMany()
+            .HasForeignKey(pf => pf.SubscriptionPlanId)
+            .IsRequired();
     }
 }

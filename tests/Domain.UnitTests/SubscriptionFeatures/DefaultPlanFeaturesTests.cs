@@ -1,5 +1,4 @@
 using Domain.SubscriptionFeatures;
-using Domain.Tenants;
 
 namespace Domain.UnitTests.SubscriptionFeatures;
 
@@ -8,7 +7,7 @@ public sealed class DefaultPlanFeaturesTests
     [Fact]
     public void GetDefaults_Free_ShouldReturnEmptySet()
     {
-        HashSet<string> features = DefaultPlanFeatures.GetDefaults(SubscriptionPlan.Free);
+        HashSet<string> features = DefaultPlanFeatures.GetDefaults("Free");
 
         features.Count.ShouldBe(0);
     }
@@ -16,7 +15,7 @@ public sealed class DefaultPlanFeaturesTests
     [Fact]
     public void GetDefaults_Pro_ShouldContainApiAccessAndReporting()
     {
-        HashSet<string> features = DefaultPlanFeatures.GetDefaults(SubscriptionPlan.Pro);
+        HashSet<string> features = DefaultPlanFeatures.GetDefaults("Pro");
 
         features.ShouldContain(SubscriptionFeature.ApiAccess);
         features.ShouldContain(SubscriptionFeature.Reporting);
@@ -26,7 +25,7 @@ public sealed class DefaultPlanFeaturesTests
     [Fact]
     public void GetDefaults_Enterprise_ShouldContainAllFeatures()
     {
-        HashSet<string> features = DefaultPlanFeatures.GetDefaults(SubscriptionPlan.Enterprise);
+        HashSet<string> features = DefaultPlanFeatures.GetDefaults("Enterprise");
 
         features.SetEquals(SubscriptionFeature.All).ShouldBeTrue();
     }

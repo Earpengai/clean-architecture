@@ -14,6 +14,8 @@ internal sealed class GetTenantByIdQueryHandler(IApplicationDbContext context)
     {
         Domain.Tenants.Tenant? tenant = await context.Tenants
             .AsNoTracking()
+            .Include(t => t.Subscription)
+            .ThenInclude(s => s!.SubscriptionPlan)
             .FirstOrDefaultAsync(t => t.Id == query.TenantId, cancellationToken);
 
         if (tenant is null)
@@ -26,8 +28,8 @@ internal sealed class GetTenantByIdQueryHandler(IApplicationDbContext context)
             tenant.Id,
             tenant.Name,
             tenant.Identifier,
-            tenant.SubscriptionPlan,
-            tenant.SubscriptionStatus,
+            tenant.Subscription?.SubscriptionPlan?.Name,
+            tenant.Subscription?.Status,
             tenant.SeatCount);
     }
 }

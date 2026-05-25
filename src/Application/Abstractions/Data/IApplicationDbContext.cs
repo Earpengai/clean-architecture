@@ -1,4 +1,5 @@
 ﻿using Domain.Payments;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Domain.Todos;
 using Domain.Users;
@@ -19,6 +20,8 @@ public interface IApplicationDbContext
     DbSet<PlanFeature> PlanFeatures { get; }
     DbSet<PlanLimit> PlanLimits { get; }
     DbSet<Payment> Payments { get; }
+    DbSet<SubscriptionPlan> SubscriptionPlans { get; }
+    DbSet<Subscription> Subscriptions { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

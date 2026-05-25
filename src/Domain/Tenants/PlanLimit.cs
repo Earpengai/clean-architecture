@@ -1,8 +1,12 @@
+using Domain.Subscriptions;
+
 namespace Domain.Tenants;
 
 public sealed class PlanLimit
 {
-    public SubscriptionPlan Plan { get; set; }
+    public Guid SubscriptionPlanId { get; set; }
     public string Limit { get; set; }
     public int Value { get; set; }
+
+    public SubscriptionPlan? SubscriptionPlan { get; set; }
 }

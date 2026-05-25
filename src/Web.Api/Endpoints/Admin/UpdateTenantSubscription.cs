@@ -11,7 +11,7 @@ namespace Web.Api.Endpoints.Admin;
 internal sealed class UpdateTenantSubscription : IEndpoint
 {
     public sealed record Request(
-        SubscriptionPlan SubscriptionPlan,
+        Guid SubscriptionPlanId,
         SubscriptionStatus SubscriptionStatus,
         int SeatCount);
 
@@ -25,7 +25,7 @@ internal sealed class UpdateTenantSubscription : IEndpoint
         {
             var command = new UpdateTenantSubscriptionCommand(
                 tenantId,
-                request.SubscriptionPlan,
+                request.SubscriptionPlanId,
                 request.SubscriptionStatus,
                 request.SeatCount);
 

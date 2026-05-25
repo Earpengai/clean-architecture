@@ -1,5 +1,3 @@
-using Domain.Tenants;
-
 namespace Domain.SubscriptionFeatures;
 
 public static class DefaultPlanFeatures
@@ -19,11 +17,11 @@ public static class DefaultPlanFeatures
         ..SubscriptionFeature.All
     ];
 
-    public static HashSet<string> GetDefaults(SubscriptionPlan plan) => plan switch
+    public static HashSet<string> GetDefaults(string planName) => planName switch
     {
-        SubscriptionPlan.Free => Free,
-        SubscriptionPlan.Pro => Pro,
-        SubscriptionPlan.Enterprise => Enterprise,
+        "Free" => Free,
+        "Pro" => Pro,
+        "Enterprise" => Enterprise,
         _ => []
     };
 }

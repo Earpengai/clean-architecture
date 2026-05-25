@@ -1,4 +1,5 @@
 using Application.Abstractions.Data;
+using Domain.Subscriptions;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,26 +34,24 @@ internal sealed class SubscriptionExpirationService(
 
             DateTime now = DateTime.UtcNow;
 
-            List<Tenant> expiredTenants = await context.Tenants
-                .Where(t => t.SubscriptionExpiresAt < now
-                            && t.SubscriptionStatus == SubscriptionStatus.Active
-                            && t.SubscriptionPlan != SubscriptionPlan.Free)
+            List<Subscription> expiredSubscriptions = await context.Subscriptions
+                .Where(s => s.ExpiresAt < now && s.Status != SubscriptionStatus.Expired)
                 .ToListAsync(cancellationToken);
 
-            if (expiredTenants.Count == 0)
+            if (expiredSubscriptions.Count == 0)
             {
                 return;
             }
 
-            foreach (Tenant tenant in expiredTenants)
+            foreach (Subscription subscription in expiredSubscriptions)
             {
-                tenant.SubscriptionStatus = SubscriptionStatus.Expired;
-                tenant.UpdatedAt = now;
+                subscription.Status = SubscriptionStatus.Expired;
+                subscription.UpdatedAt = now;
             }
 
             await context.SaveChangesAsync(cancellationToken);
 
-            logger.LogInformation("Expired {Count} tenant subscriptions", expiredTenants.Count);
+            logger.LogInformation("Expired {Count} subscriptions", expiredSubscriptions.Count);
         }
         catch (Exception ex)
         {
