@@ -9,7 +9,7 @@ public sealed record TenantAdminResponse
     public string Identifier { get; init; }
     public string? SubscriptionPlanName { get; init; }
     public SubscriptionStatus? SubscriptionStatus { get; init; }
-    public int SeatCount { get; init; }
+    public int? MaxUsersOverride { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
 }

@@ -13,7 +13,7 @@ internal sealed class UpdateTenantSubscription : IEndpoint
     public sealed record Request(
         Guid SubscriptionPlanId,
         SubscriptionStatus SubscriptionStatus,
-        int SeatCount);
+        int? MaxUsersOverride);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
@@ -27,7 +27,7 @@ internal sealed class UpdateTenantSubscription : IEndpoint
                 tenantId,
                 request.SubscriptionPlanId,
                 request.SubscriptionStatus,
-                request.SeatCount);
+                request.MaxUsersOverride);
 
             Result result = await handler.Handle(command, cancellationToken);
 

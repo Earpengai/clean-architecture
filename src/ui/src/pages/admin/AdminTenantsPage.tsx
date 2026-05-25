@@ -36,7 +36,7 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
   const [open, setOpen] = useState(false);
   const [planId, setPlanId] = useState("");
   const [status, setStatus] = useState(tenant.subscriptionStatus ?? 0);
-  const [seats, setSeats] = useState(tenant.seatCount);
+  const [maxUsersOverride, setMaxUsersOverride] = useState(tenant.maxUsersOverride);
   const [error, setError] = useState("");
 
   const { data: plans } = useAdminSubscriptionPlans();
@@ -51,7 +51,7 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
     }
     setError("");
     update.mutate(
-      { id: tenant.id, subscriptionPlanId: planId, subscriptionStatus: status, seatCount: seats },
+      { id: tenant.id, subscriptionPlanId: planId, subscriptionStatus: status, maxUsersOverride },
       {
         onSuccess: () => setOpen(false),
         onError: (err) => {
@@ -74,7 +74,7 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Update Subscription</DialogTitle>
-            <DialogDescription>Change plan, status, and seats for {tenant.name}.</DialogDescription>
+            <DialogDescription>Change plan, status, and max users for {tenant.name}.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-2 gap-3">
@@ -99,8 +99,9 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Seats</Label>
-              <Input type="number" min={1} value={seats} onChange={(e) => setSeats(Number(e.target.value))} />
+              <Label>Max Users Override</Label>
+              <Input type="number" min={1} value={maxUsersOverride ?? ""} placeholder="Plan default" onChange={(e) => setMaxUsersOverride(e.target.value ? Number(e.target.value) : null)} />
+              <p className="text-xs text-gray-400">Leave empty to use the plan's default limit.</p>
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
@@ -162,7 +163,7 @@ export function AdminTenantsPage() {
                     <div className="flex items-center gap-3 text-xs text-gray-500">
                       <span>Plan: {tenant.subscriptionPlanName ?? "None"}</span>
                       <Badge className={status.color}>{status.label}</Badge>
-                      <span>Seats: {tenant.seatCount}</span>
+                      <span>Max Users: {tenant.maxUsersOverride ?? "Default"}</span>
                       <div className="flex items-center gap-1 ml-2">
                         {tenant.isActive ? (
                           <Button

@@ -53,7 +53,7 @@ export function useUpdateTenantSubscription() {
       apiPut<void>(`/admin/tenants/${encodeURIComponent(payload.id)}/subscription`, {
         subscriptionPlanId: payload.subscriptionPlanId,
         subscriptionStatus: payload.subscriptionStatus,
-        seatCount: payload.seatCount,
+        maxUsersOverride: payload.maxUsersOverride,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_KEY });

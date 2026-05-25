@@ -40,7 +40,7 @@ internal sealed class GetTenantByIdQueryHandler(
             tenant.Identifier,
             tenant.Subscription?.SubscriptionPlan?.Name,
             tenant.Subscription?.Status,
-            tenant.SeatCount,
+            tenant.Subscription?.MaxUsersOverride,
             role,
             tenant.Subscription?.BillingPeriod.ToString(),
             tenant.Subscription?.ExpiresAt);

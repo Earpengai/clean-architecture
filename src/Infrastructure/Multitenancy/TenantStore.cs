@@ -108,7 +108,6 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             Id = Guid.Parse(tenantInfo.Id!),
             Name = tenantInfo.Name!,
             Identifier = tenantInfo.Identifier!,
-            SeatCount = tenantInfo.SeatCount,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -153,7 +152,6 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
         }
 
         tenant.Name = tenantInfo.Name!;
-        tenant.SeatCount = tenantInfo.SeatCount;
         tenant.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync();
@@ -170,7 +168,7 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             Identifier = tenant.Identifier,
             SubscriptionPlan = tenant.Subscription?.SubscriptionPlan?.Name ?? string.Empty,
             SubscriptionStatus = tenant.Subscription?.Status.ToString() ?? string.Empty,
-            SeatCount = tenant.SeatCount
+            MaxUsersOverride = tenant.Subscription?.MaxUsersOverride
         };
     }
 }

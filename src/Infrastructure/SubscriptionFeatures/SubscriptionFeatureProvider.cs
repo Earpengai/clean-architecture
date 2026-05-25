@@ -1,5 +1,6 @@
 using Application.Abstractions.Data;
 using Application.Abstractions.SubscriptionFeatures;
+using Domain.SubscriptionFeatures;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -39,12 +40,26 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
 
         Guid? planId = await context.Subscriptions
             .Where(s => s.TenantId == tenantId)
-            .Select(s => (Guid?)s.SubscriptionPlanId)
-            .FirstOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken) is { } subscription
+                ? subscription.SubscriptionPlanId
+                : null;
 
         if (planId is null)
         {
             return null;
+        }
+
+        if (limitKey == SubscriptionLimit.MaxUsers)
+        {
+            int? override_ = await context.Subscriptions
+                .Where(s => s.TenantId == tenantId)
+                .Select(s => s.MaxUsersOverride)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (override_ is not null)
+            {
+                return override_.Value;
+            }
         }
 
         int? value = await context.PlanLimits

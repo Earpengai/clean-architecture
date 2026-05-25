@@ -10,6 +10,7 @@ public sealed class Subscription
     public SubscriptionStatus Status { get; set; }
     public SubscriptionBillingPeriod BillingPeriod { get; set; }
     public DateTime? ExpiresAt { get; set; }
+    public int? MaxUsersOverride { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 

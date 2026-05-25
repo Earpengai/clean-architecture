@@ -7,4 +7,4 @@ public sealed record UpdateTenantSubscriptionCommand(
     Guid TenantId,
     Guid SubscriptionPlanId,
     SubscriptionStatus SubscriptionStatus,
-    int SeatCount) : ICommand;
+    int? MaxUsersOverride) : ICommand;

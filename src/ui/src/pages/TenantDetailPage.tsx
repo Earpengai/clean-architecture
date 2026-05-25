@@ -105,8 +105,8 @@ export function TenantDetailPage() {
                 <span className="font-medium">{status.label}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-gray-500">Seats</span>
-                <span className="font-medium">{tenant.seatCount}</span>
+                <span className="text-gray-500">Max Users</span>
+                <span className="font-medium">{tenant.maxUsersOverride ?? "Plan default"}</span>
               </div>
               {tenant.billingPeriod && tenant.billingPeriod !== "None" && (
                 <div className="flex justify-between text-sm">

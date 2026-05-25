@@ -78,7 +78,6 @@ internal sealed class CreateTenantCommandHandler(
             Id = Guid.NewGuid(),
             Name = command.Name,
             Identifier = command.Identifier,
-            SeatCount = 1,
             CreatedAt = DateTime.UtcNow
         };
 

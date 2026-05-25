@@ -34,7 +34,6 @@ export function TenantCard({ tenant, onClick }: TenantCardProps) {
         </div>
         <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
           <span>Plan: {tenant.subscriptionPlanName ?? "None"}</span>
-          <span>Seats: {tenant.seatCount}</span>
           <span>Role: {tenant.role}</span>
         </div>
       </CardContent>

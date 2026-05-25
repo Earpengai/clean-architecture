@@ -61,7 +61,7 @@ export interface TenantResponse {
   identifier: string;
   subscriptionPlanName: string | null;
   subscriptionStatus: number | null;
-  seatCount: number;
+  maxUsersOverride: number | null;
   role?: string;
   billingPeriod?: string;
   subscriptionExpiresAt?: string | null;
@@ -122,7 +122,7 @@ export interface TenantAdminResponse {
   identifier: string;
   subscriptionPlanName: string | null;
   subscriptionStatus: number | null;
-  seatCount: number;
+  maxUsersOverride: number | null;
   isActive: boolean;
   createdAt: string;
 }
@@ -214,7 +214,7 @@ export interface InitiatePaymentPayload {
 export interface UpdateTenantSubscriptionPayload {
   subscriptionPlanId: string;
   subscriptionStatus: number;
-  seatCount: number;
+  maxUsersOverride: number | null;
 }
 
 export interface SubscriptionPlanListItem {

@@ -33,7 +33,7 @@ internal sealed class GetAllTenantsAdminQueryHandler(
                 Identifier = t.Identifier,
                 SubscriptionPlanName = t.Subscription != null ? t.Subscription.SubscriptionPlan!.Name : null,
                 SubscriptionStatus = t.Subscription != null ? t.Subscription.Status : (SubscriptionStatus?)null,
-                SeatCount = t.SeatCount,
+                MaxUsersOverride = t.Subscription != null ? t.Subscription.MaxUsersOverride : null,
                 IsActive = t.IsActive,
                 CreatedAt = t.CreatedAt
             })

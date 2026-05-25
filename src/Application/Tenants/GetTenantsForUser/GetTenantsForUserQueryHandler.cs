@@ -29,7 +29,7 @@ internal sealed class GetTenantsForUserQueryHandler(IApplicationDbContext contex
                     x.Tenant.Identifier,
                     x.Tenant.Subscription != null ? x.Tenant.Subscription.SubscriptionPlan!.Name : null,
                     x.Tenant.Subscription != null ? x.Tenant.Subscription.Status : (SubscriptionStatus?)null,
-                    x.Tenant.SeatCount,
+                    x.Tenant.Subscription != null ? x.Tenant.Subscription.MaxUsersOverride : null,
                     r.Name!))
             .ToListAsync(cancellationToken);
 #pragma warning restore IDE0031

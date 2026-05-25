@@ -6,5 +6,5 @@ public sealed class AppTenantInfo : TenantInfo
 {
     public string SubscriptionPlan { get; set; } = string.Empty;
     public string SubscriptionStatus { get; set; } = string.Empty;
-    public int SeatCount { get; set; }
+    public int? MaxUsersOverride { get; set; }
 }

@@ -45,10 +45,8 @@ internal sealed class UpdateTenantSubscriptionCommandHandler(
 
         subscription.SubscriptionPlanId = command.SubscriptionPlanId;
         subscription.Status = command.SubscriptionStatus;
+        subscription.MaxUsersOverride = command.MaxUsersOverride;
         subscription.UpdatedAt = DateTime.UtcNow;
-
-        tenant.SeatCount = command.SeatCount;
-        tenant.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
 
