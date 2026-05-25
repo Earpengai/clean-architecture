@@ -17,9 +17,9 @@ export function useUpdatePlanFeature() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { plan: string; feature: string; isEnabled: boolean }) =>
+    mutationFn: (payload: { planId: string; feature: string; isEnabled: boolean }) =>
       apiPut<void>(
-        `/admin/subscription/plans/${encodeURIComponent(payload.plan)}/features/${encodeURIComponent(payload.feature)}`,
+        `/admin/subscription/plans/${encodeURIComponent(payload.planId)}/features/${encodeURIComponent(payload.feature)}`,
         { isEnabled: payload.isEnabled },
       ),
     onSuccess: () => {
@@ -39,9 +39,9 @@ export function useUpdatePlanLimit() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { plan: string; limit: string; value: number }) =>
+    mutationFn: (payload: { planId: string; limit: string; value: number }) =>
       apiPut<void>(
-        `/admin/subscription/plans/${encodeURIComponent(payload.plan)}/limits/${encodeURIComponent(payload.limit)}`,
+        `/admin/subscription/plans/${encodeURIComponent(payload.planId)}/limits/${encodeURIComponent(payload.limit)}`,
         { value: payload.value },
       ),
     onSuccess: () => {

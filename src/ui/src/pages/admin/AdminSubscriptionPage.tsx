@@ -27,23 +27,72 @@ function limitLabel(limit: string) {
     .join(" ");
 }
 
-const planOrder = ["Free", "Pro", "Enterprise"];
-
 function planBadgeColor(plan: string) {
   switch (plan) {
     case "Free": return "bg-gray-100 text-gray-700";
     case "Pro": return "bg-blue-100 text-blue-700";
     case "Enterprise": return "bg-purple-100 text-purple-700";
-    default: return "bg-gray-100 text-gray-700";
+    default: return "bg-indigo-100 text-indigo-700";
   }
+}
+
+interface PlanColumn {
+  id: string;
+  name: string;
+}
+
+function usePlanColumns(): {
+  plans: PlanColumn[];
+  isLoading: boolean;
+} {
+  const { data: features, isLoading: fLoading } = usePlanFeatures();
+  const { data: limits, isLoading: lLoading } = usePlanLimits();
+
+  const isLoading = fLoading || lLoading;
+
+  const plans: PlanColumn[] = [];
+  const seen = new Set<string>();
+
+  if (features) {
+    for (const f of features) {
+      if (!seen.has(f.subscriptionPlanId)) {
+        seen.add(f.subscriptionPlanId);
+        plans.push({ id: f.subscriptionPlanId, name: f.plan });
+      }
+    }
+  }
+
+  if (limits && plans.length === 0) {
+    for (const l of limits) {
+      if (!seen.has(l.subscriptionPlanId)) {
+        seen.add(l.subscriptionPlanId);
+        plans.push({ id: l.subscriptionPlanId, name: l.plan });
+      }
+    }
+  }
+
+  plans.sort((a, b) => {
+    const order = ["Free", "Pro", "Enterprise"];
+    const ai = order.indexOf(a.name);
+    const bi = order.indexOf(b.name);
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    if (ai >= 0) return -1;
+    if (bi >= 0) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return { plans, isLoading };
 }
 
 function FeaturesTab() {
   const { data: features, isLoading, error } = usePlanFeatures();
   const updateFeature = useUpdatePlanFeature();
   const addToast = useToastStore((state) => state.addToast);
+  const { plans, isLoading: plansLoading } = usePlanColumns();
 
-  if (isLoading) {
+  const isLoading_ = isLoading || plansLoading;
+
+  if (isLoading_) {
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
@@ -62,17 +111,14 @@ function FeaturesTab() {
   }
 
   const featureNames = [...new Set(features.map((f) => f.feature))].sort();
-  const plans = [...new Set(features.map((f) => f.plan))].sort(
-    (a, b) => planOrder.indexOf(a) - planOrder.indexOf(b),
-  );
 
-  function isEnabled(plan: string, feature: string) {
-    return features?.find((f) => f.plan === plan && f.feature === feature)?.isEnabled ?? false;
+  function isEnabled(planId: string, feature: string) {
+    return features?.find((f) => f.subscriptionPlanId === planId && f.feature === feature)?.isEnabled ?? false;
   }
 
-  function handleToggle(plan: string, feature: string, current: boolean) {
+  function handleToggle(planId: string, feature: string, current: boolean) {
     updateFeature.mutate(
-      { plan, feature, isEnabled: !current },
+      { planId, feature, isEnabled: !current },
       {
         onError: (err) => addToast(extractErrorDetail(err), "error"),
       },
@@ -86,8 +132,8 @@ function FeaturesTab() {
           <tr>
             <th className="text-left px-3 py-2 font-medium text-gray-500">Feature</th>
             {plans.map((plan) => (
-              <th key={plan} className="text-center px-3 py-2">
-                <Badge className={planBadgeColor(plan)}>{plan}</Badge>
+              <th key={plan.id} className="text-center px-3 py-2">
+                <Badge className={planBadgeColor(plan.name)}>{plan.name}</Badge>
               </th>
             ))}
           </tr>
@@ -99,16 +145,16 @@ function FeaturesTab() {
                 {featureLabel(feature)}
               </td>
               {plans.map((plan) => {
-                const enabled = isEnabled(plan, feature);
+                const enabled = isEnabled(plan.id, feature);
                 const pending = updateFeature.isPending &&
-                  updateFeature.variables?.plan === plan &&
+                  updateFeature.variables?.planId === plan.id &&
                   updateFeature.variables?.feature === feature;
                 return (
-                  <td key={plan} className="px-3 py-3 text-center">
+                  <td key={plan.id} className="px-3 py-3 text-center">
                     <button
                       type="button"
                       disabled={pending}
-                      onClick={() => handleToggle(plan, feature, enabled)}
+                      onClick={() => handleToggle(plan.id, feature, enabled)}
                       className={`inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 ${
                         enabled ? "bg-indigo-600" : "bg-gray-200"
                       } ${pending ? "opacity-50" : ""}`}
@@ -135,8 +181,11 @@ function LimitsTab() {
   const updateLimit = useUpdatePlanLimit();
   const [editingValues, setEditingValues] = useState<Record<string, number>>({});
   const addToast = useToastStore((state) => state.addToast);
+  const { plans, isLoading: plansLoading } = usePlanColumns();
 
-  if (isLoading) {
+  const isLoading_ = isLoading || plansLoading;
+
+  if (isLoading_) {
     return (
       <div className="space-y-3">
         {[...Array(5)].map((_, i) => (
@@ -155,32 +204,29 @@ function LimitsTab() {
   }
 
   const limitNames = [...new Set(limits.map((l) => l.limit))].sort();
-  const plans = [...new Set(limits.map((l) => l.plan))].sort(
-    (a, b) => planOrder.indexOf(a) - planOrder.indexOf(b),
-  );
 
-  function currentValue(plan: string, limit: string) {
-    return limits?.find((l) => l.plan === plan && l.limit === limit)?.value;
+  function currentValue(planId: string, limit: string) {
+    return limits?.find((l) => l.subscriptionPlanId === planId && l.limit === limit)?.value;
   }
 
-  function getEditKey(plan: string, limit: string) {
-    return `${plan}::${limit}`;
+  function getEditKey(planId: string, limit: string) {
+    return `${planId}::${limit}`;
   }
 
-  function getDisplayValue(plan: string, limit: string) {
-    const key = getEditKey(plan, limit);
+  function getDisplayValue(planId: string, limit: string) {
+    const key = getEditKey(planId, limit);
     if (key in editingValues) {
       return editingValues[key];
     }
-    return currentValue(plan, limit);
+    return currentValue(planId, limit);
   }
 
-  function handleBlur(plan: string, limit: string) {
-    const key = getEditKey(plan, limit);
+  function handleBlur(planId: string, limit: string) {
+    const key = getEditKey(planId, limit);
     const val = editingValues[key];
-    if (val !== undefined && val !== currentValue(plan, limit)) {
+    if (val !== undefined && val !== currentValue(planId, limit)) {
       updateLimit.mutate(
-        { plan, limit, value: val },
+        { planId, limit, value: val },
         {
           onError: (err) => addToast(extractErrorDetail(err), "error"),
         },
@@ -193,10 +239,10 @@ function LimitsTab() {
     });
   }
 
-  function handleChange(plan: string, limit: string, value: string) {
+  function handleChange(planId: string, limit: string, value: string) {
     const num = parseInt(value, 10);
     if (!isNaN(num)) {
-      setEditingValues((prev) => ({ ...prev, [getEditKey(plan, limit)]: num }));
+      setEditingValues((prev) => ({ ...prev, [getEditKey(planId, limit)]: num }));
     }
   }
 
@@ -207,8 +253,8 @@ function LimitsTab() {
           <tr>
             <th className="text-left px-3 py-2 font-medium text-gray-500">Limit</th>
             {plans.map((plan) => (
-              <th key={plan} className="text-center px-3 py-2">
-                <Badge className={planBadgeColor(plan)}>{plan}</Badge>
+              <th key={plan.id} className="text-center px-3 py-2">
+                <Badge className={planBadgeColor(plan.name)}>{plan.name}</Badge>
               </th>
             ))}
           </tr>
@@ -220,27 +266,27 @@ function LimitsTab() {
                 {limitLabel(limit)}
               </td>
               {plans.map((plan) => {
-                const val = getDisplayValue(plan, limit);
-                const key = getEditKey(plan, limit);
+                const val = getDisplayValue(plan.id, limit);
+                const key = getEditKey(plan.id, limit);
                 const isEditing = key in editingValues;
                 const pending = updateLimit.isPending &&
-                  updateLimit.variables?.plan === plan &&
+                  updateLimit.variables?.planId === plan.id &&
                   updateLimit.variables?.limit === limit;
 
                 if (isEditing || pending) {
                   return (
-                    <td key={plan} className="px-3 py-3 text-center">
+                    <td key={plan.id} className="px-3 py-3 text-center">
                       <Input
                         type="number"
                         min={-1}
                         value={val === -1 ? "" : val}
                         placeholder={val === -1 ? "Unlimited" : undefined}
                         className="mx-auto h-8 w-24 text-center text-sm"
-                        onChange={(e) => handleChange(plan, limit, e.target.value)}
-                        onBlur={() => handleBlur(plan, limit)}
+                        onChange={(e) => handleChange(plan.id, limit, e.target.value)}
+                        onBlur={() => handleBlur(plan.id, limit)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            handleBlur(plan, limit);
+                            handleBlur(plan.id, limit);
                           }
                         }}
                         autoFocus
@@ -250,7 +296,7 @@ function LimitsTab() {
                 }
 
                 return (
-                  <td key={plan} className="px-3 py-3 text-center">
+                  <td key={plan.id} className="px-3 py-3 text-center">
                     <button
                       type="button"
                       onClick={() =>

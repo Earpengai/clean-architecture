@@ -28,6 +28,7 @@ internal sealed class GetPlanFeaturesQueryHandler(
             .ThenBy(pf => pf.Feature)
             .Select(pf => new PlanFeatureResponse
             {
+                SubscriptionPlanId = pf.SubscriptionPlanId,
                 Plan = pf.SubscriptionPlan != null ? pf.SubscriptionPlan.Name : string.Empty,
                 Feature = pf.Feature,
                 IsEnabled = pf.IsEnabled

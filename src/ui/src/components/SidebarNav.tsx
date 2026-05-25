@@ -75,6 +75,8 @@ export function SidebarNav({ section }: SidebarNavProps) {
 
   const adminItems: NavItem[] = [
     { label: t("nav.adminTenants"), path: "/admin/tenants", icon: <Building2 className="h-4 w-4" /> },
+    { label: "Plans", path: "/admin/plans", icon: <CreditCard className="h-4 w-4" /> },
+    { label: "Subscriptions", path: "/admin/subscriptions", icon: <Banknote className="h-4 w-4" /> },
     { label: t("nav.subscription"), path: "/admin/subscription", icon: <Settings2 className="h-4 w-4" /> },
   ];
 

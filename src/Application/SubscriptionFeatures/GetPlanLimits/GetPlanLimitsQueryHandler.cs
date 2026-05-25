@@ -28,6 +28,7 @@ internal sealed class GetPlanLimitsQueryHandler(
             .ThenBy(pl => pl.Limit)
             .Select(pl => new PlanLimitResponse
             {
+                SubscriptionPlanId = pl.SubscriptionPlanId,
                 Plan = pl.SubscriptionPlan != null ? pl.SubscriptionPlan.Name : string.Empty,
                 Limit = pl.Limit,
                 Value = pl.Value

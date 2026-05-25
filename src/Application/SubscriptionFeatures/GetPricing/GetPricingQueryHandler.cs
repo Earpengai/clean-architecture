@@ -25,6 +25,7 @@ internal sealed class GetPricingQueryHandler(IApplicationDbContext context)
         {
             pricing.Add(new PricingResponse
             {
+                PlanId = plan.Id,
                 Plan = plan.Name,
                 BillingPeriod = "Monthly",
                 Amount = plan.PriceMonthly
@@ -34,6 +35,7 @@ internal sealed class GetPricingQueryHandler(IApplicationDbContext context)
             {
                 pricing.Add(new PricingResponse
                 {
+                    PlanId = plan.Id,
                     Plan = plan.Name,
                     BillingPeriod = "Yearly",
                     Amount = plan.PriceYearly

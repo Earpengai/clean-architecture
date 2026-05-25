@@ -24,6 +24,8 @@ import { LoginTwoFactorPage } from "@/pages/LoginTwoFactorPage";
 import { OnboardingGuard } from "@/components/OnboardingGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
 import { AdminSubscriptionPage } from "@/pages/admin/AdminSubscriptionPage";
+import { AdminPlansPage } from "@/pages/admin/AdminPlansPage";
+import { AdminSubscriptionsPage } from "@/pages/admin/AdminSubscriptionsPage";
 import { SubscriptionPage } from "@/pages/SubscriptionPage";
 import { SubscriptionBillingPage } from "@/pages/SubscriptionBillingPage";
 
@@ -93,6 +95,8 @@ export function AppRoutes() {
           <Route path="admin" element={<AppShell section="admin" />}>
             <Route path="tenants" element={<AdminTenantsPage />} />
             <Route path="subscription" element={<AdminSubscriptionPage />} />
+            <Route path="plans" element={<AdminPlansPage />} />
+            <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
           </Route>
         </Route>
       </Route>

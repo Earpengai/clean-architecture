@@ -8,16 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Building2, Users, CreditCard } from "lucide-react";
 
-function planLabel(plan: number) {
-  switch (plan) {
-    case 0: return "Free";
-    case 1: return "Pro";
-    case 2: return "Enterprise";
-    default: return "Unknown";
-  }
-}
-
-function statusLabel(status: number) {
+function statusLabel(status: number | null) {
+  if (status === null) return { label: "Unknown", color: "bg-gray-100 text-gray-700" };
   switch (status) {
     case 0: return { label: "Active", color: "bg-green-100 text-green-700" };
     case 1: return { label: "Trialing", color: "bg-blue-100 text-blue-700" };
@@ -106,7 +98,7 @@ export function TenantDetailPage() {
             <CardContent className="space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Plan</span>
-                <span className="font-medium">{planLabel(tenant.subscriptionPlan)}</span>
+                <span className="font-medium">{tenant.subscriptionPlanName ?? "None"}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-500">Status</span>

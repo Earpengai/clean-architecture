@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAdminTenants, useEnableTenant, useDisableTenant, useUpdateTenantSubscription } from "@/api/admin";
+import { useAdminTenants, useEnableTenant, useDisableTenant, useUpdateTenantSubscription, useAdminSubscriptionPlans } from "@/api/admin";
 import { useToastStore } from "@/stores/toastStore";
 import { extractErrorDetail } from "@/lib/errors";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
@@ -20,16 +20,8 @@ import {
 } from "@/components/ui/dialog";
 import { Building2, Power, PowerOff, CreditCard } from "lucide-react";
 
-function planLabel(plan: number) {
-  switch (plan) {
-    case 0: return "Free";
-    case 1: return "Pro";
-    case 2: return "Enterprise";
-    default: return "Unknown";
-  }
-}
-
-function statusLabel(status: number) {
+function statusLabel(status: number | null) {
+  if (status === null) return { label: "Unknown", color: "bg-gray-100 text-gray-700" };
   switch (status) {
     case 0: return { label: "Active", color: "bg-green-100 text-green-700" };
     case 1: return { label: "Trialing", color: "bg-blue-100 text-blue-700" };
@@ -42,19 +34,24 @@ function statusLabel(status: number) {
 
 function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAdminResponse }) {
   const [open, setOpen] = useState(false);
-  const [plan, setPlan] = useState(tenant.subscriptionPlan);
-  const [status, setStatus] = useState(tenant.subscriptionStatus);
+  const [planId, setPlanId] = useState("");
+  const [status, setStatus] = useState(tenant.subscriptionStatus ?? 0);
   const [seats, setSeats] = useState(tenant.seatCount);
   const [error, setError] = useState("");
 
+  const { data: plans } = useAdminSubscriptionPlans();
   const update = useUpdateTenantSubscription();
   const addToast = useToastStore((state) => state.addToast);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!planId) {
+      setError("Please select a plan.");
+      return;
+    }
     setError("");
     update.mutate(
-      { id: tenant.id, subscriptionPlan: plan, subscriptionStatus: status, seatCount: seats },
+      { id: tenant.id, subscriptionPlanId: planId, subscriptionStatus: status, seatCount: seats },
       {
         onSuccess: () => setOpen(false),
         onError: (err) => {
@@ -67,7 +64,7 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(isOpen) => { setOpen(isOpen); if (!isOpen) setPlanId(""); }}>
       <DialogTrigger asChild>
         <Button variant="ghost" size="icon" title="Edit Subscription">
           <CreditCard className="h-4 w-4" />
@@ -83,10 +80,11 @@ function SubscriptionDialog({ tenant }: { tenant: import("@/api/types").TenantAd
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Plan</Label>
-                <select value={plan} onChange={(e) => setPlan(Number(e.target.value))} className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm">
-                  <option value={0}>Free</option>
-                  <option value={1}>Pro</option>
-                  <option value={2}>Enterprise</option>
+                <select value={planId} onChange={(e) => setPlanId(e.target.value)} className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm">
+                  <option value="">Select plan...</option>
+                  {plans?.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-2">
@@ -162,7 +160,7 @@ export function AdminTenantsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span>Plan: {planLabel(tenant.subscriptionPlan)}</span>
+                      <span>Plan: {tenant.subscriptionPlanName ?? "None"}</span>
                       <Badge className={status.color}>{status.label}</Badge>
                       <span>Seats: {tenant.seatCount}</span>
                       <div className="flex items-center gap-1 ml-2">

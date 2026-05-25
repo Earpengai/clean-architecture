@@ -59,8 +59,8 @@ export interface TenantResponse {
   id: string;
   name: string;
   identifier: string;
-  subscriptionPlan: number;
-  subscriptionStatus: number;
+  subscriptionPlanName: string | null;
+  subscriptionStatus: number | null;
   seatCount: number;
   role: string;
 }
@@ -68,6 +68,7 @@ export interface TenantResponse {
 export interface CreateTenantPayload {
   name: string;
   identifier: string;
+  subscriptionPlanId?: string;
 }
 
 export interface RoleResponse {
@@ -117,8 +118,8 @@ export interface TenantAdminResponse {
   id: string;
   name: string;
   identifier: string;
-  subscriptionPlan: number;
-  subscriptionStatus: number;
+  subscriptionPlanName: string | null;
+  subscriptionStatus: number | null;
   seatCount: number;
   isActive: boolean;
   createdAt: string;
@@ -164,12 +165,14 @@ export interface UserProfileResponse {
 }
 
 export interface PlanFeatureResponse {
+  subscriptionPlanId: string;
   plan: string;
   feature: string;
   isEnabled: boolean;
 }
 
 export interface PlanLimitResponse {
+  subscriptionPlanId: string;
   plan: string;
   limit: string;
   value: number;
@@ -195,9 +198,98 @@ export interface TenantFeaturesResponse {
 }
 
 export interface PricingResponse {
+  planId: string;
   plan: string;
   billingPeriod: string;
   amount: number;
+}
+
+export interface InitiatePaymentPayload {
+  subscriptionPlanId: string;
+  billingPeriod: string;
+}
+
+export interface UpdateTenantSubscriptionPayload {
+  subscriptionPlanId: string;
+  subscriptionStatus: number;
+  seatCount: number;
+}
+
+export interface SubscriptionPlanListItem {
+  id: string;
+  name: string;
+  description: string | null;
+  priceMonthly: number;
+  priceYearly: number;
+  trialDays: number;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  subscriptionCount: number;
+}
+
+export interface PlanFeatureInfo {
+  feature: string;
+  isEnabled: boolean;
+}
+
+export interface PlanLimitInfo {
+  limit: string;
+  value: number;
+}
+
+export interface SubscriptionPlanDetail {
+  id: string;
+  name: string;
+  description: string | null;
+  priceMonthly: number;
+  priceYearly: number;
+  trialDays: number;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string | null;
+  features: PlanFeatureInfo[];
+  limits: PlanLimitInfo[];
+}
+
+export interface SubscriptionResponse {
+  id: string;
+  tenantId: string;
+  tenantName: string;
+  planName: string;
+  status: string;
+  billingPeriod: string;
+  expiresAt: string | null;
+  createdAt: string;
+}
+
+export interface TenantSubscriptionResponse {
+  subscriptionId: string;
+  tenantId: string;
+  tenantName: string;
+  planName: string;
+  status: string;
+  billingPeriod: string;
+  expiresAt: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  features: FeatureState[];
+  limits: LimitState[];
+}
+
+export interface CreateSubscriptionPlanPayload {
+  name: string;
+  description: string | null;
+  priceMonthly: number;
+  priceYearly: number;
+  trialDays: number;
+  sortOrder: number;
+  isActive: boolean;
+}
+
+export interface UpdateSubscriptionStatusPayload {
+  newStatus: number;
 }
 
 export interface InitiatePaymentResponse {

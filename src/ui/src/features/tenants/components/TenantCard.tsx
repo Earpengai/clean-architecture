@@ -2,16 +2,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { TenantResponse } from "@/api/types";
 
-function planLabel(plan: number) {
-  switch (plan) {
-    case 0: return "Free";
-    case 1: return "Pro";
-    case 2: return "Enterprise";
-    default: return "Unknown";
-  }
-}
-
-function statusLabel(status: number) {
+function statusLabel(status: number | null) {
+  if (status === null) return { label: "Unknown", color: "bg-gray-100 text-gray-700" };
   switch (status) {
     case 0: return { label: "Active", color: "bg-green-100 text-green-700" };
     case 1: return { label: "Trialing", color: "bg-blue-100 text-blue-700" };
@@ -41,7 +33,7 @@ export function TenantCard({ tenant, onClick }: TenantCardProps) {
           <Badge className={status.color}>{status.label}</Badge>
         </div>
         <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
-          <span>Plan: {planLabel(tenant.subscriptionPlan)}</span>
+          <span>Plan: {tenant.subscriptionPlanName ?? "None"}</span>
           <span>Seats: {tenant.seatCount}</span>
           <span>Role: {tenant.role}</span>
         </div>

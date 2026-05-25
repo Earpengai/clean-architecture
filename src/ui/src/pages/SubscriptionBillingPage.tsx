@@ -10,8 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Check, CreditCard, RefreshCw, History, Clock } from "lucide-react";
 
 interface PlanOption {
-  plan: number;
-  planLabel: string;
+  planId: string;
+  planName: string;
   monthlyPrice: number;
   yearlyPrice: number;
   monthlyText: string;
@@ -24,34 +24,12 @@ function planBadgeColor(plan: string) {
     case "Free": return "bg-gray-100 text-gray-700";
     case "Pro": return "bg-blue-100 text-blue-700";
     case "Enterprise": return "bg-purple-100 text-purple-700";
-    default: return "bg-gray-100 text-gray-700";
-  }
-}
-
-function parsePlanLabel(plan: string) {
-  switch (plan) {
-    case "Free": return 0;
-    case "Pro": return 1;
-    case "Enterprise": return 2;
-    default: return -1;
-  }
-}
-
-function parseBillingPeriod(period: string) {
-  switch (period) {
-    case "None": return 0;
-    case "Monthly": return 1;
-    case "Yearly": return 2;
-    default: return -1;
+    default: return "bg-indigo-100 text-indigo-700";
   }
 }
 
 function periodLabel(period: string) {
-  switch (period) {
-    case "Monthly": return "Monthly";
-    case "Yearly": return "Yearly";
-    default: return "";
-  }
+  return period;
 }
 
 function PlanCard({
@@ -63,11 +41,11 @@ function PlanCard({
 }: {
   option: PlanOption;
   selected: boolean;
-  billingPeriod: number;
+  billingPeriod: string;
   isCurrent: boolean;
-  onSelect: (plan: number, period: number) => void;
+  onSelect: (planId: string, period: string) => void;
 }) {
-  const isYearly = billingPeriod === 2;
+  const isYearly = billingPeriod === "Yearly";
   const priceText = isYearly ? option.yearlyText : option.monthlyText;
 
   return (
@@ -77,11 +55,11 @@ function PlanCard({
           ? "ring-2 ring-indigo-500 border-indigo-200"
           : ""
       }`}
-      onClick={() => !isCurrent && onSelect(option.plan, billingPeriod)}
+      onClick={() => !isCurrent && onSelect(option.planId, billingPeriod)}
     >
       <CardContent className="p-6">
         <div className="flex items-center justify-between mb-3">
-          <Badge className={option.badgeColor}>{option.planLabel}</Badge>
+          <Badge className={option.badgeColor}>{option.planName}</Badge>
           {isCurrent && (
             <Badge className="bg-gray-100 text-gray-600">Current</Badge>
           )}
@@ -99,10 +77,10 @@ function PlanCard({
             disabled={isCurrent}
             onClick={(e) => {
               e.stopPropagation();
-              if (!isCurrent) onSelect(option.plan, 1);
+              if (!isCurrent) onSelect(option.planId, "Monthly");
             }}
             className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-              selected && billingPeriod === 1 && !isCurrent
+              selected && billingPeriod === "Monthly" && !isCurrent
                 ? "border-indigo-500 bg-indigo-50 text-indigo-700"
                 : "border-gray-200 text-gray-500 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
             }`}
@@ -114,10 +92,10 @@ function PlanCard({
             disabled={isCurrent}
             onClick={(e) => {
               e.stopPropagation();
-              if (!isCurrent) onSelect(option.plan, 2);
+              if (!isCurrent) onSelect(option.planId, "Yearly");
             }}
             className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
-              selected && billingPeriod === 2 && !isCurrent
+              selected && billingPeriod === "Yearly" && !isCurrent
                 ? "border-indigo-500 bg-indigo-50 text-indigo-700"
                 : "border-gray-200 text-gray-500 hover:border-gray-300 disabled:opacity-40 disabled:cursor-not-allowed"
             }`}
@@ -239,8 +217,8 @@ function QrPayment({
 
 export function SubscriptionBillingPage() {
   const { t } = useTranslation();
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
-  const [billingPeriod, setBillingPeriod] = useState<number>(1);
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<string>("Monthly");
   const [paymentData, setPaymentData] = useState<{
     qr: string;
     md5: string;
@@ -255,52 +233,55 @@ export function SubscriptionBillingPage() {
   const { data: pricing, isLoading: pricingLoading } = usePricing();
   const { data: currentSub, isLoading: subLoading } = useTenantSubscription();
 
-  const currentPlanNum = currentSub ? parsePlanLabel(currentSub.subscriptionPlan) : -1;
-  const currentPeriodNum = currentSub ? parseBillingPeriod(currentSub.billingPeriod) : -1;
+  const currentPlanName = currentSub?.subscriptionPlan ?? "";
+  const currentBillingPeriod = currentSub?.billingPeriod ?? "";
 
   const plans: PlanOption[] = useMemo(() => {
     if (!pricing) return [];
 
-    const grouped: Record<string, { monthly: number; yearly: number }> = {};
+    const grouped: Record<string, { planName: string; monthly: number; yearly: number }> = {};
     for (const p of pricing) {
-      if (p.plan === "Free") continue;
-      if (!grouped[p.plan]) grouped[p.plan] = { monthly: 0, yearly: 0 };
-      const planPrices = grouped[p.plan]!;
+      if (!grouped[p.planId]) {
+        grouped[p.planId] = { planName: p.plan, monthly: 0, yearly: 0 };
+      }
+      const planPrices = grouped[p.planId]!;
       if (p.billingPeriod === "Monthly") planPrices.monthly = p.amount;
       if (p.billingPeriod === "Yearly") planPrices.yearly = p.amount;
     }
 
-    return Object.entries(grouped).map(([planLabel, prices]) => ({
-      plan: parsePlanLabel(planLabel),
-      planLabel,
-      monthlyPrice: prices.monthly,
-      yearlyPrice: prices.yearly,
-      monthlyText: `$${prices.monthly.toFixed(2)}/mo`,
-      yearlyText: `$${prices.yearly.toFixed(2)}/yr`,
-      badgeColor: planBadgeColor(planLabel),
-    }));
+    return Object.entries(grouped)
+      .filter(([, prices]) => prices.planName !== "Free")
+      .map(([planId, prices]) => ({
+        planId,
+        planName: prices.planName,
+        monthlyPrice: prices.monthly,
+        yearlyPrice: prices.yearly,
+        monthlyText: `$${prices.monthly.toFixed(2)}/mo`,
+        yearlyText: `$${prices.yearly.toFixed(2)}/yr`,
+        badgeColor: planBadgeColor(prices.planName),
+      }));
   }, [pricing]);
 
-  const isCurrentPlan = (planNum: number, periodNum: number) =>
-    planNum === currentPlanNum && periodNum === currentPeriodNum;
+  const isCurrentPlan = (planId: string, period: string) =>
+    planId === currentPlanName && period === currentBillingPeriod;
 
-  const handleSelectPlan = (plan: number, period: number) => {
-    setSelectedPlan(plan);
+  const handleSelectPlan = (planId: string, period: string) => {
+    setSelectedPlanId(planId);
     setBillingPeriod(period);
     setPaymentData(null);
     setError("");
   };
 
   const handlePay = () => {
-    if (selectedPlan === null) return;
+    if (selectedPlanId === null) return;
     setError("");
 
     initiatePayment.mutate(
-      { plan: selectedPlan, billingPeriod },
+      { subscriptionPlanId: selectedPlanId, billingPeriod },
       {
         onSuccess: (data) => {
-          const planOption = plans.find((p) => p.plan === selectedPlan);
-          const isYearly = billingPeriod === 2;
+          const planOption = plans.find((p) => p.planId === selectedPlanId);
+          const isYearly = billingPeriod === "Yearly";
           const amount = isYearly ? (planOption?.yearlyPrice ?? 0) : (planOption?.monthlyPrice ?? 0);
 
           setPaymentData({
@@ -308,7 +289,7 @@ export function SubscriptionBillingPage() {
             md5: data.md5,
             amount,
             currency: "USD",
-            planLabel: planOption?.planLabel ?? "",
+            planLabel: planOption?.planName ?? "",
           });
           window.scrollTo({ top: 0, behavior: "smooth" });
         },
@@ -332,14 +313,14 @@ export function SubscriptionBillingPage() {
 
       {subLoading ? (
         <Skeleton className="h-10 w-64" />
-      ) : currentSub && currentSub.subscriptionPlan !== "Free" ? (
+      ) : currentSub && currentPlanName !== "Free" ? (
         <div className="flex items-center gap-3 p-3 rounded-md bg-gray-50 border border-gray-100">
           <span className="text-sm text-gray-500">{t("billing.currentPlan")}:</span>
-          <Badge className={planBadgeColor(currentSub.subscriptionPlan)}>
-            {currentSub.subscriptionPlan}
+          <Badge className={planBadgeColor(currentPlanName)}>
+            {currentPlanName}
           </Badge>
-          {currentSub.billingPeriod !== "None" && (
-            <span className="text-xs text-gray-500">{periodLabel(currentSub.billingPeriod)}</span>
+          {currentBillingPeriod !== "None" && (
+            <span className="text-xs text-gray-500">{periodLabel(currentBillingPeriod)}</span>
           )}
           {currentSub.subscriptionExpiresAt && (
             <span className="text-xs text-gray-400">
@@ -366,11 +347,11 @@ export function SubscriptionBillingPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 {plans.map((option) => (
                   <PlanCard
-                    key={option.plan}
+                    key={option.planId}
                     option={option}
-                    selected={selectedPlan === option.plan}
-                    billingPeriod={selectedPlan === option.plan ? billingPeriod : 1}
-                    isCurrent={isCurrentPlan(option.plan, 1) || isCurrentPlan(option.plan, 2)}
+                    selected={selectedPlanId === option.planId}
+                    billingPeriod={selectedPlanId === option.planId ? billingPeriod : "Monthly"}
+                    isCurrent={isCurrentPlan(option.planId, "Monthly") || isCurrentPlan(option.planId, "Yearly")}
                     onSelect={handleSelectPlan}
                   />
                 ))}
@@ -382,7 +363,7 @@ export function SubscriptionBillingPage() {
 
           <Button
             className="mt-6 w-full"
-            disabled={selectedPlan === null || initiatePayment.isPending || pricingLoading}
+            disabled={selectedPlanId === null || initiatePayment.isPending || pricingLoading}
             onClick={handlePay}
           >
             {initiatePayment.isPending ? (
@@ -445,7 +426,7 @@ export function SubscriptionBillingPage() {
                 >
                   <div>
                     <div className="flex items-center gap-2">
-                      <Badge className={p.plan === "Pro" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}>
+                      <Badge className={p.plan === "Pro" ? "bg-blue-100 text-blue-700" : p.plan === "Enterprise" ? "bg-purple-100 text-purple-700" : "bg-indigo-100 text-indigo-700"}>
                         {p.plan}
                       </Badge>
                       <span className="text-xs text-gray-500">{p.billingPeriod}</span>

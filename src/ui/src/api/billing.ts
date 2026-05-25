@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost } from "./client";
-import type { InitiatePaymentResponse, CheckPaymentResponse, PaymentResponse, PricingResponse } from "./types";
+import type { InitiatePaymentResponse, CheckPaymentResponse, PaymentResponse, PricingResponse, InitiatePaymentPayload } from "./types";
 
 const BILLING_KEY = ["tenant", "subscription", "payment"] as const;
 const PRICING_KEY = ["tenant", "subscription", "pricing"] as const;
@@ -16,7 +16,7 @@ export function useInitiatePayment() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: { plan: number; billingPeriod: number }) =>
+    mutationFn: (payload: InitiatePaymentPayload) =>
       apiPost<InitiatePaymentResponse>("/tenant/subscription/payment", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BILLING_KEY });
