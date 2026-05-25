@@ -15,4 +15,8 @@ public static class SubscriptionErrors
     public static readonly Error NoActivePlanAvailable = Error.NotFound(
         "Subscriptions.NoActivePlanAvailable",
         "No active subscription plan is available");
+
+    public static Error PlanNameAlreadyExists(string name) => Error.Conflict(
+        "Subscriptions.PlanNameAlreadyExists",
+        $"A subscription plan with the name '{name}' already exists");
 }
