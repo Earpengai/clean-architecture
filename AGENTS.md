@@ -149,5 +149,12 @@ Uses `IEndpoint` interface (not controller classes) with `MapEndpoint(IEndpointR
 
 ## Testing
 
-- Only architecture tests exist (`tests/ArchitectureTests`). No unit/functional/integration tests yet (though `InternalsVisibleTo("Application.UnitTests")` is declared).
-- `Program.cs` is declared `public partial class Program` for integration test accessibility.
+- **ArchitectureTests** (`tests/ArchitectureTests/Layers/LayerTests.cs`) — NetArchTest.Rules enforcing layer dependency rules (7 tests)
+- **SharedKernel.UnitTests** (`tests/SharedKernel.UnitTests/`) — Result, Error, Entity, ValidationError tests (17 tests)
+- **Domain.UnitTests** (`tests/Domain.UnitTests/`) — Entity behavior, subscription pricing/features/limits, error definitions (18 tests)
+- **Application.UnitTests** (`tests/Application.UnitTests/`) — FluentValidation validators, command/query handlers with NSubstitute mocks (24 tests)
+- **IntegrationTests** (`tests/IntegrationTests/`) — WebApplicationFactory + Testcontainers (PostgreSQL), requires Docker (2 tests)
+
+All test projects use xUnit + Shouldly. Application.UnitTests use NSubstitute for mocking. IntegrationTests use `Microsoft.AspNetCore.Mvc.Testing` + `Testcontainers.PostgreSql`.
+
+`InternalsVisibleTo` attributes are configured on all source projects for their corresponding test projects.

@@ -5,4 +5,8 @@
     <ProjectReference Include="..\SharedKernel\SharedKernel.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="Domain.UnitTests" />
+  </ItemGroup>
+
 </Project>

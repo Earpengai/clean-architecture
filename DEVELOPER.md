@@ -68,7 +68,11 @@ clean-architecture/
 │   ├── Web.Api/          # Minimal API endpoints, Swagger, middleware, exception handling
 │   └── ui/               # React 19 frontend (see src/ui/README.md)
 ├── tests/
-│   └── ArchitectureTests/   # NetArchTest.Rules enforces layer dependency rules
+│   ├── ArchitectureTests/      # NetArchTest.Rules enforces layer dependency rules
+│   ├── SharedKernel.UnitTests/ # Result, Error, Entity tests
+│   ├── Domain.UnitTests/       # Entity behavior, subscription features/limits/pricing
+│   ├── Application.UnitTests/  # CQRS handlers, FluentValidation validators, decorators
+│   └── IntegrationTests/       # WebApplicationFactory + Testcontainers PostgreSQL
 ├── docs/                    # Query pattern guides (paginated-list, tree-list, kanban-list)
 ├── CleanArchitecture.slnx   # Solution file (.slnx format)
 ├── Directory.Build.props    # Shared build properties (net10.0, warnings-as-errors)
@@ -466,7 +470,7 @@ These are enforced by `.editorconfig` and `Directory.Build.props`. Violations ar
 
 ## Testing
 
-Currently, only architecture tests exist (`tests/ArchitectureTests/Layers/LayerTests.cs`). They use **NetArchTest.Rules** to verify layer dependency rules.
+The project includes 65+ unit tests and 2 integration tests across 5 test projects:
 
 ```powershell
 # Run all tests
@@ -474,9 +478,23 @@ dotnet test CleanArchitecture.slnx --configuration Release
 
 # Run a specific test
 dotnet test CleanArchitecture.slnx --filter "FullyQualifiedName~LayerTests"
+
+# Run unit tests only (skip integration tests which require Docker)
+dotnet test CleanArchitecture.slnx --filter "FullyQualifiedName~UnitTests|FullyQualifiedName~ArchitectureTests"
+
+# Run integration tests (requires Docker running)
+dotnet test CleanArchitecture.slnx --filter "FullyQualifiedName~IntegrationTests"
 ```
 
-The test project uses **xUnit** with **Shouldly** assertions. `InternalsVisibleTo` attributes are already declared for future unit/integration test projects.
+| Test Project | Test Count | Tools | Layer Tested |
+|---|---|---|---|
+| `ArchitectureTests` | 7 | NetArchTest.Rules | All (dependency enforcement) |
+| `SharedKernel.UnitTests` | 17 | xUnit, Shouldly | SharedKernel |
+| `Domain.UnitTests` | 18 | xUnit, Shouldly | Domain |
+| `Application.UnitTests` | 24 | xUnit, Shouldly, NSubstitute | Application |
+| `IntegrationTests` | 2 | xUnit, Shouldly, WebApplicationFactory, Testcontainers.PostgreSql | Infrastructure + Web.Api |
+
+`InternalsVisibleTo` attributes are configured on all source projects for their corresponding test projects. Integration tests require Docker to be running (they use Testcontainers to spin up a PostgreSQL container).
 
 ## Docker Compose
 
