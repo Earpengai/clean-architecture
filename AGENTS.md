@@ -135,6 +135,14 @@ Migrations are auto-applied at startup in Development via `ApplyMigrations()` (`
 - `DomainEventsDispatcher` resolves `IDomainEventHandler<T>` implementations from the DI container using cached reflection
 - Domain event handlers live in the **Application** layer, not Domain
 
+## Background Job Queue
+
+- **DB-backed outbox** — `BackgroundJob` entity persisted in `background_jobs` table, processed by `BackgroundJobProcessor` (`BackgroundService`)
+- **Redis notifications** — `DatabaseBackgroundJobQueue` publishes on `"jobs:notifications"` after DB insert; processor subscribes for instant wake, falls back to 10s polling
+- **Retry on failure** — up to `MaxRetries` (default 3); status cycles `Pending → Processing → (Pending | Failed)`
+- **Email is queued** — `IEmailService → QueuedEmailService → IBackgroundJobQueue.EnqueueAsync(SendEmailJob)`; domain event handlers unchanged
+- **Add new jobs** — implement `IBackgroundJob` (marker record) + `IBackgroundJobHandler<T>`, register in DI; see `docs/background-job-queue.md`
+
 ## Web.Api Endpoint Pattern
 
 Uses `IEndpoint` interface (not controller classes) with `MapEndpoint(IEndpointRouteBuilder)` — registered via assembly scanning in DI. Return values use `Result` with `Match()` extension methods and `CustomResults.Problem()` for RFC 7807 problem details.

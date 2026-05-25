@@ -301,6 +301,18 @@ User entity → Raise(UserRegisteredDomainEvent) → SaveChangesAsync → Domain
     → UserRegisteredDomainEventHandler → IEmailService.SendAsync(...)
 ```
 
+### Background Job Queue
+
+A DB-backed outbox pattern with Redis notifications for asynchronous background processing.
+
+1. `IBackgroundJob` (marker) + `IBackgroundJobHandler<T>` define jobs and their handlers
+2. `IBackgroundJobQueue.EnqueueAsync<T>(T job)` persists jobs to the `background_jobs` table + publishes Redis notification
+3. `BackgroundJobProcessor` (`BackgroundService`) subscribes to Redis for instant wake, polls DB every 10s as fallback
+4. Failed jobs retry up to `MaxRetries` (default 3); resolved via cached reflection (same pattern as domain events)
+5. Email is already wired: `IEmailService` → `QueuedEmailService` → `IBackgroundJobQueue.EnqueueAsync(SendEmailJob)`
+
+See `docs/background-job-queue.md` for the full guide on adding new job types.
+
 ### Subscription Plans & Feature Gating
 
 - **Domain**: `SubscriptionPlan`, `SubscriptionFeature`, `SubscriptionLimit` define per-tenant plan capabilities
@@ -517,3 +529,4 @@ Dependabot is configured for daily NuGet updates in `.github/dependabot.yml`.
 - [docs/paginated-list.md](./docs/paginated-list.md) — paginated query pattern
 - [docs/tree-list.md](./docs/tree-list.md) — hierarchical query pattern
 - [docs/kanban-list.md](./docs/kanban-list.md) — kanban query pattern
+- [docs/background-job-queue.md](./docs/background-job-queue.md) — DB-backed background job queue with Redis
