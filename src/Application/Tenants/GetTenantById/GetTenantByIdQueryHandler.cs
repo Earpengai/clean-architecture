@@ -1,11 +1,15 @@
+using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
 namespace Application.Tenants.GetTenantById;
 
-internal sealed class GetTenantByIdQueryHandler(IApplicationDbContext context)
+internal sealed class GetTenantByIdQueryHandler(
+    IApplicationDbContext context,
+    IUserContext userContext)
     : IQueryHandler<GetTenantByIdQuery, TenantResponse>
 {
     public async Task<Result<TenantResponse>> Handle(
@@ -24,12 +28,21 @@ internal sealed class GetTenantByIdQueryHandler(IApplicationDbContext context)
                 Domain.Tenants.TenantErrors.NotFound(query.TenantId));
         }
 
+        string? role = await context.Memberships
+            .AsNoTracking()
+            .Where(m => m.TenantId == query.TenantId && m.UserId == userContext.UserId)
+            .Select(m => m.Role.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+
         return new TenantResponse(
             tenant.Id,
             tenant.Name,
             tenant.Identifier,
             tenant.Subscription?.SubscriptionPlan?.Name,
             tenant.Subscription?.Status,
-            tenant.SeatCount);
+            tenant.SeatCount,
+            role,
+            tenant.Subscription?.BillingPeriod.ToString(),
+            tenant.Subscription?.ExpiresAt);
     }
 }

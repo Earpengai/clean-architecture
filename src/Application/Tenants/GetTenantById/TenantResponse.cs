@@ -8,4 +8,7 @@ public sealed record TenantResponse(
     string Identifier,
     string? SubscriptionPlanName,
     SubscriptionStatus? SubscriptionStatus,
-    int SeatCount);
+    int SeatCount,
+    string? Role,
+    string? BillingPeriod,
+    DateTime? SubscriptionExpiresAt);

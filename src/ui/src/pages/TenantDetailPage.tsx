@@ -108,6 +108,18 @@ export function TenantDetailPage() {
                 <span className="text-gray-500">Seats</span>
                 <span className="font-medium">{tenant.seatCount}</span>
               </div>
+              {tenant.billingPeriod && tenant.billingPeriod !== "None" && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Billing</span>
+                  <span className="font-medium">{tenant.billingPeriod}</span>
+                </div>
+              )}
+              {tenant.subscriptionExpiresAt && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Expires</span>
+                  <span className="font-medium">{new Date(tenant.subscriptionExpiresAt).toLocaleDateString()}</span>
+                </div>
+              )}
             </CardContent>
           </Card>
 

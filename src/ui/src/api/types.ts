@@ -62,7 +62,9 @@ export interface TenantResponse {
   subscriptionPlanName: string | null;
   subscriptionStatus: number | null;
   seatCount: number;
-  role: string;
+  role?: string;
+  billingPeriod?: string;
+  subscriptionExpiresAt?: string | null;
 }
 
 export interface CreateTenantPayload {
