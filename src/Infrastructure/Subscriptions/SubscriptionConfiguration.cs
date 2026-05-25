@@ -11,7 +11,7 @@ internal sealed class SubscriptionConfiguration : IEntityTypeConfiguration<Subsc
     {
         builder.HasKey(s => s.Id);
 
-        builder.HasOne<Tenant>()
+        builder.HasOne(s => s.Tenant)
             .WithOne(t => t.Subscription)
             .HasForeignKey<Subscription>(s => s.TenantId)
             .IsRequired();
