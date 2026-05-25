@@ -1,6 +1,6 @@
 namespace Application.Admin.GetSubscriptionPlanById;
 
-public sealed record SubscriptionPlanResponse
+public sealed record SubscriptionPlanDetail
 {
     public Guid Id { get; init; }
     public string Name { get; init; }

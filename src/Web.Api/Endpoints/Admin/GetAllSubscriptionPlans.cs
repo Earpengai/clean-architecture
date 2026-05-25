@@ -12,12 +12,12 @@ internal sealed class GetAllSubscriptionPlans : IEndpoint
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
         app.MapGet("admin/subscription/plans", async (
-            IQueryHandler<GetAllSubscriptionPlansQuery, List<SubscriptionPlanResponse>> handler,
+            IQueryHandler<GetAllSubscriptionPlansQuery, List<SubscriptionPlanListItem>> handler,
             CancellationToken cancellationToken) =>
         {
             var query = new GetAllSubscriptionPlansQuery();
 
-            Result<List<SubscriptionPlanResponse>> result = await handler.Handle(query, cancellationToken);
+            Result<List<SubscriptionPlanListItem>> result = await handler.Handle(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

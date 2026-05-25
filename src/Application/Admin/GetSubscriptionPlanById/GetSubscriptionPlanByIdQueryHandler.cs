@@ -11,15 +11,15 @@ namespace Application.Admin.GetSubscriptionPlanById;
 internal sealed class GetSubscriptionPlanByIdQueryHandler(
     IApplicationDbContext context,
     IUserContext userContext)
-    : IQueryHandler<GetSubscriptionPlanByIdQuery, SubscriptionPlanResponse>
+    : IQueryHandler<GetSubscriptionPlanByIdQuery, SubscriptionPlanDetail>
 {
-    public async Task<Result<SubscriptionPlanResponse>> Handle(
+    public async Task<Result<SubscriptionPlanDetail>> Handle(
         GetSubscriptionPlanByIdQuery query,
         CancellationToken cancellationToken)
     {
         if (!userContext.IsSystemAdministrator)
         {
-            return Result.Failure<SubscriptionPlanResponse>(UserErrors.Unauthorized());
+            return Result.Failure<SubscriptionPlanDetail>(UserErrors.Unauthorized());
         }
 
         SubscriptionPlan? plan = await context.SubscriptionPlans
@@ -28,7 +28,7 @@ internal sealed class GetSubscriptionPlanByIdQueryHandler(
 
         if (plan is null)
         {
-            return Result.Failure<SubscriptionPlanResponse>(
+            return Result.Failure<SubscriptionPlanDetail>(
                 SubscriptionErrors.PlanNotFound(query.SubscriptionPlanId));
         }
 
@@ -54,7 +54,7 @@ internal sealed class GetSubscriptionPlanByIdQueryHandler(
             })
             .ToListAsync(cancellationToken);
 
-        return new SubscriptionPlanResponse
+        return new SubscriptionPlanDetail
         {
             Id = plan.Id,
             Name = plan.Name,

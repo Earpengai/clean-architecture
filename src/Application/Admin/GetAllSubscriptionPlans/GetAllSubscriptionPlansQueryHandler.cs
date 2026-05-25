@@ -10,21 +10,21 @@ namespace Application.Admin.GetAllSubscriptionPlans;
 internal sealed class GetAllSubscriptionPlansQueryHandler(
     IApplicationDbContext context,
     IUserContext userContext)
-    : IQueryHandler<GetAllSubscriptionPlansQuery, List<SubscriptionPlanResponse>>
+    : IQueryHandler<GetAllSubscriptionPlansQuery, List<SubscriptionPlanListItem>>
 {
-    public async Task<Result<List<SubscriptionPlanResponse>>> Handle(
+    public async Task<Result<List<SubscriptionPlanListItem>>> Handle(
         GetAllSubscriptionPlansQuery query,
         CancellationToken cancellationToken)
     {
         if (!userContext.IsSystemAdministrator)
         {
-            return Result.Failure<List<SubscriptionPlanResponse>>(UserErrors.Unauthorized());
+            return Result.Failure<List<SubscriptionPlanListItem>>(UserErrors.Unauthorized());
         }
 
-        List<SubscriptionPlanResponse> plans = await context.SubscriptionPlans
+        List<SubscriptionPlanListItem> plans = await context.SubscriptionPlans
             .AsNoTracking()
             .OrderBy(p => p.SortOrder)
-            .Select(p => new SubscriptionPlanResponse
+            .Select(p => new SubscriptionPlanListItem
             {
                 Id = p.Id,
                 Name = p.Name,

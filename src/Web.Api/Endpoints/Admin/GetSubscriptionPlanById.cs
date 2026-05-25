@@ -13,12 +13,12 @@ internal sealed class GetSubscriptionPlanById : IEndpoint
     {
         app.MapGet("admin/subscription/plans/{planId:guid}", async (
             Guid planId,
-            IQueryHandler<GetSubscriptionPlanByIdQuery, SubscriptionPlanResponse> handler,
+            IQueryHandler<GetSubscriptionPlanByIdQuery, SubscriptionPlanDetail> handler,
             CancellationToken cancellationToken) =>
         {
             var query = new GetSubscriptionPlanByIdQuery(planId);
 
-            Result<SubscriptionPlanResponse> result = await handler.Handle(query, cancellationToken);
+            Result<SubscriptionPlanDetail> result = await handler.Handle(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })
