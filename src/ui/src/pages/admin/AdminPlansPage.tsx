@@ -308,6 +308,7 @@ export function AdminPlansPage() {
       )}
 
       <PlanFormDialog
+        key={editingPlan?.id ?? "create"}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         plan={editingPlan}
