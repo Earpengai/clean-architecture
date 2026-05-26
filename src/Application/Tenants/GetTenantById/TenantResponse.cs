@@ -11,4 +11,5 @@ public sealed record TenantResponse(
     int? MaxUsersOverride,
     string? Role,
     string? BillingPeriod,
-    DateTime? SubscriptionExpiresAt);
+    DateTime? SubscriptionExpiresAt,
+    bool IsActive);

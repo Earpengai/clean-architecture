@@ -43,6 +43,7 @@ internal sealed class GetTenantByIdQueryHandler(
             tenant.Subscription?.MaxUsersOverride,
             role,
             tenant.Subscription?.BillingPeriod.ToString(),
-            tenant.Subscription?.ExpiresAt);
+            tenant.Subscription?.ExpiresAt,
+            tenant.IsActive);
     }
 }

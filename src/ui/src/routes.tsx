@@ -22,6 +22,7 @@ import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { LoginTwoFactorPage } from "@/pages/LoginTwoFactorPage";
 import { OnboardingGuard } from "@/components/OnboardingGuard";
+import { TenantGuard } from "@/components/TenantGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
 import { AdminSubscriptionPage } from "@/pages/admin/AdminSubscriptionPage";
 import { AdminPlansPage } from "@/pages/admin/AdminPlansPage";
@@ -62,35 +63,37 @@ export function AppRoutes() {
 
       {/* === PROTECTED ROUTES === */}
       <Route element={<ProtectedRoute />}>
-        {/* Application Section */}
-        <Route element={<OnboardingGuard />}>
-          <Route path="app" element={<AppShell section="app" />}>
-            <Route index element={<Dashboard />} />
-            <Route path="todos" element={<TodosPage />} />
-            <Route path="todos/:id" element={<TodoDetailPage />} />
-            <Route path="profile" element={<ProfilePage />} />
+        <Route element={<TenantGuard />}>
+          {/* Application Section */}
+          <Route element={<OnboardingGuard />}>
+            <Route path="app" element={<AppShell section="app" />}>
+              <Route index element={<Dashboard />} />
+              <Route path="todos" element={<TodosPage />} />
+              <Route path="todos/:id" element={<TodoDetailPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+            </Route>
+          </Route>
+
+          {/* Tenant Management Section */}
+          <Route path="tenant" element={<AppShell section="tenant" />}>
+            <Route path="tenants" element={<TenantsPage />} />
+            <Route path="tenants/:id" element={<TenantDetailPage />} />
+            <Route element={<PermissionGuard permissions={["roles:read"]} />}>
+              <Route path="roles" element={<RolesPage />} />
+            </Route>
+            <Route element={<PermissionGuard permissions={["users:read"]} />}>
+              <Route path="users" element={<UsersPage />} />
+              <Route path="users/:id" element={<UserDetailPage />} />
+              <Route path="invitations" element={<InvitationsPage />} />
+            </Route>
+            <Route element={<PermissionGuard permissions={["tenants:write"]} />}>
+              <Route path="subscription" element={<SubscriptionPage />} />
+              <Route path="billing" element={<SubscriptionBillingPage />} />
+            </Route>
           </Route>
         </Route>
 
-        {/* Tenant Management Section */}
-        <Route path="tenant" element={<AppShell section="tenant" />}>
-          <Route path="tenants" element={<TenantsPage />} />
-          <Route path="tenants/:id" element={<TenantDetailPage />} />
-          <Route element={<PermissionGuard permissions={["roles:read"]} />}>
-            <Route path="roles" element={<RolesPage />} />
-          </Route>
-          <Route element={<PermissionGuard permissions={["users:read"]} />}>
-            <Route path="users" element={<UsersPage />} />
-            <Route path="users/:id" element={<UserDetailPage />} />
-            <Route path="invitations" element={<InvitationsPage />} />
-          </Route>
-          <Route element={<PermissionGuard permissions={["tenants:write"]} />}>
-            <Route path="subscription" element={<SubscriptionPage />} />
-            <Route path="billing" element={<SubscriptionBillingPage />} />
-          </Route>
-        </Route>
-
-        {/* Admin Section */}
+        {/* Admin Section - outside TenantGuard, system admins need access */}
         <Route element={<AdminGuard />}>
           <Route path="admin" element={<AppShell section="admin" />}>
             <Route path="tenants" element={<AdminTenantsPage />} />

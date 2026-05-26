@@ -26,8 +26,12 @@ export function TenantSwitcher() {
     const exists = tenants.some((t) => t.id === activeTenantId);
 
     if (!exists) {
-      const first = tenants[0]!;
-      setActiveTenant(first.id, first.identifier);
+      const firstActive = tenants.find(
+        (t) => t.isActive && t.subscriptionStatus !== 4
+      );
+      if (firstActive) {
+        setActiveTenant(firstActive.id, firstActive.identifier);
+      }
     }
   }, [tenants, isLoading, activeTenantId, setActiveTenant]);
 
@@ -58,11 +62,29 @@ export function TenantSwitcher() {
         {tenants?.map((tenant) => (
           <DropdownMenuItem
             key={tenant.id}
-            onClick={() => setActiveTenant(tenant.id, tenant.identifier)}
-            className="justify-between"
+            onClick={() => {
+              if (tenant.isActive && tenant.subscriptionStatus !== 4) {
+                setActiveTenant(tenant.id, tenant.identifier);
+              }
+            }}
+            className={`justify-between ${
+              !tenant.isActive || tenant.subscriptionStatus === 4
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
           >
             <span className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
+              <span
+                className={`h-2 w-2 rounded-full shrink-0 ${
+                  !tenant.isActive
+                    ? "bg-red-400"
+                    : tenant.subscriptionStatus === 4
+                      ? "bg-gray-400"
+                      : tenant.subscriptionStatus === 1
+                        ? "bg-yellow-400"
+                        : "bg-green-400"
+                }`}
+              />
               {tenant.name}
             </span>
             {tenant.id === (activeTenantId ?? tenants?.[0]?.id) && (

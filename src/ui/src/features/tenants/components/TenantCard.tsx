@@ -21,21 +21,45 @@ interface TenantCardProps {
 
 export function TenantCard({ tenant, onClick }: TenantCardProps) {
   const status = statusLabel(tenant.subscriptionStatus);
+  const isDisabled = !tenant.isActive;
 
   return (
-    <Card className="cursor-pointer hover:border-indigo-300 transition-colors" onClick={onClick}>
+    <Card
+      className={`cursor-pointer transition-colors ${
+        isDisabled
+          ? "opacity-60 border-red-200 hover:border-red-300"
+          : "hover:border-indigo-300"
+      }`}
+      onClick={onClick}
+    >
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="font-semibold text-gray-900 truncate">{tenant.name}</h3>
+            <h3 className="font-semibold text-gray-900 truncate">
+              {tenant.name}
+              {isDisabled && (
+                <span className="ml-2 text-xs text-red-500 font-normal">(Disabled)</span>
+              )}
+            </h3>
             <p className="text-xs text-gray-500 mt-0.5">{tenant.identifier}</p>
           </div>
-          <Badge className={status.color}>{status.label}</Badge>
+          <div className="flex flex-col gap-1 items-end shrink-0">
+            {isDisabled && (
+              <Badge className="bg-red-100 text-red-700">Disabled</Badge>
+            )}
+            <Badge className={status.color}>{status.label}</Badge>
+          </div>
         </div>
         <div className="mt-3 flex items-center gap-4 text-xs text-gray-500">
           <span>Plan: {tenant.subscriptionPlanName ?? "None"}</span>
           <span>Role: {tenant.role}</span>
         </div>
+        {tenant.subscriptionExpiresAt && (
+          <div className="mt-2 text-xs text-gray-400">
+            {tenant.subscriptionStatus === 1 ? "Trial ends" : "Expires"}:{" "}
+            {new Date(tenant.subscriptionExpiresAt).toLocaleDateString()}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

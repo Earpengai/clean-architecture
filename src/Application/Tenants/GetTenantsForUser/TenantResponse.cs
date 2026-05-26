@@ -9,4 +9,6 @@ public sealed record TenantResponse(
     string? SubscriptionPlanName,
     SubscriptionStatus? SubscriptionStatus,
     int? MaxUsersOverride,
-    string Role);
+    string Role,
+    bool IsActive,
+    DateTime? SubscriptionExpiresAt);

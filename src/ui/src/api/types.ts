@@ -65,6 +65,7 @@ export interface TenantResponse {
   role?: string;
   billingPeriod?: string;
   subscriptionExpiresAt?: string | null;
+  isActive: boolean;
 }
 
 export interface CreateTenantPayload {

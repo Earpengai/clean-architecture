@@ -3,15 +3,64 @@ export interface AppError {
   isTenantError: boolean;
   isPermissionError: boolean;
   isNotFoundError: boolean;
+  isTenantBlocked: boolean;
+  tenantBlockReason: "disabled" | "expired" | "trial" | null;
 }
 
-export function parseErrorMessage(status: number, detail?: string): AppError {
+function makeBlockResult(reason: "disabled" | "expired" | "trial", message: string): AppError {
+  return {
+    message,
+    isTenantError: false,
+    isPermissionError: false,
+    isNotFoundError: false,
+    isTenantBlocked: true,
+    tenantBlockReason: reason,
+  };
+}
+
+function detectTenantBlock(
+  status: number,
+  detail: string,
+  problemType?: string
+): AppError | null {
+  if (status !== 403) return null;
+
+  if (problemType) {
+    if (problemType.includes("tenant-disabled"))
+      return makeBlockResult("disabled", detail);
+    if (problemType.includes("tenant-expired"))
+      return makeBlockResult("expired", detail);
+    if (problemType.includes("trial-expired"))
+      return makeBlockResult("trial", detail);
+  }
+
+  const lower = detail.toLowerCase();
+  if (lower.includes("tenant disabled") || lower.includes("tenants.disabled"))
+    return makeBlockResult("disabled", detail);
+  if (lower.includes("subscription expired") || lower.includes("tenants.subscriptionexpired"))
+    return makeBlockResult("expired", detail);
+  if (lower.includes("trial expired") || lower.includes("tenants.trialexpired"))
+    return makeBlockResult("trial", detail);
+
+  return null;
+}
+
+export function parseErrorMessage(
+  status: number,
+  detail?: string,
+  problemType?: string
+): AppError {
+  const tenantBlocked = detectTenantBlock(status, detail ?? "", problemType);
+  if (tenantBlocked) return tenantBlocked;
+
   if (status === 403) {
     return {
       message: "You don't have permission to access this resource.",
       isPermissionError: true,
       isTenantError: false,
       isNotFoundError: false,
+      isTenantBlocked: false,
+      tenantBlockReason: null,
     };
   }
 
@@ -23,6 +72,8 @@ export function parseErrorMessage(status: number, detail?: string): AppError {
         isTenantError: true,
         isPermissionError: false,
         isNotFoundError: false,
+        isTenantBlocked: false,
+        tenantBlockReason: null,
       };
     }
     return {
@@ -30,6 +81,8 @@ export function parseErrorMessage(status: number, detail?: string): AppError {
       isTenantError: false,
       isPermissionError: false,
       isNotFoundError: false,
+      isTenantBlocked: false,
+      tenantBlockReason: null,
     };
   }
 
@@ -39,6 +92,8 @@ export function parseErrorMessage(status: number, detail?: string): AppError {
       isNotFoundError: true,
       isTenantError: false,
       isPermissionError: false,
+      isTenantBlocked: false,
+      tenantBlockReason: null,
     };
   }
 
@@ -48,6 +103,8 @@ export function parseErrorMessage(status: number, detail?: string): AppError {
       isTenantError: false,
       isPermissionError: false,
       isNotFoundError: false,
+      isTenantBlocked: false,
+      tenantBlockReason: null,
     };
   }
 
@@ -57,6 +114,8 @@ export function parseErrorMessage(status: number, detail?: string): AppError {
       isTenantError: false,
       isPermissionError: false,
       isNotFoundError: false,
+      isTenantBlocked: false,
+      tenantBlockReason: null,
     };
   }
 
@@ -65,6 +124,8 @@ export function parseErrorMessage(status: number, detail?: string): AppError {
     isTenantError: false,
     isPermissionError: false,
     isNotFoundError: false,
+    isTenantBlocked: false,
+    tenantBlockReason: null,
   };
 }
 

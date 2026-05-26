@@ -30,7 +30,10 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             return null;
         }
 
-        return MapToAppTenantInfo(tenant);
+        int memberCount = await context.Memberships
+            .CountAsync(m => m.TenantId == tenant.Id);
+
+        return MapToAppTenantInfo(tenant, memberCount);
     }
 
     public async Task<AppTenantInfo?> TryGetAsync(string id)
@@ -55,7 +58,10 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             return null;
         }
 
-        return MapToAppTenantInfo(tenant);
+        int memberCount = await context.Memberships
+            .CountAsync(m => m.TenantId == tenant.Id);
+
+        return MapToAppTenantInfo(tenant, memberCount);
     }
 
     public async Task<IEnumerable<AppTenantInfo>> GetAllAsync()
@@ -70,7 +76,15 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             .ThenInclude(s => s!.SubscriptionPlan)
             .ToListAsync();
 
-        return tenants.Select(MapToAppTenantInfo);
+        List<AppTenantInfo> result = [];
+        foreach (Domain.Tenants.Tenant tenant in tenants)
+        {
+            int memberCount = await context.Memberships
+                .CountAsync(m => m.TenantId == tenant.Id);
+            result.Add(MapToAppTenantInfo(tenant, memberCount));
+        }
+
+        return result;
     }
 
     public async Task<IEnumerable<AppTenantInfo>> GetAllAsync(int take, int skip)
@@ -87,7 +101,15 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             .Take(take)
             .ToListAsync();
 
-        return tenants.Select(MapToAppTenantInfo);
+        List<AppTenantInfo> result = [];
+        foreach (Domain.Tenants.Tenant tenant in tenants)
+        {
+            int memberCount = await context.Memberships
+                .CountAsync(m => m.TenantId == tenant.Id);
+            result.Add(MapToAppTenantInfo(tenant, memberCount));
+        }
+
+        return result;
     }
 
     public async Task<bool> TryAddAsync(AppTenantInfo tenantInfo)
@@ -159,7 +181,7 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
         return true;
     }
 
-    private static AppTenantInfo MapToAppTenantInfo(Domain.Tenants.Tenant tenant)
+    private static AppTenantInfo MapToAppTenantInfo(Domain.Tenants.Tenant tenant, int currentUserCount = 0)
     {
         return new AppTenantInfo
         {
@@ -168,7 +190,10 @@ internal sealed class TenantStore : IMultiTenantStore<AppTenantInfo>
             Identifier = tenant.Identifier,
             SubscriptionPlan = tenant.Subscription?.SubscriptionPlan?.Name ?? string.Empty,
             SubscriptionStatus = tenant.Subscription?.Status.ToString() ?? string.Empty,
-            MaxUsersOverride = tenant.Subscription?.MaxUsersOverride
+            MaxUsersOverride = tenant.Subscription?.MaxUsersOverride,
+            IsActive = tenant.IsActive,
+            ExpiresAt = tenant.Subscription?.ExpiresAt,
+            CurrentUserCount = currentUserCount
         };
     }
 }

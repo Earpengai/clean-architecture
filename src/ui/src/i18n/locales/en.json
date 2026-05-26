@@ -85,5 +85,17 @@
     "expires": "Expires",
     "history": "Payment History",
     "noHistory": "No payment history."
+  },
+  "tenant": {
+    "blockedTitle": "Tenant Unavailable",
+    "disabledTitle": "Tenant Disabled",
+    "disabledMessage": "This tenant has been disabled. Please contact your administrator or switch to another tenant.",
+    "expiredTitle": "Subscription Expired",
+    "expiredMessage": "Your subscription has expired. Please renew to regain access.",
+    "trialExpiredTitle": "Trial Expired",
+    "trialExpiredMessage": "Your trial period has ended. Please upgrade to a paid plan to continue.",
+    "switchTenant": "Switch Tenant",
+    "upgradePlan": "Upgrade Plan",
+    "manageTenants": "Manage Tenants"
   }
 }

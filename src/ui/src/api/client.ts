@@ -155,14 +155,16 @@ async function apiRequest<T>(path: string, init: RequestInit, retry = true): Pro
 
     const errorBody = await response.text();
     let detail = "";
+    let problemType: string | undefined;
     try {
       const parsed = JSON.parse(errorBody);
       detail = parsed.detail ?? parsed.title ?? errorBody;
+      problemType = parsed.type;
     } catch {
       detail = errorBody || response.statusText;
     }
 
-    throw new ApiError(response.status, detail);
+    throw new ApiError(response.status, detail, problemType);
   }
 
   if (response.status === 204) {
@@ -174,10 +176,12 @@ async function apiRequest<T>(path: string, init: RequestInit, retry = true): Pro
 
 export class ApiError extends Error {
   status: number;
+  problemType?: string;
 
-  constructor(status: number, detail: string) {
+  constructor(status: number, detail: string, problemType?: string) {
     super(detail);
     this.name = "ApiError";
     this.status = status;
+    this.problemType = problemType;
   }
 }

@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
+using Domain.SubscriptionFeatures;
 using Domain.Tenants;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
@@ -41,6 +42,23 @@ internal sealed class InviteUserCommandHandler(
             return Result.Failure<Guid>(TenantErrors.NotFound(userContext.TenantId!.Value));
         }
 
+        int? maxUsers = await ResolveMaxUsersAsync(context, userContext.TenantId!.Value, cancellationToken);
+
+        if (maxUsers is not null && maxUsers != SubscriptionLimit.Unlimited)
+        {
+            int currentUserCount = await context.Memberships
+                .CountAsync(m => m.TenantId == userContext.TenantId!.Value, cancellationToken);
+
+            int pendingInvitationCount = await context.Invitations
+                .CountAsync(i => i.TenantId == userContext.TenantId!.Value
+                    && i.Status == InvitationStatus.Pending, cancellationToken);
+
+            if (currentUserCount + pendingInvitationCount >= maxUsers.Value)
+            {
+                return Result.Failure<Guid>(TenantErrors.MaxUsersReached(maxUsers.Value));
+            }
+        }
+
         var invitation = new Invitation
         {
             Id = Guid.NewGuid(),
@@ -61,5 +79,35 @@ internal sealed class InviteUserCommandHandler(
         await context.SaveChangesAsync(cancellationToken);
 
         return invitation.Id;
+    }
+
+    private static async Task<int?> ResolveMaxUsersAsync(
+        IApplicationDbContext context, Guid tenantId, CancellationToken cancellationToken)
+    {
+        int? override_ = await context.Subscriptions
+            .Where(s => s.TenantId == tenantId)
+            .Select(s => s.MaxUsersOverride)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (override_ is not null)
+        {
+            return override_;
+        }
+
+        Guid? planId = await context.Subscriptions
+            .Where(s => s.TenantId == tenantId)
+            .Select(s => (Guid?)s.SubscriptionPlanId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (planId is null)
+        {
+            return null;
+        }
+
+        return await context.PlanLimits
+            .Where(pl => pl.SubscriptionPlanId == planId.Value
+                && pl.Limit == SubscriptionLimit.MaxUsers)
+            .Select(pl => (int?)pl.Value)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 }
