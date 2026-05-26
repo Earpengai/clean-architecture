@@ -24,6 +24,7 @@ internal sealed class ResetPassword : IEndpoint
 
             return result.Match(Results.NoContent, CustomResults.Problem);
         })
+        .RequireRateLimiting("AuthRateLimit")
         .ExcludeFromMultiTenantResolution()
         .WithTags(Tags.Auth);
     }
