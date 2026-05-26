@@ -40,6 +40,11 @@ internal sealed class RegisterUserCommandHandler(
 
         bool sendVerification = configuration.GetValue<bool>("EmailVerification:SendVerificationEmail");
 
+        if (!sendVerification)
+        {
+            user.EmailConfirmed = true;
+        }
+
         var registrationInfo = new RegistrationInfo
         {
             Id = Guid.NewGuid(),

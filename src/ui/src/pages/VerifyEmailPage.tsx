@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { useVerifyEmail, useResendVerification } from "@/api/auth";
 import type { ApiError } from "@/api/client";
@@ -17,13 +17,18 @@ export function VerifyEmailPage() {
   const [resendSent, setResendSent] = useState(false);
   const verifyEmail = useVerifyEmail();
   const resendVerification = useResendVerification();
+  const hasAttempted = useRef(false);
 
   useEffect(() => {
+    if (hasAttempted.current) return;
     if (!token || !userId) {
+      hasAttempted.current = true;
       setStatus("error");
       setErrorMessage("Invalid or missing verification link.");
       return;
     }
+
+    hasAttempted.current = true;
 
     verifyEmail.mutate(
       { userId, token },

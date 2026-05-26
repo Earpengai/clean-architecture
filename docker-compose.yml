@@ -55,7 +55,7 @@ services:
       - ./src/ui:/app
       - ui_node_modules:/app/node_modules
     environment:
-      - VITE_API_TARGET=http://web-api:8080
+      - VITE_API_TARGET=http://localhost:5000
     depends_on:
       - web-api
 
