@@ -37,3 +37,15 @@ export function useCreateTenant() {
     },
   });
 }
+
+export function useClearDemoData() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (tenantId: string) =>
+      apiPost<void>(`/tenants/${encodeURIComponent(tenantId)}/clear-demo-data`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TENANTS_KEY });
+    },
+  });
+}

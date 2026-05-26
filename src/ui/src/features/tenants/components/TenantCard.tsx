@@ -44,6 +44,9 @@ export function TenantCard({ tenant, onClick }: TenantCardProps) {
             <p className="text-xs text-gray-500 mt-0.5">{tenant.identifier}</p>
           </div>
           <div className="flex flex-col gap-1 items-end shrink-0">
+            {tenant.isDemoData && (
+              <Badge className="bg-amber-100 text-amber-700">Demo</Badge>
+            )}
             {isDisabled && (
               <Badge className="bg-red-100 text-red-700">Disabled</Badge>
             )}

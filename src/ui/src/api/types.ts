@@ -66,6 +66,8 @@ export interface TenantResponse {
   billingPeriod?: string;
   subscriptionExpiresAt?: string | null;
   isActive: boolean;
+  isDemoData: boolean;
+  demoDataClearedAt: string | null;
 }
 
 export interface AvailablePlanResponse {
@@ -84,6 +86,7 @@ export interface CreateTenantPayload {
   name: string;
   identifier: string;
   subscriptionPlanId?: string;
+  useDemoData?: boolean;
 }
 
 export interface RoleResponse {
@@ -138,6 +141,8 @@ export interface TenantAdminResponse {
   maxUsersOverride: number | null;
   isActive: boolean;
   createdAt: string;
+  isDemoData: boolean;
+  demoDataClearedAt: string | null;
 }
 
 export interface LoginResponse {

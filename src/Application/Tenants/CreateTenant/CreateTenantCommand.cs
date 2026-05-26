@@ -6,4 +6,5 @@ public sealed record CreateTenantCommand(
     string Name,
     string Identifier,
     Guid OwnerId,
-    Guid? SubscriptionPlanId = null) : ICommand<CreateTenantResponse>;
+    Guid? SubscriptionPlanId = null,
+    bool UseDemoData = false) : ICommand<CreateTenantResponse>;

@@ -43,4 +43,16 @@ public static class TenantErrors
     public static Error MaxUsersReached(int limit) => Error.Problem(
         "Tenants.MaxUsersReached",
         $"This tenant has reached the maximum number of users ({limit}). Please upgrade your plan to add more users.");
+
+    public static readonly Error DemoDataAlreadyCleared = Error.Conflict(
+        "Tenants.DemoDataAlreadyCleared",
+        "Demo data has already been cleared for this tenant. This operation can only be performed once.");
+
+    public static readonly Error NotDemoTenant = Error.Problem(
+        "Tenants.NotDemoTenant",
+        "This tenant was not created with demo data.");
+
+    public static readonly Error NotOwner = Error.Problem(
+        "Tenants.NotOwner",
+        "Only the tenant owner can perform this operation.");
 }

@@ -35,7 +35,9 @@ internal sealed class GetAllTenantsAdminQueryHandler(
                 SubscriptionStatus = t.Subscription != null ? t.Subscription.Status : (SubscriptionStatus?)null,
                 MaxUsersOverride = t.Subscription != null ? t.Subscription.MaxUsersOverride : null,
                 IsActive = t.IsActive,
-                CreatedAt = t.CreatedAt
+                CreatedAt = t.CreatedAt,
+                IsDemoData = t.IsDemoData,
+                DemoDataClearedAt = t.DemoDataClearedAt
             })
             .ToListAsync(cancellationToken);
 #pragma warning restore IDE0031

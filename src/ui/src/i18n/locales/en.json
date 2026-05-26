@@ -96,6 +96,10 @@
     "trialExpiredMessage": "Your trial period has ended. Please upgrade to a paid plan to continue.",
     "switchTenant": "Switch Tenant",
     "upgradePlan": "Upgrade Plan",
-    "manageTenants": "Manage Tenants"
+    "manageTenants": "Manage Tenants",
+    "demoBadge": "Demo",
+    "clearDemoData": "Clear Demo Data",
+    "clearDemoDataDesc": "Permanently remove all demo content from this tenant. This action cannot be undone.",
+    "demoDataCleared": "Demo data cleared successfully. Ready for production use."
   }
 }

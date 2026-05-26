@@ -9,6 +9,8 @@ using Application.Abstractions.Email;
 using Application.Abstractions.Jobs;
 using Application.Abstractions.SubscriptionFeatures;
 using Application.Billing.ProcessPayment;
+using Application.Tenants.ClearDemoData;
+using Application.Tenants.SeedDemoData;
 using Domain.Users;
 using DomainRole = Domain.Tenants.Role;
 using Finbuckle.MultiTenant;
@@ -84,6 +86,10 @@ public static class DependencyInjection
         services.AddScoped<IBackgroundJobHandler<SendEmailJob>, SendEmailJobHandler>();
 
         services.AddScoped<IBackgroundJobHandler<ProcessPaymentJob>, ProcessPaymentJobHandler>();
+
+        services.AddScoped<IBackgroundJobHandler<SeedDemoDataJob>, SeedDemoDataJobHandler>();
+
+        services.AddScoped<IBackgroundJobHandler<ClearDemoDataJob>, ClearDemoDataJobHandler>();
 
         services.AddScoped<ISubscriptionFeatureProvider, SubscriptionFeatureProvider>();
 

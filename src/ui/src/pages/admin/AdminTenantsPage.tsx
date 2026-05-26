@@ -153,6 +153,9 @@ export function AdminTenantsPage() {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
                           <p className="text-sm font-medium text-gray-900 truncate">{tenant.name}</p>
+                          {tenant.isDemoData && (
+                            <Badge className="bg-amber-100 text-amber-700">Demo</Badge>
+                          )}
                           <Badge className={tenant.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}>
                             {tenant.isActive ? "Active" : "Disabled"}
                           </Badge>

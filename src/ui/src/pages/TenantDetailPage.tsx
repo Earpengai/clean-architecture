@@ -1,12 +1,24 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useTenantById } from "@/api/tenants";
+import { useTenantById, useClearDemoData } from "@/api/tenants";
 import { usePermission } from "@/hooks/usePermission";
+import { useToastStore } from "@/stores/toastStore";
+import { extractErrorDetail } from "@/lib/errors";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Building2, Users, CreditCard } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { ArrowLeft, Building2, Users, CreditCard, Trash2, AlertTriangle } from "lucide-react";
 
 function statusLabel(status: number | null) {
   if (status === null) return { label: "Unknown", color: "bg-gray-100 text-gray-700" };
@@ -28,6 +40,21 @@ export function TenantDetailPage() {
   const { data: tenant, isLoading, error } = useTenantById(id);
   const canReadUsers = usePermission("users:read");
   const canReadRoles = usePermission("roles:read");
+  const canWriteTenants = usePermission("tenants:write");
+  const clearDemo = useClearDemoData();
+  const addToast = useToastStore((state) => state.addToast);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  const handleClearDemoData = () => {
+    if (!tenant) return;
+    clearDemo.mutate(tenant.id, {
+      onSuccess: () => {
+        setShowClearConfirm(false);
+        addToast(t("tenant.demoDataCleared"), "success");
+      },
+      onError: (err) => addToast(extractErrorDetail(err), "error"),
+    });
+  };
 
   if (isLoading) {
     return (
@@ -68,6 +95,9 @@ export function TenantDetailPage() {
                 <div className="flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-indigo-600" />
                   <CardTitle>{tenant.name}</CardTitle>
+                  {tenant.isDemoData && (
+                    <Badge className="bg-amber-100 text-amber-700">Demo</Badge>
+                  )}
                 </div>
                 <Badge className={status.color}>{status.label}</Badge>
               </div>
@@ -141,10 +171,52 @@ export function TenantDetailPage() {
                   Manage Roles
                 </Button>
               )}
+              {tenant.isDemoData && canWriteTenants && (
+                <>
+                  <Separator />
+                  <div className="space-y-2">
+                    <p className="text-xs text-gray-500">{t("tenant.clearDemoDataDesc")}</p>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => setShowClearConfirm(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      {t("tenant.clearDemoData")}
+                    </Button>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <DialogTitle>{t("tenant.clearDemoData")}</DialogTitle>
+            </div>
+            <DialogDescription className="pt-2">
+              This will permanently delete all todo items in this tenant. This action cannot be undone. The tenant will be ready for production use after clearing.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowClearConfirm(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleClearDemoData}
+              disabled={clearDemo.isPending}
+            >
+              {clearDemo.isPending ? "Clearing..." : "Clear All Data"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

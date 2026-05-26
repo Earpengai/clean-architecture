@@ -11,6 +11,8 @@ public sealed class Tenant : Entity
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsDemoData { get; set; }
+    public DateTime? DemoDataClearedAt { get; set; }
 
     public Subscription? Subscription { get; set; }
 }

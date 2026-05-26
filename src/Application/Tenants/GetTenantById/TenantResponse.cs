@@ -12,4 +12,6 @@ public sealed record TenantResponse(
     string? Role,
     string? BillingPeriod,
     DateTime? SubscriptionExpiresAt,
-    bool IsActive);
+    bool IsActive,
+    bool IsDemoData,
+    DateTime? DemoDataClearedAt);

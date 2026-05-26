@@ -44,6 +44,8 @@ internal sealed class GetTenantByIdQueryHandler(
             role,
             tenant.Subscription?.BillingPeriod.ToString(),
             tenant.Subscription?.ExpiresAt,
-            tenant.IsActive);
+            tenant.IsActive,
+            tenant.IsDemoData,
+            tenant.DemoDataClearedAt);
     }
 }

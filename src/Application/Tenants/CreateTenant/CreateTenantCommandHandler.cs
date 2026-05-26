@@ -1,7 +1,9 @@
 using System.Security.Cryptography;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
+using Application.Abstractions.Jobs;
 using Application.Abstractions.Messaging;
+using Application.Tenants.SeedDemoData;
 using Domain.Permissions;
 using Domain.SubscriptionFeatures;
 using Domain.Subscriptions;
@@ -14,7 +16,8 @@ namespace Application.Tenants.CreateTenant;
 
 internal sealed class CreateTenantCommandHandler(
     IApplicationDbContext context,
-    ITokenProvider tokenProvider)
+    ITokenProvider tokenProvider,
+    IBackgroundJobQueue jobQueue)
     : ICommandHandler<CreateTenantCommand, CreateTenantResponse>
 {
     public async Task<Result<CreateTenantResponse>> Handle(CreateTenantCommand command, CancellationToken cancellationToken)
@@ -78,7 +81,8 @@ internal sealed class CreateTenantCommandHandler(
             Id = Guid.NewGuid(),
             Name = command.Name,
             Identifier = command.Identifier,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            IsDemoData = command.UseDemoData
         };
 
         subscription.TenantId = tenant.Id;
@@ -103,6 +107,13 @@ internal sealed class CreateTenantCommandHandler(
         context.Memberships.Add(membership);
 
         await context.SaveChangesAsync(cancellationToken);
+
+        if (command.UseDemoData)
+        {
+            await jobQueue.EnqueueAsync(
+                new SeedDemoDataJob(tenant.Id),
+                cancellationToken: cancellationToken);
+        }
 
         User? user = await context.Users.FirstOrDefaultAsync(
             u => u.Id == command.OwnerId, cancellationToken);

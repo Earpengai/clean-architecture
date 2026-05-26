@@ -120,6 +120,7 @@ export function CreateTenantDialog() {
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [useDemoData, setUseDemoData] = useState(false);
   const [error, setError] = useState("");
   const create = useCreateTenant();
   const addToast = useToastStore((state) => state.addToast);
@@ -134,6 +135,7 @@ export function CreateTenantDialog() {
         name: name.trim(),
         identifier: identifier.trim(),
         subscriptionPlanId: selectedPlanId ?? undefined,
+        useDemoData,
       },
       {
         onSuccess: () => {
@@ -141,6 +143,7 @@ export function CreateTenantDialog() {
           setName("");
           setIdentifier("");
           setSelectedPlanId(null);
+          setUseDemoData(false);
         },
         onError: (err) => {
           const message = extractErrorDetail(err);
@@ -177,6 +180,19 @@ export function CreateTenantDialog() {
               <Input id="tenantIdentifier" value={identifier} onChange={(e) => setIdentifier(e.target.value)} placeholder="acme" required />
               <p className="text-xs text-gray-500">A unique URL-safe identifier for this tenant.</p>
             </div>
+
+            <label className="flex items-center gap-2 rounded-md border border-gray-200 p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+              <input
+                type="checkbox"
+                checked={useDemoData}
+                onChange={(e) => setUseDemoData(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <div>
+                <span className="text-sm font-medium text-gray-700">Seed demo data</span>
+                <p className="text-xs text-gray-500">Pre-populate with sample todos to explore features.</p>
+              </div>
+            </label>
 
             <div className="space-y-2">
               <Label>Select Plan</Label>

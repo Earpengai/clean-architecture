@@ -12,4 +12,6 @@ public sealed record TenantAdminResponse
     public int? MaxUsersOverride { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
+    public bool IsDemoData { get; init; }
+    public DateTime? DemoDataClearedAt { get; init; }
 }
