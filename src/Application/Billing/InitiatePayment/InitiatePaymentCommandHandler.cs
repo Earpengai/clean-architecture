@@ -1,7 +1,9 @@
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Billing;
 using Application.Abstractions.Data;
+using Application.Abstractions.Jobs;
 using Application.Abstractions.Messaging;
+using Application.Billing.ProcessPayment;
 using Domain.Payments;
 using Domain.Subscriptions;
 using Domain.Tenants;
@@ -13,7 +15,8 @@ namespace Application.Billing.InitiatePayment;
 internal sealed class InitiatePaymentCommandHandler(
     IApplicationDbContext context,
     IUserContext userContext,
-    IBakongService bakongService)
+    IBakongService bakongService,
+    IBackgroundJobQueue jobQueue)
     : ICommandHandler<InitiatePaymentCommand, InitiatePaymentResponse>
 {
     public async Task<Result<InitiatePaymentResponse>> Handle(
@@ -82,6 +85,8 @@ internal sealed class InitiatePaymentCommandHandler(
         context.Payments.Add(payment);
 
         await context.SaveChangesAsync(cancellationToken);
+
+        await jobQueue.EnqueueAsync(new ProcessPaymentJob(payment.Id), maxRetries: 1, cancellationToken: cancellationToken);
 
         InitiatePaymentResponse response = new()
         {

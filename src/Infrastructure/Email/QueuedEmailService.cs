@@ -9,6 +9,6 @@ internal sealed class QueuedEmailService(IBackgroundJobQueue jobQueue) : IEmailS
     public async Task SendAsync(string to, string subject, string htmlBody, CancellationToken cancellationToken = default)
     {
         var job = new SendEmailJob(to, subject, htmlBody);
-        await jobQueue.EnqueueAsync(job, cancellationToken);
+        await jobQueue.EnqueueAsync(job, cancellationToken: cancellationToken);
     }
 }

@@ -13,7 +13,11 @@ internal sealed class DatabaseBackgroundJobQueue(
     ILogger<DatabaseBackgroundJobQueue> logger)
     : IBackgroundJobQueue
 {
-    public async Task EnqueueAsync<T>(T job, CancellationToken cancellationToken = default)
+    public async Task EnqueueAsync<T>(
+        T job,
+        DateTime? scheduledAt = null,
+        int? maxRetries = null,
+        CancellationToken cancellationToken = default)
         where T : IBackgroundJob
     {
         string jobType = typeof(T).AssemblyQualifiedName!;
@@ -22,8 +26,14 @@ internal sealed class DatabaseBackgroundJobQueue(
         var backgroundJob = new BackgroundJob
         {
             JobType = jobType,
-            Payload = payload
+            Payload = payload,
+            ScheduledAt = scheduledAt
         };
+
+        if (maxRetries is not null)
+        {
+            backgroundJob.MaxRetries = maxRetries.Value;
+        }
 
         context.Set<BackgroundJob>().Add(backgroundJob);
         await context.SaveChangesAsync(cancellationToken);
