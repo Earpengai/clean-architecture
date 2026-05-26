@@ -141,6 +141,16 @@ export function useRequestEmailVerification() {
   });
 }
 
+interface ResendVerificationPayload {
+  userId: string;
+}
+
+export function useResendVerification() {
+  return useMutation({
+    mutationFn: (payload: ResendVerificationPayload) => apiPost<void>("/auth/resend-verification", payload),
+  });
+}
+
 export function useEnableTwoFactor() {
   return useMutation({
     mutationFn: () => apiPost<EnableTwoFactorResponse>("/profile/enable-2fa"),
