@@ -118,6 +118,8 @@ internal sealed class CreateTenantCommandHandler(
         User? user = await context.Users.FirstOrDefaultAsync(
             u => u.Id == command.OwnerId, cancellationToken);
 
+        tenant.Raise(new TenantCreatedDomainEvent(tenant.Id, tenant.Name, user!.Email!));
+
         List<string> tenantIdentifiers = await context.Memberships
             .Where(m => m.UserId == command.OwnerId)
             .Join(context.Tenants,
