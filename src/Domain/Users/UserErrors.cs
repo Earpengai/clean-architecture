@@ -19,7 +19,7 @@ public static class UserErrors
 
     public static readonly Error EmailNotUnique = Error.Conflict(
         "Users.EmailNotUnique",
-        "The provided email is not unique");
+        "An account with this email already exists.");
 
     public static readonly Error EmailAlreadyVerified = Error.Conflict(
         "Users.EmailAlreadyVerified",
