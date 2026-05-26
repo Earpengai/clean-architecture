@@ -33,6 +33,7 @@ internal sealed class TokenProvider(IConfiguration configuration) : ITokenProvid
             new Claim(JwtRegisteredClaimNames.Nbf, EpochTime.GetIntDate(utcNow).ToString(CultureInfo.InvariantCulture)),
             new Claim("tenant_ids", JsonSerializer.Serialize(tenantIdentifiers)),
             new Claim("is_system_admin", isSystemAdministrator.ToString().ToUpperInvariant()),
+            new Claim("email_verified", user.EmailConfirmed.ToString().ToUpperInvariant()),
             new Claim("security_stamp", securityStamp)
         ];
 

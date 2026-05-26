@@ -146,6 +146,12 @@ export interface LoginResponse {
   requiresTwoFactor: boolean;
   twoFactorToken: string | null;
   userId: string | null;
+  emailConfirmed: boolean;
+}
+
+export interface RegisterResponse {
+  userId: string;
+  verificationEmailSent: boolean;
 }
 
 export interface RefreshTokenResponse {

@@ -17,5 +17,12 @@ internal sealed class RegisterUserCommandValidator : AbstractValidator<RegisterU
             .Matches(@"[a-z]").WithMessage("Password must contain at least one lowercase letter")
             .Matches(@"[0-9]").WithMessage("Password must contain at least one digit")
             .Matches(@"[!@#$%^&*(),.?"":{}|<>]").WithMessage("Password must contain at least one special character");
+        RuleFor(c => c.ConfirmPassword)
+            .Equal(c => c.Password).WithMessage("Passwords do not match.");
+        RuleFor(c => c.CompanyName).NotEmpty().MaximumLength(200);
+        RuleFor(c => c.Industry).NotEmpty().MaximumLength(100);
+        RuleFor(c => c.Country).NotEmpty().MaximumLength(100);
+        RuleFor(c => c.AcceptedTerms)
+            .Equal(true).WithMessage("You must accept the terms of service.");
     }
 }

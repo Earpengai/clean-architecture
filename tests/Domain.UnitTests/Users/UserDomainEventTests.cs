@@ -15,7 +15,7 @@ public sealed class UserDomainEventTests
     public void Raise_ShouldAddDomainEvent()
     {
         User user = new();
-        IDomainEvent domainEvent = new UserRegisteredDomainEvent(Guid.NewGuid(), "test@example.com");
+        IDomainEvent domainEvent = new UserRegisteredDomainEvent(Guid.NewGuid(), "test@example.com", "token");
 
         user.Raise(domainEvent);
 
@@ -27,8 +27,8 @@ public sealed class UserDomainEventTests
     public void ClearDomainEvents_ShouldRemoveAllEvents()
     {
         User user = new();
-        user.Raise(new UserRegisteredDomainEvent(Guid.NewGuid(), "test@example.com"));
-        user.Raise(new UserRegisteredDomainEvent(Guid.NewGuid(), "test2@example.com"));
+        user.Raise(new UserRegisteredDomainEvent(Guid.NewGuid(), "test@example.com", "token"));
+        user.Raise(new UserRegisteredDomainEvent(Guid.NewGuid(), "test2@example.com", "token"));
 
         user.ClearDomainEvents();
 

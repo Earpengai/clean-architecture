@@ -1,22 +1,26 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useLogin } from "@/api/auth";
+import { useLogin, useRequestEmailVerification } from "@/api/auth";
 import type { LoginResponse } from "@/api/types";
+import type { ApiError } from "@/api/client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn } from "lucide-react";
+import { LogIn, Mail } from "lucide-react";
 
 export function LoginPage() {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const login = useLogin();
+  const requestVerification = useRequestEmailVerification();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [errorType, setErrorType] = useState<string | undefined>();
+  const [verifyResent, setVerifyResent] = useState(false);
 
   if (isAuthenticated) {
     navigate("/app", { replace: true });
@@ -26,6 +30,7 @@ export function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setErrorType(undefined);
 
     login.mutate(
       { email, password },
@@ -40,7 +45,11 @@ export function LoginPage() {
             navigate("/app", { replace: true });
           }
         },
-        onError: (err) => setError(err.message),
+        onError: (err) => {
+          const apiError = err as ApiError;
+          setError(apiError.message);
+          setErrorType(apiError.problemType);
+        },
       },
     );
   };
@@ -78,7 +87,33 @@ export function LoginPage() {
                 required
               />
             </div>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && (
+              <div className="space-y-2">
+                <p className="text-sm text-red-500">{error}</p>
+                {errorType === "Users.EmailNotVerified" && (
+                  <div className="flex items-center gap-2">
+                    {verifyResent ? (
+                      <span className="text-xs text-green-600">Verification email sent.</span>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="text-xs h-8"
+                        onClick={() => {
+                          requestVerification.mutate(undefined, {
+                            onSuccess: () => setVerifyResent(true),
+                          });
+                        }}
+                        disabled={requestVerification.isPending}
+                      >
+                        <Mail className="h-3 w-3 mr-1" />
+                        {requestVerification.isPending ? "Sending..." : "Resend Verification Email"}
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={login.isPending}>
               {login.isPending ? "Signing in..." : "Sign In"}
             </Button>

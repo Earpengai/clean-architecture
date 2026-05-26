@@ -40,6 +40,11 @@ internal sealed class LoginTwoFactorCommandHandler(
             return Result.Failure<LoginResponse>(UserErrors.InvalidCredentials);
         }
 
+        if (!user.EmailConfirmed)
+        {
+            return Result.Failure<LoginResponse>(UserErrors.EmailNotVerified);
+        }
+
         List<string> tenantIdentifiers = await context.Memberships
             .Where(m => m.UserId == user.Id)
             .Join(context.Tenants,
@@ -66,6 +71,6 @@ internal sealed class LoginTwoFactorCommandHandler(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return LoginResponse.Success(accessToken, plainRefreshToken);
+        return LoginResponse.Success(accessToken, plainRefreshToken, user.EmailConfirmed);
     }
 }

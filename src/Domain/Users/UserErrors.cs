@@ -25,6 +25,10 @@ public static class UserErrors
         "Users.EmailAlreadyVerified",
         "The email is already verified");
 
+    public static readonly Error EmailNotVerified = Error.Problem(
+        "Users.EmailNotVerified",
+        "Your email address has not been verified. Please check your inbox for the verification link.");
+
     public static readonly Error InvalidVerificationToken = Error.Problem(
         "Users.InvalidVerificationToken",
         "The verification token is invalid or has expired");

@@ -3,20 +3,22 @@ using Application.Abstractions.Messaging;
 using Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using SharedKernel;
 
 namespace Application.Users.Register;
 
 internal sealed class RegisterUserCommandHandler(
     IApplicationDbContext context,
-    UserManager<User> userManager)
-    : ICommandHandler<RegisterUserCommand, Guid>
+    UserManager<User> userManager,
+    IConfiguration configuration)
+    : ICommandHandler<RegisterUserCommand, RegisterResponse>
 {
-    public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
+    public async Task<Result<RegisterResponse>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
         if (await context.Users.AnyAsync(u => u.Email == command.Email, cancellationToken))
         {
-            return Result.Failure<Guid>(UserErrors.EmailNotUnique);
+            return Result.Failure<RegisterResponse>(UserErrors.EmailNotUnique);
         }
 
         var user = new User
@@ -33,13 +35,32 @@ internal sealed class RegisterUserCommandHandler(
 
         if (!result.Succeeded)
         {
-            return Result.Failure<Guid>(UserErrors.FromIdentityResult(result));
+            return Result.Failure<RegisterResponse>(UserErrors.FromIdentityResult(result));
         }
 
-        user.Raise(new UserRegisteredDomainEvent(user.Id, user.Email!));
+        bool sendVerification = configuration.GetValue<bool>("EmailVerification:SendVerificationEmail");
+
+        var registrationInfo = new RegistrationInfo
+        {
+            Id = Guid.NewGuid(),
+            Email = command.Email,
+            FirstName = command.FirstName,
+            LastName = command.LastName,
+            CompanyName = command.CompanyName,
+            Industry = command.Industry,
+            Country = command.Country,
+            AcceptedTerms = command.AcceptedTerms,
+            RegisteredAt = DateTime.UtcNow
+        };
+
+        context.RegistrationInfos.Add(registrationInfo);
+
+        string token = await userManager.GenerateEmailConfirmationTokenAsync(user);
+
+        user.Raise(new UserRegisteredDomainEvent(user.Id, user.Email!, token));
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return user.Id;
+        return new RegisterResponse(user.Id, sendVerification);
     }
 }

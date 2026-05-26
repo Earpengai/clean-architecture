@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTenantStore } from "@/stores/tenantStore";
 import { apiGet, apiPost, apiPut, setAuthTokens, getAuthToken } from "./client";
-import type { LoginResponse, EnableTwoFactorResponse, UserProfileResponse } from "./types";
+import type { LoginResponse, EnableTwoFactorResponse, UserProfileResponse, RegisterResponse } from "./types";
 
 interface LoginPayload {
   email: string;
@@ -13,6 +13,11 @@ interface RegisterPayload {
   firstName: string;
   lastName: string;
   password: string;
+  confirmPassword: string;
+  companyName: string;
+  industry: string;
+  country: string;
+  acceptedTerms: boolean;
 }
 
 interface ChangePasswordPayload {
@@ -80,7 +85,7 @@ export function useLoginTwoFactor() {
 
 export function useRegister() {
   return useMutation({
-    mutationFn: (payload: RegisterPayload) => apiPost<string>("/auth/register", payload),
+    mutationFn: (payload: RegisterPayload) => apiPost<RegisterResponse>("/auth/register", payload),
   });
 }
 

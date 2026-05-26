@@ -2,5 +2,7 @@
 
 namespace Application.Users.Register;
 
-public sealed record RegisterUserCommand(string Email, string FirstName, string LastName, string Password)
-    : ICommand<Guid>;
+public sealed record RegisterUserCommand(
+    string Email, string FirstName, string LastName, string Password, string ConfirmPassword,
+    string CompanyName, string Industry, string Country, bool AcceptedTerms)
+    : ICommand<RegisterResponse>;

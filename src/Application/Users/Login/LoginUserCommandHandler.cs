@@ -39,6 +39,11 @@ internal sealed class LoginUserCommandHandler(
 
         await userManager.ResetAccessFailedCountAsync(user);
 
+        if (!user.EmailConfirmed)
+        {
+            return Result.Failure<LoginResponse>(UserErrors.EmailNotVerified);
+        }
+
         if (await userManager.GetTwoFactorEnabledAsync(user))
         {
             string twoFactorToken = await userManager.GenerateTwoFactorTokenAsync(
@@ -73,6 +78,6 @@ internal sealed class LoginUserCommandHandler(
 
         await context.SaveChangesAsync(cancellationToken);
 
-        return LoginResponse.Success(accessToken, plainRefreshToken);
+        return LoginResponse.Success(accessToken, plainRefreshToken, user.EmailConfirmed);
     }
 }

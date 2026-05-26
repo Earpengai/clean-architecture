@@ -41,6 +41,8 @@ public sealed class ApplicationDbContext(
 
     public DbSet<BackgroundJob> BackgroundJobs { get; set; }
 
+    public DbSet<RegistrationInfo> RegistrationInfos { get; set; }
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

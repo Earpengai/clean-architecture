@@ -22,6 +22,7 @@ public interface IApplicationDbContext
     DbSet<Payment> Payments { get; }
     DbSet<SubscriptionPlan> SubscriptionPlans { get; }
     DbSet<Subscription> Subscriptions { get; }
+    DbSet<RegistrationInfo> RegistrationInfos { get; }
 
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }

@@ -1,6 +1,7 @@
 export interface JwtPayload {
   sub: string;
   is_system_admin: string | undefined;
+  email_verified?: string;
   security_stamp: string;
   [key: string]: unknown;
 }
