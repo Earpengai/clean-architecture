@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiGet, apiPost, setAuthTokens } from "./client";
-import type { TenantResponse, CreateTenantPayload, CreateTenantResponse } from "./types";
+import type { TenantResponse, AvailablePlanResponse, CreateTenantPayload, CreateTenantResponse } from "./types";
 
 export const TENANTS_KEY = ["tenants"] as const;
 
@@ -8,6 +8,13 @@ export function useMyTenants() {
   return useQuery({
     queryKey: TENANTS_KEY,
     queryFn: () => apiGet<TenantResponse[]>("/tenants/mine"),
+  });
+}
+
+export function useAvailablePlans() {
+  return useQuery({
+    queryKey: [...TENANTS_KEY, "available-plans"],
+    queryFn: () => apiGet<AvailablePlanResponse[]>("/tenants/available-plans"),
   });
 }
 

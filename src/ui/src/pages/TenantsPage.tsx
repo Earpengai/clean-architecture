@@ -1,19 +1,39 @@
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useMyTenants } from "@/api/tenants";
+import { useMyTenants, useAvailablePlans } from "@/api/tenants";
 import { ErrorDisplay } from "@/components/ErrorDisplay";
 import { TenantCard } from "@/features/tenants/components/TenantCard";
 import { CreateTenantDialog } from "@/features/tenants/components/CreateTenantDialog";
+import { Layers } from "lucide-react";
 
 export function TenantsPage() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { data: tenants, isLoading, error } = useMyTenants();
+  const { data: plans } = useAvailablePlans();
+
+  const tenantCount = tenants?.length ?? 0;
+
+  const totalRemaining = plans
+    ? plans.reduce((sum, p) => sum + (p.remainingQuota === -1 ? Number.MAX_SAFE_INTEGER : p.remainingQuota), 0)
+    : null;
+
+  const isUnlimited = totalRemaining !== null && totalRemaining >= Number.MAX_SAFE_INTEGER;
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">My Tenants</h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-gray-900">My Tenants</h1>
+          {totalRemaining !== null && (
+            <span className="text-xs text-gray-500 flex items-center gap-1">
+              <Layers className="h-3 w-3" />
+              {isUnlimited
+                ? `${tenantCount} created · Unlimited`
+                : `${tenantCount} created · ${totalRemaining} remaining`}
+            </span>
+          )}
+        </div>
         <CreateTenantDialog />
       </div>
 

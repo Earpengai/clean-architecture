@@ -68,6 +68,18 @@ export interface TenantResponse {
   isActive: boolean;
 }
 
+export interface AvailablePlanResponse {
+  planId: string;
+  name: string;
+  description: string | null;
+  priceMonthly: number;
+  priceYearly: number;
+  trialDays: number;
+  remainingQuota: number;
+  features: string[];
+  limits: Record<string, number>;
+}
+
 export interface CreateTenantPayload {
   name: string;
   identifier: string;

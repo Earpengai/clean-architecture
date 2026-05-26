@@ -67,7 +67,7 @@ internal sealed class CreateTenantCommandHandler(
         {
             Id = Guid.NewGuid(),
             SubscriptionPlanId = plan.Id,
-            Status = SubscriptionStatus.Trialing,
+            Status = plan.TrialDays > 0 ? SubscriptionStatus.Trialing : SubscriptionStatus.Active,
             BillingPeriod = SubscriptionBillingPeriod.None,
             ExpiresAt = plan.TrialDays > 0 ? DateTime.UtcNow.AddDays(plan.TrialDays) : null,
             CreatedAt = DateTime.UtcNow
