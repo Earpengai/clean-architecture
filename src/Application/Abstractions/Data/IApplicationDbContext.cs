@@ -17,6 +17,8 @@ public interface IApplicationDbContext
     DbSet<RolePermission> RolePermissions { get; }
     DbSet<Invitation> Invitations { get; }
     DbSet<RefreshToken> RefreshTokens { get; }
+    DbSet<TwoFactorRememberToken> TwoFactorRememberTokens { get; }
+    DbSet<UserSession> UserSessions { get; }
     DbSet<PlanFeature> PlanFeatures { get; }
     DbSet<PlanLimit> PlanLimits { get; }
     DbSet<Payment> Payments { get; }

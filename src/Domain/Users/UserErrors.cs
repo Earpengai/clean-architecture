@@ -57,6 +57,14 @@ public static class UserErrors
         "Users.PasswordNotCompliant",
         "The new password does not meet the security requirements.");
 
+    public static readonly Error InvalidRecoveryCode = Error.Problem(
+        "Users.InvalidRecoveryCode",
+        "The recovery code is invalid or has already been used.");
+
+    public static Error SessionNotFound(Guid sessionId) => Error.NotFound(
+        "Users.SessionNotFound",
+        $"The session with the Id = '{sessionId}' was not found.");
+
     public static Error FromIdentityResult(IdentityResult result)
     {
         IdentityError? firstError = result.Errors.FirstOrDefault();

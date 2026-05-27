@@ -4,13 +4,16 @@ public sealed record LoginResponse(
     string? AccessToken,
     string? RefreshToken,
     bool RequiresTwoFactor,
-    string? TwoFactorToken,
     Guid? UserId,
-    bool EmailConfirmed)
+    bool EmailConfirmed,
+    string? RememberDeviceToken)
 {
     public static LoginResponse Success(string accessToken, string refreshToken, bool emailConfirmed) =>
-        new(accessToken, refreshToken, false, null, null, emailConfirmed);
+        new(accessToken, refreshToken, false, null, emailConfirmed, null);
 
-    public static LoginResponse TwoFactorRequired(string twoFactorToken, Guid userId) =>
-        new(null, null, true, twoFactorToken, userId, false);
+    public static LoginResponse TwoFactorRequired(Guid userId) =>
+        new(null, null, true, userId, false, null);
+
+    public static LoginResponse Success(string accessToken, string refreshToken, bool emailConfirmed, string rememberDeviceToken) =>
+        new(accessToken, refreshToken, false, null, emailConfirmed, rememberDeviceToken);
 }

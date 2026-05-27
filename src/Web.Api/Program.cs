@@ -71,6 +71,8 @@ app.UseSerilogRequestLogging();
 
 app.UseExceptionHandler();
 
+app.UseSecurityHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();

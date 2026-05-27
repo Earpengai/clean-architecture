@@ -3,4 +3,4 @@ using Application.Users.Login;
 
 namespace Application.Users.LoginTwoFactor;
 
-public sealed record LoginTwoFactorCommand(Guid UserId, string TwoFactorToken, string Code) : ICommand<LoginResponse>;
+public sealed record LoginTwoFactorCommand(Guid UserId, string Code, bool RememberDevice) : ICommand<LoginResponse>;

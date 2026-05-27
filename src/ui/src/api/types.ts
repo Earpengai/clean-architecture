@@ -149,9 +149,9 @@ export interface LoginResponse {
   accessToken: string | null;
   refreshToken: string | null;
   requiresTwoFactor: boolean;
-  twoFactorToken: string | null;
   userId: string | null;
   emailConfirmed: boolean;
+  rememberDeviceToken: string | null;
 }
 
 export interface RegisterResponse {
@@ -179,6 +179,19 @@ export interface AcceptInvitationResponse {
 export interface EnableTwoFactorResponse {
   sharedKey: string;
   authenticatorUri: string;
+}
+
+export interface ConfirmTwoFactorResponse {
+  recoveryCodes: string[];
+}
+
+export interface UserSessionResponse {
+  id: string;
+  browser: string;
+  operatingSystem: string;
+  ipAddress: string;
+  createdAt: string;
+  lastActivityAt: string;
 }
 
 export interface UserProfileResponse {

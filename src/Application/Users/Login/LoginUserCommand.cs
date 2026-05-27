@@ -2,4 +2,4 @@
 
 namespace Application.Users.Login;
 
-public sealed record LoginUserCommand(string Email, string Password) : ICommand<LoginResponse>;
+public sealed record LoginUserCommand(string Email, string Password, string? RememberDeviceToken = null) : ICommand<LoginResponse>;

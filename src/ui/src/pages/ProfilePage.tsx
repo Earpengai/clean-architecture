@@ -9,13 +9,16 @@ import {
   useEnableTwoFactor,
   useConfirmTwoFactor,
   useDisableTwoFactor,
+  useUserSessions,
+  useRevokeSession,
 } from "@/api/auth";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { User, Lock, Mail, ShieldCheck, ArrowLeft, QrCode } from "lucide-react";
+import { SessionItem } from "@/components/SessionItem";
+import { User, Lock, Mail, ShieldCheck, ArrowLeft, QrCode, Download, LogOut } from "lucide-react";
 
 function useFormState() {
   const [error, setError] = useState("");
@@ -41,15 +44,18 @@ export function ProfilePage() {
   const enableTwoFactor = useEnableTwoFactor();
   const confirmTwoFactor = useConfirmTwoFactor();
   const disableTwoFactor = useDisableTwoFactor();
+  const { data: sessions, isLoading: sessionsLoading } = useUserSessions();
+  const revokeSession = useRevokeSession();
 
   const profileForm = useFormState();
   const passwordForm = useFormState();
   const emailForm = useFormState();
   const twoFactorForm = useFormState();
   const [verifySent, setVerifySent] = useState(false);
-  const [twoFactorStep, setTwoFactorStep] = useState<"idle" | "enable" | "confirm" | "enabled">("idle");
+  const [twoFactorStep, setTwoFactorStep] = useState<"idle" | "enable" | "confirm" | "enabled" | "recoveryCodes">("idle");
   const [sharedKey, setSharedKey] = useState("");
   const [authenticatorUri, setAuthenticatorUri] = useState("");
+  const [recoveryCodes, setRecoveryCodes] = useState<string[]>([]);
 
   const { data: profile, isLoading, isError } = useGetProfile();
 
@@ -114,9 +120,9 @@ export function ProfilePage() {
     confirmTwoFactor.mutate(
       { code: twoFactorCode },
       {
-        onSuccess: () => {
-          twoFactorForm.setSuccess("2FA enabled successfully.");
-          setTwoFactorStep("enabled");
+        onSuccess: (data) => {
+          setRecoveryCodes(data.recoveryCodes);
+          setTwoFactorStep("recoveryCodes");
         },
         onError: (err) => twoFactorForm.setError(err.message),
       },
@@ -132,6 +138,16 @@ export function ProfilePage() {
       },
       onError: (err) => twoFactorForm.setError(err.message),
     });
+  };
+
+  const handleDownloadRecoveryCodes = () => {
+    const blob = new Blob([recoveryCodes.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "recovery-codes.txt";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -322,6 +338,68 @@ export function ProfilePage() {
                   Disable 2FA
                 </Button>
                 {twoFactorForm.error && <p className="text-sm text-red-500">{twoFactorForm.error}</p>}
+              </div>
+            )}
+
+            {twoFactorStep === "recoveryCodes" && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-100">
+                    <ShieldCheck className="h-4 w-4 text-green-600" />
+                  </div>
+                  <span className="text-sm font-medium text-green-600">Two-factor authentication is enabled</span>
+                </div>
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-2">
+                  <p className="text-sm font-medium text-amber-800">Save your recovery codes</p>
+                  <p className="text-xs text-amber-700">
+                    Store these codes in a safe place. Each code can be used once to sign in if you lose access to your authenticator app.
+                  </p>
+                  <div className="grid grid-cols-2 gap-1">
+                    {recoveryCodes.map((code, i) => (
+                      <p key={i} className="text-xs font-mono text-gray-900 bg-white px-2 py-1 rounded border">
+                        {code}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setTwoFactorStep("enabled")}>
+                    I&apos;ve saved my recovery codes
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleDownloadRecoveryCodes}>
+                    <Download className="h-4 w-4 mr-1" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Separator />
+
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-indigo-600" />
+              <CardTitle>Active Sessions</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {sessionsLoading && <p className="text-sm text-gray-400">Loading...</p>}
+            {sessions && sessions.length === 0 && (
+              <p className="text-sm text-gray-500">No active sessions found.</p>
+            )}
+            {sessions && sessions.length > 0 && (
+              <div>
+                {sessions.map((session) => (
+                  <SessionItem
+                    key={session.id}
+                    session={session}
+                    onRevoke={(id) => revokeSession.mutate(id)}
+                    isRevoking={revokeSession.isPending}
+                  />
+                ))}
               </div>
             )}
           </CardContent>

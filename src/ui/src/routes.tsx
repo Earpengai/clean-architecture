@@ -21,6 +21,7 @@ import { ForgotPasswordPage } from "@/pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/ResetPasswordPage";
 import { VerifyEmailPage } from "@/pages/VerifyEmailPage";
 import { LoginTwoFactorPage } from "@/pages/LoginTwoFactorPage";
+import { LoginRecoveryPage } from "@/pages/LoginRecoveryPage";
 import { OnboardingGuard } from "@/components/OnboardingGuard";
 import { TenantGuard } from "@/components/TenantGuard";
 import { AdminTenantsPage } from "@/pages/admin/AdminTenantsPage";
@@ -56,6 +57,7 @@ export function AppRoutes() {
         <Route path="auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="auth/verify-email" element={<VerifyEmailPage />} />
         <Route path="auth/login-2fa" element={<LoginTwoFactorPage />} />
+        <Route path="auth/login-recovery" element={<LoginRecoveryPage />} />
       </Route>
 
       {/* === PUBLIC ACCEPT INVITATION === */}

@@ -11,6 +11,7 @@ using Application.Abstractions.SubscriptionFeatures;
 using Application.Billing.ProcessPayment;
 using Application.Tenants.ClearDemoData;
 using Application.Tenants.SeedDemoData;
+using Application.Users.DomainEventHandlers;
 using Domain.Users;
 using DomainRole = Domain.Tenants.Role;
 using Finbuckle.MultiTenant;
@@ -90,6 +91,8 @@ public static class DependencyInjection
         services.AddScoped<IBackgroundJobHandler<SeedDemoDataJob>, SeedDemoDataJobHandler>();
 
         services.AddScoped<IBackgroundJobHandler<ClearDemoDataJob>, ClearDemoDataJobHandler>();
+
+        services.AddScoped<IBackgroundJobHandler<SuspiciousLoginEmailJob>, SendSuspiciousLoginEmailJobHandler>();
 
         services.AddScoped<ISubscriptionFeatureProvider, SubscriptionFeatureProvider>();
 
@@ -277,6 +280,7 @@ public static class DependencyInjection
 
         services.AddHttpContextAccessor();
         services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<IClientInfoProvider, ClientInfoProvider>();
         services.AddSingleton<ITokenProvider, TokenProvider>();
 
         return services;

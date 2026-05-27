@@ -10,13 +10,14 @@ import { ShieldCheck, ArrowLeft } from "lucide-react";
 export function LoginTwoFactorPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const state = location.state as { userId?: string; twoFactorToken?: string } | null;
+  const state = location.state as { userId?: string } | null;
 
   const [code, setCode] = useState("");
+  const [rememberDevice, setRememberDevice] = useState(false);
   const [error, setError] = useState("");
   const loginTwoFactor = useLoginTwoFactor();
 
-  if (!state?.userId || !state?.twoFactorToken) {
+  if (!state?.userId) {
     navigate("/auth/login", { replace: true });
     return null;
   }
@@ -26,7 +27,7 @@ export function LoginTwoFactorPage() {
     setError("");
 
     loginTwoFactor.mutate(
-      { userId: state.userId!, twoFactorToken: state.twoFactorToken!, code },
+      { userId: state.userId!, code, rememberDevice },
       {
         onSuccess: () => navigate("/app", { replace: true }),
         onError: (err) => setError(err.message),
@@ -59,17 +60,38 @@ export function LoginTwoFactorPage() {
                 maxLength={6}
               />
             </div>
+            <div className="flex items-center gap-2">
+              <input
+                id="rememberDevice"
+                type="checkbox"
+                checked={rememberDevice}
+                onChange={(e) => setRememberDevice(e.target.checked)}
+                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <Label htmlFor="rememberDevice" className="text-sm text-gray-600 cursor-pointer">
+                Remember this device for 30 days
+              </Label>
+            </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={loginTwoFactor.isPending || code.length < 6}>
               {loginTwoFactor.isPending ? "Verifying..." : "Verify Code"}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm">
+          <div className="mt-4 space-y-2 text-center text-sm">
             <Link to="/auth/login" className="text-indigo-600 hover:text-indigo-500">
               <ArrowLeft className="h-4 w-4 inline mr-1" />
               Back to Sign In
             </Link>
-          </p>
+            <div>
+              <Link
+                to="/auth/login-recovery"
+                state={{ userId: state.userId }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                Lost your authenticator? Use a recovery code
+              </Link>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>

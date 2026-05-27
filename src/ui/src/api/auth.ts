@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTenantStore } from "@/stores/tenantStore";
-import { apiGet, apiPost, apiPut, setAuthTokens, getAuthToken } from "./client";
-import type { LoginResponse, EnableTwoFactorResponse, UserProfileResponse, RegisterResponse } from "./types";
+import { apiGet, apiPost, apiPut, apiDelete, setAuthTokens, getAuthToken } from "./client";
+import type { LoginResponse, EnableTwoFactorResponse, UserProfileResponse, RegisterResponse, ConfirmTwoFactorResponse, UserSessionResponse } from "./types";
 
 interface LoginPayload {
   email: string;
@@ -47,8 +47,8 @@ interface VerifyEmailPayload {
 
 interface LoginTwoFactorPayload {
   userId: string;
-  twoFactorToken: string;
   code: string;
+  rememberDevice: boolean;
 }
 
 interface ConfirmTwoFactorPayload {
@@ -159,7 +159,7 @@ export function useEnableTwoFactor() {
 
 export function useConfirmTwoFactor() {
   return useMutation({
-    mutationFn: (payload: ConfirmTwoFactorPayload) => apiPost<void>("/profile/confirm-2fa", payload),
+    mutationFn: (payload: ConfirmTwoFactorPayload) => apiPost<ConfirmTwoFactorResponse>("/profile/confirm-2fa", payload),
   });
 }
 
@@ -169,10 +169,47 @@ export function useDisableTwoFactor() {
   });
 }
 
+interface LoginRecoveryPayload {
+  userId: string;
+  recoveryCode: string;
+}
+
+export function useLoginRecovery() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: LoginRecoveryPayload) => apiPost<LoginResponse>("/auth/login-recovery", payload),
+    onSuccess: (data) => {
+      if (data.accessToken && data.refreshToken) {
+        setAuthTokens(data.accessToken, data.refreshToken);
+        queryClient.clear();
+      }
+    },
+  });
+}
+
 export function useGetProfile() {
   return useQuery({
     queryKey: ["user-profile"],
     queryFn: () => apiGet<UserProfileResponse>("/profile"),
+  });
+}
+
+export function useUserSessions() {
+  return useQuery({
+    queryKey: ["user-sessions"],
+    queryFn: () => apiGet<UserSessionResponse[]>("/profile/sessions"),
+  });
+}
+
+export function useRevokeSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) => apiDelete<void>(`/profile/sessions/${sessionId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-sessions"] });
+    },
   });
 }
 

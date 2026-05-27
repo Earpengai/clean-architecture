@@ -1,28 +1,25 @@
 using Application.Abstractions.Messaging;
 using Application.Users.Login;
+using Application.Users.LoginRecovery;
 using Finbuckle.MultiTenant;
-using Microsoft.AspNetCore.Http;
 using SharedKernel;
 using Web.Api.Extensions;
 using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Auth;
 
-internal sealed class Login : IEndpoint
+internal sealed class LoginRecovery : IEndpoint
 {
-    public sealed record Request(string Email, string Password);
+    public sealed record Request(Guid UserId, string RecoveryCode);
 
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("auth/login", async (
+        app.MapPost("auth/login-recovery", async (
             Request request,
-            HttpContext httpContext,
-            ICommandHandler<LoginUserCommand, LoginResponse> handler,
+            ICommandHandler<LoginRecoveryCommand, LoginResponse> handler,
             CancellationToken cancellationToken) =>
         {
-            httpContext.Request.Cookies.TryGetValue("two_factor_remember", out string? rememberDeviceToken);
-
-            var command = new LoginUserCommand(request.Email, request.Password, rememberDeviceToken);
+            var command = new LoginRecoveryCommand(request.UserId, request.RecoveryCode);
 
             Result<LoginResponse> result = await handler.Handle(command, cancellationToken);
 

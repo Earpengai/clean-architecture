@@ -1,5 +1,5 @@
 using Application.Abstractions.Messaging;
-using Application.Users.ConfirmTwoFactor;
+using Application.Users.GetUserSessions;
 using Finbuckle.MultiTenant;
 using SharedKernel;
 using Web.Api.Extensions;
@@ -7,20 +7,17 @@ using Web.Api.Infrastructure;
 
 namespace Web.Api.Endpoints.Profile;
 
-internal sealed class ConfirmTwoFactor : IEndpoint
+internal sealed class GetSessions : IEndpoint
 {
-    public sealed record Request(string Code);
-
     public void MapEndpoint(IEndpointRouteBuilder app)
     {
-        app.MapPost("profile/confirm-2fa", async (
-            Request request,
-            ICommandHandler<ConfirmTwoFactorCommand, ConfirmTwoFactorResponse> handler,
+        app.MapGet("profile/sessions", async (
+            IQueryHandler<GetUserSessionsQuery, List<UserSessionResponse>> handler,
             CancellationToken cancellationToken) =>
         {
-            var command = new ConfirmTwoFactorCommand(request.Code);
+            var query = new GetUserSessionsQuery();
 
-            Result<ConfirmTwoFactorResponse> result = await handler.Handle(command, cancellationToken);
+            Result<List<UserSessionResponse>> result = await handler.Handle(query, cancellationToken);
 
             return result.Match(Results.Ok, CustomResults.Problem);
         })

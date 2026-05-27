@@ -38,7 +38,7 @@ export function LoginPage() {
         onSuccess: (data: LoginResponse) => {
           if (data.requiresTwoFactor) {
             navigate("/auth/login-2fa", {
-              state: { userId: data.userId!, twoFactorToken: data.twoFactorToken! },
+              state: { userId: data.userId! },
               replace: true,
             });
           } else {

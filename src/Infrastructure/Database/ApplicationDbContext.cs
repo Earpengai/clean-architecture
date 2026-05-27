@@ -29,6 +29,10 @@ public sealed class ApplicationDbContext(
 
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
+    public DbSet<TwoFactorRememberToken> TwoFactorRememberTokens { get; set; }
+
+    public DbSet<UserSession> UserSessions { get; set; }
+
     public DbSet<PlanFeature> PlanFeatures { get; set; }
 
     public DbSet<PlanLimit> PlanLimits { get; set; }

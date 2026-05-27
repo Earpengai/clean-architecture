@@ -12,7 +12,8 @@ namespace Application.Users.Login;
 internal sealed class LoginUserCommandHandler(
     IApplicationDbContext context,
     UserManager<User> userManager,
-    ITokenProvider tokenProvider) : ICommandHandler<LoginUserCommand, LoginResponse>
+    ITokenProvider tokenProvider,
+    IClientInfoProvider clientInfoProvider) : ICommandHandler<LoginUserCommand, LoginResponse>
 {
     public async Task<Result<LoginResponse>> Handle(LoginUserCommand command, CancellationToken cancellationToken)
     {
@@ -46,12 +47,37 @@ internal sealed class LoginUserCommandHandler(
 
         if (await userManager.GetTwoFactorEnabledAsync(user))
         {
-            string twoFactorToken = await userManager.GenerateTwoFactorTokenAsync(
-                user, TokenOptions.DefaultEmailProvider);
+            if (command.RememberDeviceToken is not null
+                && command.RememberDeviceToken.Length == 128
+                && command.RememberDeviceToken.All(c => c is >= '0' and <= '9' or >= 'A' and <= 'F' or >= 'a' and <= 'f'))
+            {
+                string rememberTokenHash = Convert.ToHexString(
+                    SHA256.HashData(Convert.FromHexString(command.RememberDeviceToken)));
 
-            return LoginResponse.TwoFactorRequired(twoFactorToken, user.Id);
+                bool rememberTokenValid = await context.TwoFactorRememberTokens
+                    .AnyAsync(t => t.UserId == user.Id
+                        && t.TokenHash == rememberTokenHash
+                        && t.ExpiresAt > DateTime.UtcNow, cancellationToken);
+
+                if (rememberTokenValid)
+                {
+                    return await IssueTokens(user, context, tokenProvider, clientInfoProvider, cancellationToken);
+                }
+            }
+
+            return LoginResponse.TwoFactorRequired(user.Id);
         }
 
+        return await IssueTokens(user, context, tokenProvider, clientInfoProvider, cancellationToken);
+    }
+
+    private static async Task<LoginResponse> IssueTokens(
+        User user,
+        IApplicationDbContext context,
+        ITokenProvider tokenProvider,
+        IClientInfoProvider clientInfoProvider,
+        CancellationToken cancellationToken)
+    {
         List<string> tenantIdentifiers = await context.Memberships
             .Where(m => m.UserId == user.Id)
             .Join(context.Tenants,
@@ -65,9 +91,11 @@ internal sealed class LoginUserCommandHandler(
         string plainRefreshToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
         string refreshTokenHash = Convert.ToHexString(SHA256.HashData(Convert.FromHexString(plainRefreshToken)));
 
+        var refreshTokenId = Guid.NewGuid();
+
         var refreshToken = new RefreshToken
         {
-            Id = Guid.NewGuid(),
+            Id = refreshTokenId,
             UserId = user.Id,
             TokenHash = refreshTokenHash,
             ExpiresAt = DateTime.UtcNow.AddDays(7),
@@ -75,6 +103,16 @@ internal sealed class LoginUserCommandHandler(
         };
 
         context.RefreshTokens.Add(refreshToken);
+
+        DateTime timestamp = DateTime.UtcNow;
+
+        user.Raise(new UserLoggedInDomainEvent(
+            user.Id,
+            user.Email!,
+            clientInfoProvider.IpAddress,
+            clientInfoProvider.UserAgent,
+            refreshTokenId,
+            timestamp));
 
         await context.SaveChangesAsync(cancellationToken);
 

@@ -8,15 +8,15 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SharedKernel;
 
-namespace Application.Users.LoginTwoFactor;
+namespace Application.Users.LoginRecovery;
 
-internal sealed class LoginTwoFactorCommandHandler(
+internal sealed class LoginRecoveryCommandHandler(
     IApplicationDbContext context,
     UserManager<User> userManager,
     ITokenProvider tokenProvider,
-    IClientInfoProvider clientInfoProvider) : ICommandHandler<LoginTwoFactorCommand, LoginResponse>
+    IClientInfoProvider clientInfoProvider) : ICommandHandler<LoginRecoveryCommand, LoginResponse>
 {
-    public async Task<Result<LoginResponse>> Handle(LoginTwoFactorCommand command, CancellationToken cancellationToken)
+    public async Task<Result<LoginResponse>> Handle(LoginRecoveryCommand command, CancellationToken cancellationToken)
     {
         User? user = await userManager.FindByIdAsync(command.UserId.ToString());
 
@@ -30,12 +30,11 @@ internal sealed class LoginTwoFactorCommandHandler(
             return Result.Failure<LoginResponse>(UserErrors.AccountLocked);
         }
 
-        bool codeValid = await userManager.VerifyTwoFactorTokenAsync(
-            user, userManager.Options.Tokens.AuthenticatorTokenProvider, command.Code);
+        IdentityResult recoveryResult = await userManager.RedeemTwoFactorRecoveryCodeAsync(user, command.RecoveryCode);
 
-        if (!codeValid)
+        if (!recoveryResult.Succeeded)
         {
-            return Result.Failure<LoginResponse>(UserErrors.InvalidCredentials);
+            return Result.Failure<LoginResponse>(UserErrors.InvalidRecoveryCode);
         }
 
         if (!user.EmailConfirmed)
@@ -69,25 +68,6 @@ internal sealed class LoginTwoFactorCommandHandler(
 
         context.RefreshTokens.Add(refreshToken);
 
-        string? rememberDeviceToken = null;
-
-        if (command.RememberDevice)
-        {
-            string plainRememberToken = Convert.ToHexString(RandomNumberGenerator.GetBytes(64));
-            string rememberHash = Convert.ToHexString(SHA256.HashData(Convert.FromHexString(plainRememberToken)));
-
-            context.TwoFactorRememberTokens.Add(new TwoFactorRememberToken
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                TokenHash = rememberHash,
-                ExpiresAt = DateTime.UtcNow.AddDays(30),
-                CreatedAt = DateTime.UtcNow
-            });
-
-            rememberDeviceToken = plainRememberToken;
-        }
-
         DateTime timestamp = DateTime.UtcNow;
 
         user.Raise(new UserLoggedInDomainEvent(
@@ -99,11 +79,6 @@ internal sealed class LoginTwoFactorCommandHandler(
             timestamp));
 
         await context.SaveChangesAsync(cancellationToken);
-
-        if (rememberDeviceToken is not null)
-        {
-            return LoginResponse.Success(accessToken, plainRefreshToken, user.EmailConfirmed, rememberDeviceToken);
-        }
 
         return LoginResponse.Success(accessToken, plainRefreshToken, user.EmailConfirmed);
     }
