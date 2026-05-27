@@ -548,3 +548,4 @@ Dependabot is configured for daily NuGet updates in `.github/dependabot.yml`.
 - [docs/tree-list.md](./docs/tree-list.md) — hierarchical query pattern
 - [docs/kanban-list.md](./docs/kanban-list.md) — kanban query pattern
 - [docs/background-job-queue.md](./docs/background-job-queue.md) — DB-backed background job queue with Redis
+- [docs/distributed-caching.md](./docs/distributed-caching.md) — Redis cache-aside for authorization hot path

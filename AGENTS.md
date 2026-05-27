@@ -143,6 +143,15 @@ Migrations are auto-applied at startup in Development via `ApplyMigrations()` (`
 - **Email is queued** — `IEmailService → QueuedEmailService → IBackgroundJobQueue.EnqueueAsync(SendEmailJob)`; domain event handlers unchanged
 - **Add new jobs** — implement `IBackgroundJob` (marker record) + `IBackgroundJobHandler<T>`, register in DI; see `docs/background-job-queue.md`
 
+## Distributed Caching
+
+- **`ICacheService`** in `Application.Abstractions.Caching` — generic `GetAsync<T>` / `SetAsync<T>` / `RemoveAsync`; singleton in DI
+- **`RedisCacheService`** (`src/Infrastructure/Caching/`) — uses existing `IConnectionMultiplexer`, JSON serialization, `"cache:"` key prefix
+- **Cache-aside in authorization hot path** — `PermissionProvider` (`permissions:{userId}`) and `SubscriptionFeatureProvider` (`features:{tenantId}`, `limits:{tenantId}:{limitKey}`); runs on every authorized request
+- **5-min default TTL** overridable per `SetAsync` call; `CacheOptions` binds from `"Cache"` config section
+- **Failures are non-critical** — Redis exceptions are logged as warnings and bypassed, app degrades gracefully
+- **Invalidation** — TTL-based (primary) + `RemoveAsync(key)` for explicit invalidation after mutations; see `docs/distributed-caching.md`
+
 ## Web.Api Endpoint Pattern
 
 Uses `IEndpoint` interface (not controller classes) with `MapEndpoint(IEndpointRouteBuilder)` — registered via assembly scanning in DI. Return values use `Result` with `Match()` extension methods and `CustomResults.Problem()` for RFC 7807 problem details.
