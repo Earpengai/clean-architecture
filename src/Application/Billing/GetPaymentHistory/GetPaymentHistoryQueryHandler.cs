@@ -1,4 +1,3 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -7,20 +6,16 @@ using SharedKernel;
 namespace Application.Billing.GetPaymentHistory;
 
 internal sealed class GetPaymentHistoryQueryHandler(
-    IApplicationDbContext context,
-    IUserContext userContext)
+    IApplicationDbContext context)
     : IQueryHandler<GetPaymentHistoryQuery, List<PaymentResponse>>
 {
     public async Task<Result<List<PaymentResponse>>> Handle(
         GetPaymentHistoryQuery query,
         CancellationToken cancellationToken)
     {
-        Guid tenantId = userContext.TenantId ?? Guid.Empty;
-
 #pragma warning disable IDE0031
         List<PaymentResponse> payments = await context.Payments
             .AsNoTracking()
-            .Where(p => p.TenantId == tenantId)
             .OrderByDescending(p => p.CreatedAt)
             .Select(p => new PaymentResponse
             {

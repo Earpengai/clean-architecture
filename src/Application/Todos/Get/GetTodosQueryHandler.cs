@@ -1,5 +1,4 @@
 ﻿using System.Linq.Expressions;
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Models;
@@ -10,8 +9,7 @@ using SharedKernel;
 namespace Application.Todos.Get;
 
 internal sealed class GetTodosQueryHandler(
-    IApplicationDbContext context,
-    IUserContext userContext)
+    IApplicationDbContext context)
     : IQueryHandler<GetTodosQuery, PaginatedList<TodoResponse>>
 {
     private static readonly Dictionary<string, Expression<Func<TodoItem, string>>> SearchMap = new()
@@ -42,7 +40,6 @@ internal sealed class GetTodosQueryHandler(
         CancellationToken cancellationToken)
     {
         PaginatedList<TodoResponse> result = await context.TodoItems
-            .Where(t => t.TenantId == userContext.TenantId!.Value)
             .ApplyFilters(query.Filters, FilterMap)
             .ApplySearch(query.Search, SearchMap)
             .ApplySort(query.Sorts, SortMap, t => t.CreatedAt)

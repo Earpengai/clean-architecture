@@ -17,8 +17,7 @@ internal sealed class InviteUserCommandHandler(
     public async Task<Result<Guid>> Handle(InviteUserCommand command, CancellationToken cancellationToken)
     {
         bool alreadyMember = await context.Memberships
-            .AnyAsync(m => m.TenantId == userContext.TenantId!.Value
-                && m.User != null && m.User.Email == command.Email, cancellationToken);
+            .AnyAsync(m => m.User != null && m.User.Email == command.Email, cancellationToken);
 
         if (alreadyMember)
         {
@@ -26,8 +25,7 @@ internal sealed class InviteUserCommandHandler(
         }
 
         Role? role = await context.Roles
-            .FirstOrDefaultAsync(r => r.Id == command.RoleId
-                && r.TenantId == userContext.TenantId!.Value, cancellationToken);
+            .FirstOrDefaultAsync(r => r.Id == command.RoleId, cancellationToken);
 
         if (role is null)
         {
@@ -47,11 +45,10 @@ internal sealed class InviteUserCommandHandler(
         if (maxUsers is not null && maxUsers != SubscriptionLimit.Unlimited)
         {
             int currentUserCount = await context.Memberships
-                .CountAsync(m => m.TenantId == userContext.TenantId!.Value, cancellationToken);
+                .CountAsync(cancellationToken);
 
             int pendingInvitationCount = await context.Invitations
-                .CountAsync(i => i.TenantId == userContext.TenantId!.Value
-                    && i.Status == InvitationStatus.Pending, cancellationToken);
+                .CountAsync(i => i.Status == InvitationStatus.Pending, cancellationToken);
 
             if (currentUserCount + pendingInvitationCount >= maxUsers.Value)
             {

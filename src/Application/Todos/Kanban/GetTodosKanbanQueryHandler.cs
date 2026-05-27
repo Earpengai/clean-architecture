@@ -1,4 +1,3 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Application.Abstractions.Models;
@@ -9,8 +8,7 @@ using SharedKernel;
 namespace Application.Todos.Kanban;
 
 internal sealed class GetTodosKanbanQueryHandler(
-    IApplicationDbContext context,
-    IUserContext userContext)
+    IApplicationDbContext context)
     : IQueryHandler<GetTodosKanbanQuery, KanbanList<Priority, TodoCardResponse>>
 {
     public async Task<Result<KanbanList<Priority, TodoCardResponse>>> Handle(
@@ -18,7 +16,6 @@ internal sealed class GetTodosKanbanQueryHandler(
         CancellationToken cancellationToken)
     {
         KanbanList<Priority, TodoCardResponse> board = await context.TodoItems
-            .Where(t => t.TenantId == userContext.TenantId!.Value)
             .ToKanbanListAsync(
                 columnKeySelector: t => t.Priority,
                 itemSelector: t => new TodoCardResponse

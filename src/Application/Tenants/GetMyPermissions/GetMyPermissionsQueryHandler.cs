@@ -16,7 +16,7 @@ internal sealed class GetMyPermissionsQueryHandler(
         CancellationToken cancellationToken)
     {
         HashSet<string> permissions = await context.Memberships
-            .Where(m => m.UserId == userContext.UserId && m.TenantId == userContext.TenantId!.Value)
+            .Where(m => m.UserId == userContext.UserId)
             .SelectMany(m => m.Role.Permissions)
             .Select(rp => rp.Permission)
             .Distinct()

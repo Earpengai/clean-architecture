@@ -1,4 +1,3 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +6,7 @@ using SharedKernel;
 namespace Application.Tenants.GetRoles;
 
 internal sealed class GetRolesQueryHandler(
-    IApplicationDbContext context,
-    IUserContext userContext)
+    IApplicationDbContext context)
     : IQueryHandler<GetRolesQuery, List<RoleResponse>>
 {
     public async Task<Result<List<RoleResponse>>> Handle(
@@ -16,7 +14,6 @@ internal sealed class GetRolesQueryHandler(
         CancellationToken cancellationToken)
     {
         List<RoleResponse> roles = await context.Roles
-            .Where(r => r.TenantId == userContext.TenantId!.Value)
             .Select(r => new RoleResponse
             {
                 Id = r.Id,

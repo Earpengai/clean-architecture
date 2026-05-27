@@ -30,7 +30,7 @@ internal sealed class GetTenantByIdQueryHandler(
 
         string? role = await context.Memberships
             .AsNoTracking()
-            .Where(m => m.TenantId == query.TenantId && m.UserId == userContext.UserId)
+            .Where(m => m.UserId == userContext.UserId)
             .Select(m => m.Role.Name)
             .FirstOrDefaultAsync(cancellationToken);
 

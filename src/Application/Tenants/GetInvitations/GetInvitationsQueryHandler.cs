@@ -1,4 +1,3 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +6,7 @@ using SharedKernel;
 namespace Application.Tenants.GetInvitations;
 
 internal sealed class GetInvitationsQueryHandler(
-    IApplicationDbContext context,
-    IUserContext userContext)
+    IApplicationDbContext context)
     : IQueryHandler<GetInvitationsQuery, List<InvitationResponse>>
 {
     public async Task<Result<List<InvitationResponse>>> Handle(
@@ -16,7 +14,6 @@ internal sealed class GetInvitationsQueryHandler(
         CancellationToken cancellationToken)
     {
         List<InvitationResponse> invitations = await context.Invitations
-            .Where(i => i.TenantId == userContext.TenantId!.Value)
             .Join(context.Roles,
                 i => i.RoleId,
                 r => r.Id,

@@ -1,4 +1,3 @@
-using Application.Abstractions.Authentication;
 using Application.Abstractions.Data;
 using Application.Abstractions.Messaging;
 using Microsoft.EntityFrameworkCore;
@@ -7,8 +6,7 @@ using SharedKernel;
 namespace Application.Users.GetTenantUsers;
 
 internal sealed class GetTenantUsersQueryHandler(
-    IApplicationDbContext context,
-    IUserContext userContext)
+    IApplicationDbContext context)
     : IQueryHandler<GetTenantUsersQuery, List<UserResponse>>
 {
     public async Task<Result<List<UserResponse>>> Handle(
@@ -16,7 +14,6 @@ internal sealed class GetTenantUsersQueryHandler(
         CancellationToken cancellationToken)
     {
         List<UserResponse> users = await context.Memberships
-            .Where(m => m.TenantId == userContext.TenantId!.Value)
             .Join(context.Users,
                 m => m.UserId,
                 u => u.Id,
