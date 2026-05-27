@@ -1,3 +1,4 @@
+using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.SubscriptionFeatures;
 using Domain.SubscriptionFeatures;
@@ -6,10 +7,21 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.SubscriptionFeatures;
 
-internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceScopeFactory) : ISubscriptionFeatureProvider
+internal sealed class SubscriptionFeatureProvider(
+    IServiceScopeFactory serviceScopeFactory,
+    ICacheService cacheService) : ISubscriptionFeatureProvider
 {
     public async Task<HashSet<string>> GetEnabledFeaturesAsync(Guid tenantId, CancellationToken cancellationToken = default)
     {
+        string cacheKey = $"features:{tenantId}";
+
+        HashSet<string>? cached = await cacheService.GetAsync<HashSet<string>>(cacheKey, cancellationToken);
+
+        if (cached is not null)
+        {
+            return cached;
+        }
+
         using IServiceScope scope = serviceScopeFactory.CreateScope();
         IApplicationDbContext context = scope.ServiceProvider
             .GetRequiredService<IApplicationDbContext>();
@@ -21,6 +33,8 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
 
         if (planId is null)
         {
+            await cacheService.SetAsync(cacheKey, new HashSet<string>(), cancellationToken: cancellationToken);
+
             return [];
         }
 
@@ -29,11 +43,24 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
             .Select(pf => pf.Feature)
             .ToListAsync(cancellationToken);
 
-        return [.. features];
+        HashSet<string> result = [.. features];
+
+        await cacheService.SetAsync(cacheKey, result, cancellationToken: cancellationToken);
+
+        return result;
     }
 
     public async Task<int?> GetLimitAsync(Guid tenantId, string limitKey, CancellationToken cancellationToken = default)
     {
+        string cacheKey = $"limits:{tenantId}:{limitKey}";
+
+        int? cached = await cacheService.GetAsync<int?>(cacheKey, cancellationToken);
+
+        if (cached is not null)
+        {
+            return cached;
+        }
+
         using IServiceScope scope = serviceScopeFactory.CreateScope();
         IApplicationDbContext context = scope.ServiceProvider
             .GetRequiredService<IApplicationDbContext>();
@@ -58,6 +85,8 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
 
             if (override_ is not null)
             {
+                await cacheService.SetAsync(cacheKey, override_.Value, cancellationToken: cancellationToken);
+
                 return override_.Value;
             }
         }
@@ -66,6 +95,11 @@ internal sealed class SubscriptionFeatureProvider(IServiceScopeFactory serviceSc
             .Where(pl => pl.SubscriptionPlanId == planId.Value && pl.Limit == limitKey)
             .Select(pl => (int?)pl.Value)
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (value is not null)
+        {
+            await cacheService.SetAsync(cacheKey, value, cancellationToken: cancellationToken);
+        }
 
         return value;
     }

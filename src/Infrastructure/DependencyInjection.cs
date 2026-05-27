@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Application.Abstractions.Authentication;
 using Application.Abstractions.Billing;
+using Application.Abstractions.Caching;
 using Application.Abstractions.Data;
 using Application.Abstractions.Email;
 using Application.Abstractions.Jobs;
@@ -18,6 +19,7 @@ using Finbuckle.MultiTenant;
 using Infrastructure.Authentication;
 using Infrastructure.Authorization;
 using Infrastructure.Billing;
+using Infrastructure.Caching;
 using Infrastructure.Data;
 using Infrastructure.Database;
 using Infrastructure.DomainEvents;
@@ -77,6 +79,10 @@ public static class DependencyInjection
 
             return ConnectionMultiplexer.Connect(options);
         });
+
+        services.Configure<CacheOptions>(configuration.GetSection(CacheOptions.Section));
+
+        services.AddSingleton<ICacheService, RedisCacheService>();
 
         services.AddScoped<IBackgroundJobQueue, DatabaseBackgroundJobQueue>();
 
