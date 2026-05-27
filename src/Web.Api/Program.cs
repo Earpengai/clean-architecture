@@ -63,7 +63,7 @@ if (app.Environment.IsDevelopment())
 app.MapHealthChecks("health", new HealthCheckOptions
 {
     ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
-});
+}).ExcludeFromMultiTenantResolution();
 
 app.UseRequestContextLogging();
 

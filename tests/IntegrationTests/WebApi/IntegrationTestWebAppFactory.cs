@@ -2,6 +2,7 @@ using IntegrationTests.Database;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using NSubstitute;
 using StackExchange.Redis;
 
@@ -33,6 +34,16 @@ public sealed class IntegrationTestWebAppFactory : WebApplicationFactory<Program
 
         builder.ConfigureServices(services =>
         {
+            services.PostConfigure<HealthCheckServiceOptions>(options =>
+            {
+                HealthCheckRegistration? redis = options.Registrations
+                    .FirstOrDefault(r => r.Name.Contains("redis", StringComparison.OrdinalIgnoreCase));
+                if (redis is not null)
+                {
+                    options.Registrations.Remove(redis);
+                }
+            });
+
             IConnectionMultiplexer redisMock = Substitute.For<IConnectionMultiplexer>();
             services.AddSingleton(redisMock);
         });
