@@ -124,7 +124,9 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(
             (sp, options) => options
                 .UseNpgsql(connectionString, npgsqlOptions =>
-                    npgsqlOptions.MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Default))
+                    npgsqlOptions
+                        .EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(30), errorCodesToAdd: null)
+                        .MigrationsHistoryTable(HistoryRepository.DefaultTableName, Schemas.Default))
                 .UseSnakeCaseNamingConvention()
                 .AddInterceptors(sp.GetRequiredService<TenantSaveInterceptor>()));
 

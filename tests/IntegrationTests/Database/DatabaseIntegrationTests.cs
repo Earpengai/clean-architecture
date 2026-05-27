@@ -1,6 +1,8 @@
 using Domain.Todos;
+using Domain.Users;
 using Infrastructure.Database;
 using IntegrationTests.WebApi;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,13 +15,27 @@ public sealed class DatabaseIntegrationTests(IntegrationTestWebAppFactory factor
     public async Task CanAddAndRetrieveTodoItem()
     {
         using IServiceScope scope = factory.Services.CreateScope();
+        UserManager<User> userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        var testUser = new User
+        {
+            Id = Guid.NewGuid(),
+            UserName = "testuser@test.com",
+            Email = "testuser@test.com",
+            FirstName = "Test",
+            LastName = "User",
+            EmailConfirmed = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await userManager.CreateAsync(testUser, "TestPass123!");
 
         var tenantId = Guid.NewGuid();
         var todoItem = new TodoItem
         {
             Id = Guid.NewGuid(),
-            UserId = Guid.NewGuid(),
+            UserId = testUser.Id,
             TenantId = tenantId,
             Description = "Integration test todo",
             Priority = Priority.Normal,
